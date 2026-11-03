@@ -86,3 +86,7 @@ Compose는 `127.0.0.1:8088`만 호스트로 노출한다. 선택 MQTT는 Docker 
 React는 패널 미리보기와 설치 화면에 같은 렌더러를 사용한다. CCTV 플레이어는 브라우저에서 미디어 게이트웨이로 직접 연결하며 API는 설정만 저장한다. 설치 패널과 오피스는 동일 API를 사용하되 패널 키는 해당 장치의 표시·연결·입력에만 한정한다.
 
 제조 에이전트는 단일 API 프로세스 내부 ThreadPoolExecutor로 실행한다. DB 상태·세대 번호로 실행 제어와 늦은 결과 폐기를 처리하고 재시작 시 진행 실행을 paused로 복구한다. 다중 인스턴스는 별도 분산 큐·잠금 구성이 필요하다. Ollama는 선택적 요약 서비스이고 실제 계산·작업 승인 권한은 API에 남는다. [상세 구조](MULTI-AGENT.md)를 참고한다.
+
+## 공용 공급망과 데이터 제품 경계
+
+app/supply/engine.py는 Decimal 기반 copy-on-write 원장 커널, supply/api.py는 권한·행 잠금·감사·outbox를 담당한다. Pages는 BigInt 커널로 동일한 업무 계약을 구현한다. industry.py는 표시·호환성만 관리한다. agent_widgets.py는 고정 스냅샷으로 선행 모듈을 한 번씩 실행하고 장치에는 게시 결과만 제공한다. integrations.py는 DB와 같은 트랜잭션의 outbox 및 export 계약을 제공하고 integration_plugins/가 선택형 SDK 호출을 격리한다. [상세 설계](INTEGRATIONS.md). 단일 JSON 원장은 파일럿 규모이며 정규화·분산 워커·외부 lakehouse 적재는 확장 경계다.

@@ -21,7 +21,7 @@ def test_signup_auto_login_then_logout_and_relogin(client,auth):
     assert client.get('/api/overview',headers=h).status_code==200
     assert client.post('/api/simulations',headers=h,json={}).status_code==201
     assert client.post('/api/models/train',headers=h,json={}).status_code==201
-    assert client.post('/api/robot-jobs',headers=h,json={'robot_id':'AMR-001','destination':'가공 A라인'}).status_code==201
+    assert client.post('/api/robot-jobs',headers=h,json={'robot_id':'AMR-001','destination':'제면 A라인'}).status_code==201
     assert client.get('/api/users',headers=h).status_code==403
     assert client.get('/api/audit',headers=h).status_code==403
     assert client.post('/api/recommendations/REC-SEED/decision',headers=h,json={'decision':'approve'}).status_code==403

@@ -1,6 +1,6 @@
 import catalog from "./catalog.json" with { type: "json" };
 import type { AgentHandler, AgentModule, AgentContext } from "./contracts.ts";
-import type { AgentFact } from "../agent-model";
+import type { AgentFact } from "../agent-model.ts";
 import { run as data } from "./data.ts";
 import { run as equipment } from "./equipment.ts";
 import { run as production } from "./production.ts";
@@ -14,6 +14,13 @@ import { run as robots } from "./robots.ts";
 import { run as physical } from "./physical.ts";
 import { run as panels } from "./panels.ts";
 import { run as cctv } from "./cctv.ts";
+import { run as inventory } from "./inventory.ts";
+import { run as classification } from "./classification.ts";
+import { run as warehouse } from "./warehouse.ts";
+import { run as lot } from "./lot.ts";
+import { run as bom } from "./bom.ts";
+import { run as noodles } from "./noodles.ts";
+import { run as soup } from "./soup.ts";
 const handlers: Record<string, AgentHandler> = {
   "data.inspect": data,
   "equipment.assess": equipment,
@@ -28,6 +35,13 @@ const handlers: Record<string, AgentHandler> = {
   "physical.inspect": physical,
   "panels.inspect": panels,
   "cctv.inspect": cctv,
+  "inventory.inspect": inventory,
+  "classification.inspect": classification,
+  "warehouse.inspect": warehouse,
+  "lot.inspect": lot,
+  "bom.inspect": bom,
+  "noodles.inspect": noodles,
+  "soup.inspect": soup,
 };
 export function executeModule(
   module: AgentModule,

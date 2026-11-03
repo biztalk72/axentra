@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "Full-cycle manufacturing AX MVP"
 requires-python = ">=3.12"
 dependencies = ["fastapi>=0.115,<1", "uvicorn[standard]>=0.34,<1", "sqlalchemy>=2.0,<3", "psycopg[binary]>=3.2,<4", "alembic>=1.14,<2", "prometheus-client>=0.21,<1"]
+[project.optional-dependencies]
+integrations = ["paho-mqtt==2.1.0", "confluent-kafka==2.16.1", "mcp>=1,<2"]
 [dependency-groups]
 dev = ["pytest>=8,<10", "httpx>=0.28,<1"]
 [tool.pytest.ini_options]

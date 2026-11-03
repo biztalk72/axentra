@@ -1,5 +1,5 @@
-import { demoApi, demoCSV } from "./demo";
-import { DemoAuthError } from "./demo-auth";
+import { demoApi, demoCSV } from "./demo.ts";
+import { DemoAuthError } from "./demo-auth.ts";
 export const STATIC_DEMO = import.meta.env.VITE_STATIC_DEMO === "true";
 export type User = {
   name: string;

@@ -1,4 +1,4 @@
-import type { AgentModule } from "./agent-modules/contracts";
+import type { AgentModule } from "./agent-modules/contracts.ts";
 export type AgentTask = {
   id: string;
   name: string;

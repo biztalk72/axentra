@@ -103,3 +103,24 @@ PanelConfig와 카메라 필드의 전체 스키마는 OpenAPI를 따른다. `su
 config는 name, description, enabled, depends, instruction, parameters이다. ID/기반 도구는 변경할 수 없다. 모듈은 최대 32개, 이전 구성은 최근 20개를 보관한다. 범위·순환/없는 의존성·중지된 선행 모듈은 422, 리비전 충돌은 409다. data는 항상 활성이다.
 
 `POST /api/agents/runs`에 `agent_ids:["cctv"]`를 추가하면 data·panels를 자동 포함한다. 생략하면 사용 중인 전체 모듈이다. 빈 배열·중복·없는 ID는 422. 실행 응답의 modules는 생성 당시 코드 버전·구성 리비전·기준·지침을 보관한다. 자세한 계약은 [모듈 가이드](AGENT-MODULES.md)를 따른다.
+
+## 공용 공급망·업종·위젯·연동
+
+| 경로 (/api 기준) | 권한 | 기능 |
+|---|---|---|
+| GET /supply | 조회자 이상 | 품목·위치·LOT·BOM·수불·배치 스냅샷 |
+| POST /supply/skus, /locations, /boms, /lot-status | 관리자 | 마스터·리비전·LOT 승인/차단 |
+| POST /supply/receipts, /transfers, /issues, /production | 운영자 이상 | event_id 멱등 수불·생산, 검증 실패 전체 롤백 |
+| POST /supply/production-preview | 조회자 이상 | BOM revision·수량 기반 FEFO 할당·부족량, 쓰기 없음 |
+| GET /supply/lots/{id}/trace | 조회자 이상 | 다단계 상·하위 계보 |
+| GET /industry | 조회자 이상 | 현재 업종 및 기본 템플릿 |
+| POST /industry | 관리자 | expected_revision/config, 데이터 보존 |
+| GET/POST /agent-widgets/layout | 로그인 사용자 | 개인 위젯 배치(최대 4개) |
+| GET /agent-widgets/results?line=A&ids=inventory,lot | 조회자 이상 | 읽기 전용 모듈 결과 |
+| GET /integrations/catalog | 조회자 이상 | 데이터 제품 8종·선택형 SDK 설치 상태 |
+| GET /integrations/export/{dataset}?after_id=0&limit=1000 | 조회자 이상 | manifest+rows; telemetry 커서 |
+| GET/POST /integrations/config | 관리자 | expected_revision/config, 비밀 값 대신 환경변수 참조 |
+| GET /integrations/events | 관리자 | outbox 최근 100건·상태별 건수 |
+| POST /integrations/dispatch | 관리자 | limit 1~5, 명시적 ACK 전송·실패 재시도 |
+
+단위/수량·권한·구성 예시는 [공급망](RAMEN-SUPPLY-CHAIN.md)과 [연동](INTEGRATIONS.md)을 참조한다. 상세 요청 스키마는 실행 중 /docs의 OpenAPI가 기준이다. 패널 config에는 agent_widgets: string[]과 template_id=agents를 사용할 수 있다. 일반 제조에서 라면 전용 신규 실행·설치는 422다. revision 충돌은 409, 금지된 작업은 403이다.

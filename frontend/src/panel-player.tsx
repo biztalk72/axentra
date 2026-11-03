@@ -1,3 +1,4 @@
+import { AgentWidgetCards } from "./agent-widgets";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -209,7 +210,10 @@ export function FloorBoard({
       setPending(false);
     }
   }
-  const cameras = config.camera_widget.enabled && screen.template !== "cctv";
+  const cameras =
+    config.camera_widget.enabled &&
+    screen.template !== "cctv" &&
+    screen.template !== "agents";
   const view = () => {
     if (screen.template === "production")
       return (
@@ -272,6 +276,15 @@ export function FloorBoard({
             ))}
           </div>
         </>
+      );
+    if (screen.template === "agents")
+      return snapshot.agent_widgets?.length ? (
+        <AgentWidgetCards results={snapshot.agent_widgets} floor />
+      ) : (
+        <section className="floor-card">
+          <h2>설치된 에이전트가 없습니다.</h2>
+          <p>패널 스튜디오에서 위젯 에이전트를 선택하세요.</p>
+        </section>
       );
     if (screen.template === "equipment")
       return (

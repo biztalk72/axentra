@@ -1,3 +1,7 @@
+import { IntegrationsPage } from "./integrations/page";
+import { SupplyPage } from "./supply/page";
+import { DashboardAgentWidgets } from "./agent-widgets";
+import { useIndustry, loadIndustry, lineLabel } from "./industry-context";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -56,6 +60,8 @@ import { PanelPlayer, panelRoute } from "./panel-player";
 import "./styles.css";
 
 type Page =
+  | "supply"
+  | "integrations"
   | "panels"
   | "cctv"
   | "overview"
@@ -88,6 +94,13 @@ const nav: {
     id: "orders",
     label: "생산 관리",
     en: "Manufacturing",
+    icon: Boxes,
+    group: "WORKSPACE",
+  },
+  {
+    id: "supply",
+    label: "공정·재고·창고",
+    en: "Supply Chain",
     icon: Boxes,
     group: "WORKSPACE",
   },
@@ -160,6 +173,13 @@ const nav: {
     en: "Line CCTV",
     icon: Video,
     group: "SHOPFLOOR EXPERIENCE",
+  },
+  {
+    id: "integrations",
+    label: "데이터 카탈로그·연동",
+    en: "Data Products",
+    icon: Database,
+    group: "SYSTEM",
   },
   {
     id: "settings",
@@ -348,21 +368,21 @@ function FactoryMap({
   large?: boolean;
 }) {
   const positions: Record<string, [number, number]> = {
-    "CNC-001": [128, 126],
-    "CNC-002": [254, 126],
-    "CNC-003": [380, 126],
-    "QC-001": [506, 126],
-    "ASM-001": [128, 276],
-    "ASM-002": [254, 276],
-    "WELD-001": [380, 276],
-    "PKG-001": [506, 276],
+    "NDL-MIX": [128, 126],
+    "NDL-SHEET": [254, 126],
+    "NDL-STEAM": [380, 126],
+    "NDL-PACK": [506, 126],
+    "SUP-BLEND": [128, 276],
+    "SUP-SIEVE": [254, 276],
+    "SUP-FILL": [380, 276],
+    "SUP-PACK": [506, 276],
   };
   return (
     <div className={`factory-map ${large ? "large" : ""}`}>
       <svg
         viewBox="0 0 680 420"
         role="img"
-        aria-label="부산 스마트팩토리 8개 설비 배치도. 설비를 선택하면 상태가 표시됩니다."
+        aria-label="FORGE 라면 스마트팩토리 8개 설비 배치도. 설비를 선택하면 상태가 표시됩니다."
       >
         <defs>
           <pattern
@@ -426,7 +446,7 @@ function FactoryMap({
           fill="#8091a7"
           letterSpacing="2"
         >
-          A LINE · MACHINING
+          A LINE · {lineLabel("A")}
         </text>
         <text
           x="62"
@@ -436,7 +456,7 @@ function FactoryMap({
           fill="#8091a7"
           letterSpacing="2"
         >
-          B LINE · ASSEMBLY & PACKAGING
+          B LINE · {lineLabel("B")}
         </text>
         <g transform="translate(300 202)">
           <rect width="28" height="25" rx="7" fill="#3b65ed" />
@@ -856,6 +876,7 @@ function Login({
   );
 }
 function App() {
+  const industry = useIndustry();
   const [user, setUser] = useState<User | null>(null);
   const [boot, setBoot] = useState(true);
   const [page, setPage] = useState<Page>(() => {
@@ -910,6 +931,7 @@ function App() {
   }, [notice]);
   useEffect(() => {
     if (!user) return;
+    void loadIndustry().catch(() => {});
     let alive = true;
     const load = () =>
       api<Overview>("/overview")
@@ -1005,7 +1027,7 @@ function App() {
             <Factory size={16} />
           </span>
           <div>
-            <b>부산 스마트팩토리</b>
+            <b>{industry.config.plant_name}</b>
             <small>Manufacturing workspace</small>
           </div>
           <span className="workspace-dot" />
@@ -1166,7 +1188,8 @@ function App() {
               <div className="context-bar">
                 <span>
                   <Factory size={14} />
-                  부산 1공장 <ChevronRight size={11} /> 전체 라인
+                  {industry.config.name} 1공장 <ChevronRight size={11} /> 전체
+                  라인
                 </span>
                 <div>
                   {overview.demo && (
@@ -1188,8 +1211,13 @@ function App() {
               {page === "overview" ? (
                 <>
                   <OverviewPage data={overview} go={go} refresh={refresh} />
+                  <DashboardAgentWidgets />
                   <DashboardCctv />
                 </>
+              ) : page === "integrations" ? (
+                <IntegrationsPage admin={admin} />
+              ) : page === "supply" ? (
+                <SupplyPage admin={admin} write={write} />
               ) : page === "panels" ? (
                 <PanelsPage write={write} admin={admin} />
               ) : page === "cctv" ? (
@@ -1567,12 +1595,9 @@ function OverviewPage({
                   {line}
                 </span>
                 <div className="line-detail">
-                  <strong>
-                    {line === "A" ? "정밀 가공 라인" : "조립 · 패키징 라인"}
-                  </strong>
+                  <strong>{lineLabel(line)}</strong>
                   <small>
-                    {assets.length}개 설비 ·{" "}
-                    {line === "A" ? "CNC / 비전 검사" : "조립 / 용접 / 포장"}
+                    {assets.length}개 설비 · {lineLabel(line)}
                   </small>
                 </div>
                 <div className="line-count">
@@ -1674,7 +1699,7 @@ function TwinPage({ data, query }: { data: Overview; query: string }) {
       <div className="twin-layout">
         <section className="panel">
           <div className="panel-header">
-            <h2>부산 1공장 · 생산동 1F</h2>
+            <h2>라면 1공장 · 생산동 1F</h2>
             <span className="live-label">
               <i />
               LIVE
@@ -2066,8 +2091,8 @@ function SimulatorPage({
             <label>
               생산 라인
               <select value={line} onChange={(e) => setLine(e.target.value)}>
-                <option value="A">A 라인 · 정밀 가공</option>
-                <option value="B">B 라인 · 조립 / 패키징</option>
+                <option value="A">{lineLabel("A")}</option>
+                <option value="B">{lineLabel("B")}</option>
               </select>
             </label>
             <label>
@@ -2324,7 +2349,7 @@ function AIPage({
   toast: (m: string, e?: boolean) => void;
 }) {
   const { rows, error } = useResources("model", revision);
-  const [asset, setAsset] = useState("CNC-003");
+  const [asset, setAsset] = useState("NDL-STEAM");
   const [metric, setMetric] = useState("temperature");
   const [inferences, setInferences] = useState<Record<string, Resource>>({});
   return (
@@ -2717,7 +2742,7 @@ function RobotPage({
   const robots = useResources("robot", revision);
   const jobs = useResources("job", revision);
   const [robot, setRobot] = useState("AMR-001");
-  const [destination, setDestination] = useState("가공 A라인");
+  const [destination, setDestination] = useState("제면 A라인");
   return (
     <>
       <SectionTitle
@@ -2776,7 +2801,7 @@ function RobotPage({
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
           >
-            {["자재 창고", "가공 A라인", "조립 B라인", "출하 구역"].map((d) => (
+            {["자재 창고", "제면 A라인", "스프 B라인", "출하 구역"].map((d) => (
               <option key={d}>{d}</option>
             ))}
           </select>
@@ -3395,7 +3420,7 @@ function CreateForm({
           placeholder={
             type === "order"
               ? "예: 모터 하우징 추가 생산"
-              : "예: 가공 A라인 게이트웨이"
+              : "예: 제면 A라인 게이트웨이"
           }
         />
       </label>
@@ -3433,7 +3458,7 @@ function CreateForm({
               required
               minLength={2}
               maxLength={100}
-              placeholder="예: 모터 하우징 M-240"
+              placeholder="예: 순한맛 봉지라면 120g"
             />
           </label>
           <div className="form-row">

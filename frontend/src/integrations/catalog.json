@@ -1,0 +1,137 @@
+[
+  {
+    "id": "stock",
+    "name": "위치·LOT 재고",
+    "owner": "warehouse-operations",
+    "grain": "lot_id + location_id",
+    "primary_key": ["lot_id", "location_id"],
+    "fields": {
+      "lot_id": "string",
+      "location_id": "string",
+      "quantity": "decimal(18,3)"
+    },
+    "lineage": ["lots", "movements"]
+  },
+  {
+    "id": "lots",
+    "name": "LOT 계보",
+    "owner": "quality-operations",
+    "grain": "lot_id",
+    "primary_key": ["id"],
+    "fields": {
+      "id": "string",
+      "sku_id": "string",
+      "code": "string",
+      "manufactured_on": "date?",
+      "expires_on": "date?",
+      "supplier": "string",
+      "parents": "string[]",
+      "status": "enum",
+      "revision": "integer"
+    },
+    "lineage": ["production", "movements"]
+  },
+  {
+    "id": "boms",
+    "name": "BOM 버전",
+    "owner": "production-engineering",
+    "grain": "BOM id + revision",
+    "primary_key": ["id", "revision"],
+    "fields": {
+      "id": "string",
+      "name": "string",
+      "product_sku_id": "string",
+      "output_quantity": "decimal(18,3)",
+      "components": "{sku_id,quantity}[]",
+      "revision": "integer"
+    },
+    "lineage": ["skus"]
+  },
+  {
+    "id": "movements",
+    "name": "재고 수불 원장",
+    "owner": "warehouse-operations",
+    "grain": "movement_id",
+    "primary_key": ["id"],
+    "fields": {
+      "id": "string",
+      "action": "enum",
+      "lot_id": "string",
+      "sku_id": "string",
+      "quantity": "decimal(18,3)",
+      "from_location": "string?",
+      "to_location": "string?",
+      "reference": "string",
+      "timestamp": "datetime UTC",
+      "batch_id": "string?"
+    },
+    "lineage": ["lots", "boms"]
+  },
+  {
+    "id": "production",
+    "name": "생산 배치·BOM 스냅샷",
+    "owner": "production-operations",
+    "grain": "batch_id",
+    "primary_key": ["batch_id"],
+    "fields": {
+      "batch_id": "string",
+      "lot_id": "string",
+      "movement_id": "string",
+      "bom_snapshot": "object",
+      "allocations": "object[]",
+      "quantity": "decimal(18,3)"
+    },
+    "lineage": ["boms", "lots"]
+  },
+  {
+    "id": "skus",
+    "name": "품목 마스터",
+    "owner": "master-data",
+    "grain": "sku_id",
+    "primary_key": ["id"],
+    "fields": {
+      "id": "string",
+      "name": "string",
+      "category": "enum",
+      "unit": "enum",
+      "min_stock": "decimal(18,3)",
+      "revision": "integer"
+    },
+    "lineage": []
+  },
+  {
+    "id": "locations",
+    "name": "창고·로케이션",
+    "owner": "warehouse-operations",
+    "grain": "location_id",
+    "primary_key": ["id"],
+    "fields": {
+      "id": "string",
+      "name": "string",
+      "warehouse": "string",
+      "zone": "string",
+      "allowed_categories": "string[]",
+      "revision": "integer"
+    },
+    "lineage": []
+  },
+  {
+    "id": "telemetry",
+    "name": "설비 수집 이벤트",
+    "owner": "manufacturing-operations",
+    "grain": "source + event_id",
+    "primary_key": ["source", "event_id"],
+    "fields": {
+      "id": "integer cursor",
+      "event_id": "string",
+      "source": "string",
+      "asset_id": "string",
+      "temperature": "number",
+      "vibration": "number",
+      "good": "integer",
+      "rejected": "integer",
+      "timestamp": "datetime UTC"
+    },
+    "lineage": ["assets"]
+  }
+]

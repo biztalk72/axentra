@@ -1,7 +1,7 @@
 from datetime import datetime, timezone, timedelta
 from app.db import SessionLocal, Resource
 
-def event(event_id='test-1',asset_id='CNC-001',**kwargs):
+def event(event_id='test-1',asset_id='NDL-MIX',**kwargs):
     return {'event_id':event_id,'asset_id':asset_id,'source':'test-edge','temperature':49,'vibration':1.2,'good':5,'rejected':0,**kwargs}
 
 def test_health_auth_expiry_and_logout(client,auth):
@@ -22,13 +22,13 @@ def test_roles_enforced_server_side(client,auth):
     assert client.post('/api/connectors',json={'name':'PLC','protocol':'OPC-UA','endpoint':'opc.tcp://localhost:4840'},headers=operator).status_code==403
 
 def test_ingest_idempotency_and_out_of_order(client,auth):
-    h=auth();before=next(a for a in client.get('/api/assets',headers=h).json() if a['id']=='CNC-001')
+    h=auth();before=next(a for a in client.get('/api/assets',headers=h).json() if a['id']=='NDL-MIX')
     response=client.post('/api/telemetry/batch',headers=h,json={'events':[event(),event()]})
     assert response.json()=={'accepted':1,'duplicates':1,'late':0}
     assert client.post('/api/telemetry/batch',headers=h,json={'events':[event()]}).json()['duplicates']==1
     old=datetime.now(timezone.utc)-timedelta(days=1)
     assert client.post('/api/telemetry/batch',headers=h,json={'events':[event('late',temperature=12,timestamp=old.isoformat())]}).json()['late']==1
-    after=next(a for a in client.get('/api/assets',headers=h).json() if a['id']=='CNC-001')
+    after=next(a for a in client.get('/api/assets',headers=h).json() if a['id']=='NDL-MIX')
     assert after['produced']==before['produced']+10
     assert after['temperature']==49
 
@@ -45,8 +45,8 @@ def test_anomaly_produces_explainable_recommendation(client,auth):
     h=auth()
     client.post('/api/telemetry/batch',headers=h,json={'events':[event(temperature=88)]})
     rec=client.get('/api/resources/recommendation',headers=h).json()
-    assert any(r['asset_id']=='CNC-001' and r['engine']=='threshold-rule-v1' for r in rec)
-    assert next(a for a in client.get('/api/assets',headers=h).json() if a['id']=='CNC-001')['status']=='warning'
+    assert any(r['asset_id']=='NDL-MIX' and r['engine']=='threshold-rule-v1' for r in rec)
+    assert next(a for a in client.get('/api/assets',headers=h).json() if a['id']=='NDL-MIX')['status']=='warning'
 
 def test_approval_atomic_exactly_one_task_and_audit(client,auth):
     h=auth();endpoint='/api/recommendations/REC-SEED/decision'
@@ -65,7 +65,7 @@ def test_rejection_does_not_create_work(client,auth):
 def test_simulator_and_dataset_flow(client,auth):
     h=auth();response=client.post('/api/simulations',headers=h,json={'cycle_reduction':15,'downtime':5,'hours':8,'defect_rate':1.5})
     assert response.status_code==201
-    s=response.json();assert s['bottleneck']=='CNC-003'
+    s=response.json();assert s['bottleneck']=='NDL-STEAM'
     assert s['optimized']>s['baseline']
     assert client.post('/api/simulations',headers=h,json={'cycle_reduction':101}).status_code==422
     d=client.post('/api/datasets',headers=h,json={'simulation_id':s['id'],'samples':35}).json()
@@ -90,18 +90,18 @@ def test_train_deploy_infer_and_archive(client,auth):
     assert next(x for x in models if x['id']==m['id'])['status']=='archived'
 
 def test_robot_job_state_machine(client,auth):
-    h=auth();payload={'robot_id':'AMR-001','destination':'가공 A라인'}
+    h=auth();payload={'robot_id':'AMR-001','destination':'제면 A라인'}
     job=client.post('/api/robot-jobs',headers=h,json=payload).json()
     assert job['status']=='running' and job['mode']=='virtual'
     assert client.post('/api/robot-jobs',headers=h,json=payload).status_code==409
     assert client.post(f'/api/robot-jobs/{job["id"]}/complete',headers=h).json()['status']=='completed'
     assert client.post(f'/api/robot-jobs/{job["id"]}/complete',headers=h).status_code==409
     robot=next(r for r in client.get('/api/resources/robot',headers=h).json() if r['name']=='AMR-001')
-    assert robot['status']=='idle' and robot['battery']==83 and robot['location']=='가공 A라인'
+    assert robot['status']=='idle' and robot['battery']==83 and robot['location']=='제면 A라인'
 
 def test_finished_goods_only_count_final_station(client,auth):
     h=auth();before=next(o for o in client.get('/api/resources/order',headers=h).json() if o['line']=='A' and o['status']=='running')['completed']
-    client.post('/api/telemetry/batch',headers=h,json={'events':[event('process'),event('final',asset_id='QC-001')]})
+    client.post('/api/telemetry/batch',headers=h,json={'events':[event('process'),event('final',asset_id='NDL-PACK')]})
     after=next(o for o in client.get('/api/resources/order',headers=h).json() if o['line']=='A' and o['status']=='running')['completed']
     assert after==before+5
 
@@ -151,7 +151,7 @@ def test_concurrent_robot_dispatch_postgresql(client,auth):
         pytest.skip('PostgreSQL row lock check')
     h=auth()
     def dispatch(_):
-        return client.post('/api/robot-jobs',headers=h,json={'robot_id':'AMR-001','destination':'가공 A라인'}).status_code
+        return client.post('/api/robot-jobs',headers=h,json={'robot_id':'AMR-001','destination':'제면 A라인'}).status_code
     with ThreadPoolExecutor(max_workers=2) as pool:
         assert sorted(pool.map(dispatch,range(2)))==[201,409]
     assert len(client.get('/api/resources/job',headers=h).json())==1

@@ -73,7 +73,7 @@ test("Pages demo supports the complete admin manufacturing workflow", async () =
     defect_rate: 1.5,
   });
   assert.ok(simulation.optimized > simulation.baseline);
-  assert.equal(simulation.bottleneck, "CNC-003");
+  assert.equal(simulation.bottleneck, "NDL-STEAM");
   const dataset = await request("/datasets", {
     simulation_id: simulation.id,
     samples: 20,
@@ -84,7 +84,7 @@ test("Pages demo supports the complete admin manufacturing workflow", async () =
   );
   const model = await request("/models/train", {
     name: "온도 감지",
-    asset_id: "CNC-003",
+    asset_id: "NDL-STEAM",
     metric: "temperature",
   });
   assert.equal(model.status, "trained");
@@ -107,7 +107,7 @@ test("Pages demo supports the complete admin manufacturing workflow", async () =
   );
   const job = await request("/robot-jobs", {
     robot_id: "AMR-001",
-    destination: "가공 A라인",
+    destination: "제면 A라인",
   });
   await assert.rejects(
     request("/robot-jobs", { robot_id: "AMR-001", destination: "출하 구역" }),
@@ -117,7 +117,7 @@ test("Pages demo supports the complete admin manufacturing workflow", async () =
     (row) => row.name === "AMR-001",
   );
   assert.equal(robot.battery, 83);
-  assert.equal(robot.location, "가공 A라인");
+  assert.equal(robot.location, "제면 A라인");
   assert.ok((await request("/audit")).length >= 8);
   assert.ok(demoCSV("/telemetry/export", auth).startsWith("id,asset_id"));
 });

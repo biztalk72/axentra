@@ -13,6 +13,7 @@ from .db import Resource, SessionLocal, User, get_db, now
 from .schemas import Input
 from .security import current_user, roles
 from .services import audit
+from .industry import industry
 
 router=APIRouter(prefix='/api/agents/modules',tags=['Agent modules'])
 registry_lock=threading.RLock()
@@ -47,8 +48,10 @@ def modules(db):
         saved=copy.deepcopy(row.data)
         template=next((m for m in CATALOG if m['tool']==saved['tool']),None)
         if template:
-            for key in ('version','category','parameter_specs'):saved[key]=copy.deepcopy(template[key])
+            for key in ('version','category','parameter_specs','industries','surfaces','data_products'):saved[key]=copy.deepcopy(template[key])
         items[saved['id']]=saved
+    current=industry(db)['config']['id']
+    for item in items.values():item['compatible']='common' in item.get('industries',['common']) or current in item.get('industries',[])
     return list(items.values())
 
 
@@ -86,13 +89,13 @@ def plan_modules(items,requested=None):
         raise HTTPException(422,'실행할 에이전트를 중복 없이 하나 이상 선택하세요.')
     def add(mid):
         if mid in visiting:raise HTTPException(422,'순환 의존성입니다.')
-        if mid not in graph or not graph[mid]['enabled']:raise HTTPException(422,'없거나 비활성화된 에이전트입니다.')
+        if mid not in graph or not graph[mid]['enabled'] or not graph[mid].get('compatible',True):raise HTTPException(422,'없거나 비활성화된 에이전트입니다.')
         if mid in selected:return
         visiting.add(mid)
         for dep in graph[mid]['depends']:add(dep)
         visiting.remove(mid);selected.add(mid)
     add('data')
-    for mid in requested if requested is not None else [m['id'] for m in items if m['enabled']]:add(mid)
+    for mid in requested if requested is not None else [m['id'] for m in items if m['enabled'] and m.get('compatible',True)]:add(mid)
     # Stable topological order, also used by the browser adapter.
     result=[]; pending=[m for m in items if m['id'] in selected]
     while pending:
@@ -151,5 +154,6 @@ def preview_module(mid:str,body:ModuleConfig,user:User=Depends(current_user),db:
     from .agents import source_context
     items=modules(db);base=next((m for m in items if m['id']==mid),None)
     if not base:raise HTTPException(404,'에이전트 모듈을 찾을 수 없습니다.')
+    if not base.get('compatible',True):raise HTTPException(422,'현재 업종에서 사용할 수 없는 에이전트입니다.')
     candidate=validate_module(module_candidate(base,body),items)
     return {'module_id':mid,'preview':True,'line_results':{line:execute(candidate,source_context(db,line),{}) for line in ('A','B')}}

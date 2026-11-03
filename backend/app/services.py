@@ -69,6 +69,9 @@ def ingest(db: Session, events):
         else:
             late+=1
         accepted+=1
+        if event.source not in ('demo-seed','demo-gateway'):
+            from .integrations import enqueue
+            enqueue(db,'manufacturing.telemetry',asset.id,{'event_id':event.event_id,'source':event.source,'asset_id':asset.id,'timestamp':timestamp,'temperature':event.temperature,'vibration':event.vibration,'good':event.good,'rejected':event.rejected})
         db.flush()
         # Count accepted production against the current active work order only.
         orders=db.scalars(select(Resource).where(Resource.category=='order',Resource.status=='running').order_by(Resource.created_at).with_for_update()).all()

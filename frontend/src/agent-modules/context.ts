@@ -1,5 +1,7 @@
-import type { ManufacturingSource } from "../panel-model";
-import type { AgentContext } from "./contracts";
+import { readSupply, publicSupply } from "../supply/demo.ts";
+import { readIndustry } from "../supply/industry-demo.ts";
+import type { ManufacturingSource } from "../panel-model.ts";
+import type { AgentContext } from "./contracts.ts";
 import { panelDemoInventory } from "../panel-demo.ts";
 export function captureContext(
   source: ManufacturingSource,
@@ -15,6 +17,8 @@ export function captureContext(
     simIds = new Set(simulations.map((r) => r.id));
   return structuredClone({
     line,
+    supply: publicSupply(readSupply()),
+    industry: readIndustry().config,
     captured_at: new Date().toISOString(),
     assets,
     events: source.events.filter((e) => ids.has(e.asset_id)).slice(-200),

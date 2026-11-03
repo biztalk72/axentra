@@ -1,3 +1,6 @@
+import { lineLabel } from "./industry-context";
+import { AgentWidgetPicker } from "./agent-widgets";
+import type { AgentModule } from "./agent-modules/contracts";
 import { useEffect, useState } from "react";
 import {
   ArrowDown,
@@ -48,6 +51,7 @@ export function PanelsPage({
 }) {
   const [rows, setRows] = useState<PanelRecord[]>([]),
     [cameras, setCameras] = useState<Camera[]>([]),
+    [agentModules, setAgentModules] = useState<AgentModule[]>([]),
     [selected, setSelected] = useState(""),
     [draft, setDraft] = useState<PanelConfig | null>(null),
     [line, setLine] = useState("all"),
@@ -89,6 +93,9 @@ export function PanelsPage({
   }
   useEffect(() => {
     void load();
+    void api<AgentModule[]>("/agents/modules")
+      .then(setAgentModules)
+      .catch(() => {});
     const timer = setInterval(() => {
       void api<PanelRecord[]>("/panels")
         .then(setRows)
@@ -265,8 +272,8 @@ export function PanelsPage({
         <div className="segmented">
           {[
             ["all", "전체 라인"],
-            ["A", "가공 A라인"],
-            ["B", "조립 B라인"],
+            ["A", lineLabel("A")],
+            ["B", lineLabel("B")],
           ].map(([id, label]) => (
             <button
               key={id}
@@ -558,8 +565,8 @@ export function PanelsPage({
                         })
                       }
                     >
-                      <option value="A">A · 정밀 가공</option>
-                      <option value="B">B · 조립 / 패키징</option>
+                      <option value="A">{lineLabel("A")}</option>
+                      <option value="B">{lineLabel("B")}</option>
                     </select>
                   </label>
                   <label>
@@ -793,6 +800,25 @@ export function PanelsPage({
                   ))}
                 </div>
               </section>
+              <section className="panel">
+                <div className="panel-header">
+                  <div>
+                    <h2>설치할 에이전트 위젯</h2>
+                    <p>
+                      최대 4개 선택 후 공용 에이전트 현황 화면을 재생 목록에
+                      추가하세요.
+                    </p>
+                  </div>
+                </div>
+                <div className="form-body">
+                  <AgentWidgetPicker
+                    modules={agentModules}
+                    selected={draft.agent_widgets || []}
+                    onChange={(ids) => patch({ agent_widgets: ids })}
+                    disabled={!write}
+                  />
+                </div>
+              </section>
               <section className="panel studio-camera-settings">
                 <div className="panel-header">
                   <div>
@@ -1008,6 +1034,7 @@ export function PanelsPage({
                     theme: draft.theme,
                     refresh_interval: draft.refresh_interval,
                     rotation_enabled: draft.rotation_enabled,
+                    agent_widgets: draft.agent_widgets || [],
                   },
                   `${targets.length}개 패널에 초안을 분배했습니다. 게시 후 현장에 반영됩니다.`,
                 );

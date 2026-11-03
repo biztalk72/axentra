@@ -15,7 +15,7 @@ from .security import roles, current_user, bearer
 from .services import add_resource, audit, asset_dict
 
 router=APIRouter(prefix='/api',tags=['Field panels & CCTV'])
-Template=Literal['production','equipment','quality','work-order','andon','logistics','notice','cctv']
+Template=Literal['production','equipment','quality','work-order','andon','logistics','notice','cctv','agents']
 
 class Screen(Input):
     id:str=Field(min_length=1,max_length=60,pattern=r'^[a-zA-Z0-9_-]+$')
@@ -48,6 +48,7 @@ class PanelConfig(Input):
     rotation_enabled:bool=True
     screens:list[Screen]=Field(min_length=1,max_length=12)
     camera_widget:CameraWidget=Field(default_factory=CameraWidget)
+    agent_widgets:list[str]=Field(default_factory=list,max_length=4)
     @field_validator('name','location')
     @classmethod
     def nonblank(cls,value):
@@ -66,6 +67,7 @@ class Target(Input):
     id:str
     expected_revision:int=Field(ge=1)
 class BulkLayout(Input):
+    agent_widgets:list[str]|None=Field(default=None,max_length=4)
     targets:list[Target]=Field(min_length=1,max_length=50)
     screens:list[Screen]=Field(min_length=1,max_length=12)
     theme:Literal['dark','light']
@@ -127,6 +129,9 @@ def panel_public(row):
     return {'id':row.id,'draft':data['draft'],'published':data.get('published'),'revision':data['revision'],'published_revision':data.get('published_revision',0),'published_at':data.get('published_at'),'last_seen':last,'active_screen_id':data.get('active_screen_id'),'runtime_revision':data.get('runtime_revision'),'connection':'online' if online else 'offline' if last else 'unpaired','has_device_key':bool(data.get('device_token_hash')),'device_expires_at':data.get('device_expires_at')}
 
 def validate_config(db,config):
+    from .agent_widgets import validate_widgets
+    if len(set(config.agent_widgets))!=len(config.agent_widgets):raise HTTPException(422,'에이전트 위젯을 중복 선택할 수 없습니다.')
+    validate_widgets(db,config.agent_widgets)
     if not db.scalar(select(Asset.id).where(Asset.line==config.line).limit(1)):
         raise HTTPException(422,'이 라인에는 등록된 설비가 없습니다.')
     cameras={r.id:r for r in camera_rows(db)}
@@ -144,19 +149,33 @@ def initialize_field_devices():
         if not db.scalar(select(Resource.id).where(Resource.category=='camera').limit(1)):
             for line in ('A','B'):
                 for i in (1,2):
-                    config=CameraConfig(name=f'{line}라인 · {"가공 구역" if i==1 else "검사·이송 구역"}',line=line,location=f'생산동 {line}-{i:02d}').model_dump()
+                    config=CameraConfig(name=f'{line}라인 · {("제면 구역" if line=="A" else "스프 배합 구역") if i==1 else "포장·이송 구역"}',line=line,location=f'생산동 {line}-{i:02d}').model_dump()
                     db.add(Resource(id=f'CAM-{line}-{i:02d}',category='camera',name=config['name'],status='configured',data={**config,'revision':1}))
         if not db.scalar(select(Resource.id).where(Resource.category=='panel').limit(1)):
             for line in ('A','B'):
                 for mode in ('tv','touch'):
-                    templates=['production','equipment','quality'] if mode=='tv' else ['work-order','andon','logistics']
-                    screens=[Screen(id=f'screen-{t}',template=t,title={'production':'생산 현황','equipment':'설비 모니터링','quality':'품질 현황','work-order':'작업지시','andon':'현장 지원 요청','logistics':'물류 현황'}[t],duration=20).model_dump() for t in templates]
-                    config=PanelConfig(name=f'{line}라인 {"생산 전광판" if mode=="tv" else "작업자 터치 패널"}',line=line,location=f'생산동 {line}라인 · {"입구" if mode=="tv" else "작업 셀"}',mode=mode,resolution='1920x1080' if mode=='tv' else '1280x800',rotation_enabled=mode=='tv',screens=screens,camera_widget=CameraWidget(enabled=mode=='tv',camera_ids=[f'CAM-{line}-01',f'CAM-{line}-02'])).model_dump()
+                    templates=['production','equipment','quality','agents'] if mode=='tv' else ['work-order','andon','logistics']
+                    screens=[Screen(id=f'screen-{t}',template=t,title={'production':'생산 현황','equipment':'설비 모니터링','quality':'품질 현황','work-order':'작업지시','andon':'현장 지원 요청','logistics':'물류 현황','agents':'공용 에이전트 현황'}[t],duration=20).model_dump() for t in templates]
+                    config=PanelConfig(agent_widgets=['inventory','warehouse','lot','bom'] if mode=='tv' else [],name=f'{line}라인 {"생산 전광판" if mode=="tv" else "작업자 터치 패널"}',line=line,location=f'생산동 {line}라인 · {"입구" if mode=="tv" else "작업 셀"}',mode=mode,resolution='1920x1080' if mode=='tv' else '1280x800',rotation_enabled=mode=='tv',screens=screens,camera_widget=CameraWidget(enabled=mode=='tv',camera_ids=[f'CAM-{line}-01',f'CAM-{line}-02'])).model_dump()
                     db.add(Resource(id=f'PANEL-{line}-{mode.upper()}',category='panel',name=config['name'],status='published',data={'draft':config,'published':copy.deepcopy(config),'revision':1,'published_revision':1,'published_at':now()}))
+        for row in db.scalars(select(Resource).where(Resource.category=='panel',Resource.id.in_(['PANEL-A-TV','PANEL-B-TV']))).all():
+            data=copy.deepcopy(row.data)
+            if data.get('agent_widgets_migrated'):continue
+            for kind in ('draft','published'):
+                config=data.get(kind)
+                if config and not any(s['template']=='agents' for s in config['screens']) and len(config['screens'])<12:
+                    config['screens'].append(Screen(id='screen-agents',template='agents',title='공용 에이전트 현황').model_dump());config['agent_widgets']=['inventory','warehouse','lot','bom']
+                    data['revision' if kind=='draft' else 'published_revision']+=1
+            data['agent_widgets_migrated']=True;row.data=data
+        for camera in camera_rows(db):
+            if '가공 구역' in camera.name:
+                name=camera.name.replace('가공 구역','제면 구역' if camera.data['line']=='A' else '스프 배합 구역');camera.name=name;camera.data={**camera.data,'name':name}
         db.commit()
 
 
 def snapshot(db,config,panel_id,revision,source):
+    from .agent_widgets import widget_results
+    from .industry import industry
     assets=db.scalars(select(Asset).where(Asset.line==config['line']).order_by(Asset.id)).all()
     ids=[a.id for a in assets]
     events=db.scalars(select(Telemetry).where(Telemetry.asset_id.in_(ids)).order_by(Telemetry.id.desc()).limit(300)).all()
@@ -172,7 +191,7 @@ def snapshot(db,config,panel_id,revision,source):
         item['good']+=event.good;item['rejected']+=event.rejected
     simple=lambda r:{'id':r.id,'name':r.name,'status':r.status,'created_at':r.created_at,**r.data}
     cameras=[camera_public(r) for r in camera_rows(db) if r.data['enabled'] and r.data['line']==config['line'] and r.id in config['camera_widget']['camera_ids']]
-    return {'panel_id':panel_id,'config':config,'revision':revision,'source':source,'assets':[asset_dict(a) for a in assets],'orders':[simple(r) for r in orders],'alerts':[simple(r) for r in alerts],'robots':[simple(r) for r in rows if r.category=='robot'],'jobs':[simple(r) for r in rows if r.category=='job' and r.data.get('destination')==('가공 A라인' if config['line']=='A' else '조립 B라인')],'events':[simple(r) for r in sorted(rows,key=lambda r:r.created_at,reverse=True) if r.category=='panel_event' and r.data.get('line')==config['line']][:10],'series':list(buckets.values())[-24:],'cameras':cameras,'server_time':now(),'last_data_at':max((a.updated_at for a in assets),default=None)}
+    return {'panel_id':panel_id,'industry':industry(db)['config'],'agent_widgets':widget_results(db,config['line'],config.get('agent_widgets',[])),'config':config,'revision':revision,'source':source,'assets':[asset_dict(a) for a in assets],'orders':[simple(r) for r in orders],'alerts':[simple(r) for r in alerts],'robots':[simple(r) for r in rows if r.category=='robot'],'jobs':[simple(r) for r in rows if r.category=='job' and r.data.get('destination')==('제면 A라인' if config['line']=='A' else '스프 B라인')],'events':[simple(r) for r in sorted(rows,key=lambda r:r.created_at,reverse=True) if r.category=='panel_event' and r.data.get('line')==config['line']][:10],'series':list(buckets.values())[-24:],'cameras':cameras,'server_time':now(),'last_data_at':max((a.updated_at for a in assets),default=None)}
 
 
 def device_or_user(db,row,credentials,write=False):
@@ -242,7 +261,7 @@ def bulk_layout(body:BulkLayout,user:User=Depends(roles('admin','operator')),db:
     for target in sorted(body.targets,key=lambda t:t.id):
         row=panel_row(db,target.id,True)
         if row.data['revision']!=target.expected_revision:raise HTTPException(409,'대상 패널의 설정이 변경되었습니다. 전체 분배를 취소했습니다.')
-        config=PanelConfig.model_validate({**row.data['draft'],'screens':[s.model_dump() for s in body.screens],'theme':body.theme,'refresh_interval':body.refresh_interval,'rotation_enabled':body.rotation_enabled})
+        config=PanelConfig.model_validate({**row.data['draft'],'screens':[s.model_dump() for s in body.screens],'theme':body.theme,'refresh_interval':body.refresh_interval,'rotation_enabled':body.rotation_enabled,**({'agent_widgets':body.agent_widgets} if body.agent_widgets is not None else {})})
         validate_config(db,config)
         row.data={**row.data,'draft':config.model_dump(),'revision':row.data['revision']+1}
         result.append(row)

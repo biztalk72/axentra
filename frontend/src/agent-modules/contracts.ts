@@ -1,5 +1,7 @@
-import type { AgentFact } from "../agent-model";
-import type { Asset, Resource } from "../api";
+import type { SupplyState } from "../supply/types.ts";
+import type { IndustryProfile } from "../supply/industry-demo.ts";
+import type { AgentFact } from "../agent-model.ts";
+import type { Asset, Resource } from "../api.ts";
 export type AgentModule = {
   id: string;
   name: string;
@@ -19,6 +21,10 @@ export type AgentModule = {
     max: number;
     step: number;
   }[];
+  industries?: string[];
+  surfaces?: string[];
+  data_products?: string[];
+  compatible?: boolean;
   builtin: boolean;
   revision: number;
   template_id?: string;
@@ -31,6 +37,8 @@ export type AgentModuleConfig = Pick<
 >;
 export type AgentContext = {
   line: string;
+  supply?: SupplyState;
+  industry?: IndustryProfile;
   captured_at: string;
   assets: Asset[];
   events: { asset_id: string }[];

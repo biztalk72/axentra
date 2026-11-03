@@ -1,0 +1,358 @@
+{
+  "skus": [
+    {
+      "id": "FLOUR",
+      "name": "밀가루",
+      "category": "raw",
+      "unit": "kg",
+      "min_stock": "200"
+    },
+    {
+      "id": "STARCH",
+      "name": "전분",
+      "category": "raw",
+      "unit": "kg",
+      "min_stock": "50"
+    },
+    {
+      "id": "OIL",
+      "name": "식용유",
+      "category": "raw",
+      "unit": "kg",
+      "min_stock": "20"
+    },
+    {
+      "id": "SALT",
+      "name": "정제소금",
+      "category": "raw",
+      "unit": "kg",
+      "min_stock": "10"
+    },
+    {
+      "id": "SPICE",
+      "name": "분말 조미 원료",
+      "category": "raw",
+      "unit": "kg",
+      "min_stock": "30"
+    },
+    {
+      "id": "VEG",
+      "name": "건조 채소",
+      "category": "raw",
+      "unit": "kg",
+      "min_stock": "10"
+    },
+    {
+      "id": "NOODLE",
+      "name": "면 반제품",
+      "category": "wip",
+      "unit": "kg",
+      "min_stock": "50"
+    },
+    {
+      "id": "SOUP",
+      "name": "혼합 스프 벌크",
+      "category": "wip",
+      "unit": "kg",
+      "min_stock": "10"
+    },
+    {
+      "id": "SOUP-PACK",
+      "name": "분말스프 소포장",
+      "category": "wip",
+      "unit": "ea",
+      "min_stock": "1000"
+    },
+    {
+      "id": "FILM",
+      "name": "라면 포장 필름",
+      "category": "packaging",
+      "unit": "ea",
+      "min_stock": "2000"
+    },
+    {
+      "id": "SOUP-FILM",
+      "name": "스프 포장 필름",
+      "category": "packaging",
+      "unit": "ea",
+      "min_stock": "2000"
+    },
+    {
+      "id": "CARTON",
+      "name": "출하 박스",
+      "category": "packaging",
+      "unit": "box",
+      "min_stock": "100"
+    },
+    {
+      "id": "RAMEN",
+      "name": "순한맛 봉지라면",
+      "category": "finished",
+      "unit": "ea",
+      "min_stock": "500"
+    },
+    {
+      "id": "RAMEN-BOX",
+      "name": "라면 출하 박스 (20입)",
+      "category": "finished",
+      "unit": "box",
+      "min_stock": "20"
+    }
+  ],
+  "locations": [
+    {
+      "id": "RAW-01",
+      "warehouse": "원료 창고",
+      "zone": "분체 구역",
+      "name": "원료 적치 A-01",
+      "allowed_categories": [
+        "raw"
+      ]
+    },
+    {
+      "id": "RAW-02",
+      "warehouse": "원료 창고",
+      "zone": "액상 구역",
+      "name": "원료 적치 A-02",
+      "allowed_categories": [
+        "raw"
+      ]
+    },
+    {
+      "id": "WIP-01",
+      "warehouse": "공정 창고",
+      "zone": "반제품 구역",
+      "name": "반제품 랙 B-01",
+      "allowed_categories": [
+        "wip"
+      ]
+    },
+    {
+      "id": "PKG-01",
+      "warehouse": "포장재 창고",
+      "zone": "포장재 구역",
+      "name": "포장재 랙 C-01",
+      "allowed_categories": [
+        "packaging"
+      ]
+    },
+    {
+      "id": "FG-01",
+      "warehouse": "완제품 창고",
+      "zone": "출하 대기",
+      "name": "완제품 랙 D-01",
+      "allowed_categories": [
+        "finished"
+      ]
+    },
+    {
+      "id": "QC-01",
+      "warehouse": "검사 대기 창고",
+      "zone": "격리 구역",
+      "name": "보류 LOT 구역",
+      "allowed_categories": [
+        "raw",
+        "wip",
+        "finished",
+        "packaging"
+      ]
+    }
+  ],
+  "boms": [
+    {
+      "product_sku_id": "NOODLE",
+      "name": "면 반제품 기본 배합",
+      "output_quantity": "100",
+      "components": [
+        {
+          "sku_id": "FLOUR",
+          "quantity": "80"
+        },
+        {
+          "sku_id": "STARCH",
+          "quantity": "15"
+        },
+        {
+          "sku_id": "OIL",
+          "quantity": "3"
+        },
+        {
+          "sku_id": "SALT",
+          "quantity": "2"
+        }
+      ]
+    },
+    {
+      "product_sku_id": "SOUP",
+      "name": "스프 벌크 기본 배합",
+      "output_quantity": "10",
+      "components": [
+        {
+          "sku_id": "SPICE",
+          "quantity": "8"
+        },
+        {
+          "sku_id": "SALT",
+          "quantity": "1"
+        },
+        {
+          "sku_id": "VEG",
+          "quantity": "1"
+        }
+      ]
+    },
+    {
+      "product_sku_id": "SOUP-PACK",
+      "name": "스프 정량 소포장",
+      "output_quantity": "1000",
+      "components": [
+        {
+          "sku_id": "SOUP",
+          "quantity": "10"
+        },
+        {
+          "sku_id": "SOUP-FILM",
+          "quantity": "1000"
+        }
+      ]
+    },
+    {
+      "product_sku_id": "RAMEN",
+      "name": "봉지라면 조립·포장",
+      "output_quantity": "1000",
+      "components": [
+        {
+          "sku_id": "NOODLE",
+          "quantity": "90"
+        },
+        {
+          "sku_id": "SOUP-PACK",
+          "quantity": "1000"
+        },
+        {
+          "sku_id": "FILM",
+          "quantity": "1000"
+        }
+      ]
+    },
+    {
+      "product_sku_id": "RAMEN-BOX",
+      "name": "라면 20입 출하 포장",
+      "output_quantity": "1",
+      "components": [
+        {
+          "sku_id": "RAMEN",
+          "quantity": "20"
+        },
+        {
+          "sku_id": "CARTON",
+          "quantity": "1"
+        }
+      ]
+    }
+  ],
+  "receipts": [
+    {
+      "sku_id": "FLOUR",
+      "quantity": "1500",
+      "to_location": "RAW-01",
+      "lot_code": "FLOUR-DEMO-01",
+      "expires_in_days": 90
+    },
+    {
+      "sku_id": "STARCH",
+      "quantity": "300",
+      "to_location": "RAW-01",
+      "lot_code": "STARCH-DEMO-01",
+      "expires_in_days": 120
+    },
+    {
+      "sku_id": "OIL",
+      "quantity": "100",
+      "to_location": "RAW-02",
+      "lot_code": "OIL-DEMO-01",
+      "expires_in_days": 60
+    },
+    {
+      "sku_id": "SALT",
+      "quantity": "100",
+      "to_location": "RAW-01",
+      "lot_code": "SALT-DEMO-01",
+      "expires_in_days": 365
+    },
+    {
+      "sku_id": "SPICE",
+      "quantity": "160",
+      "to_location": "RAW-01",
+      "lot_code": "SPICE-DEMO-01",
+      "expires_in_days": 90
+    },
+    {
+      "sku_id": "VEG",
+      "quantity": "60",
+      "to_location": "RAW-01",
+      "lot_code": "VEG-DEMO-01",
+      "expires_in_days": 45
+    },
+    {
+      "sku_id": "FILM",
+      "quantity": "30000",
+      "to_location": "PKG-01",
+      "lot_code": "FILM-DEMO-01",
+      "expires_in_days": 365
+    },
+    {
+      "sku_id": "SOUP-FILM",
+      "quantity": "30000",
+      "to_location": "PKG-01",
+      "lot_code": "SOUP-FILM-DEMO-01",
+      "expires_in_days": 365
+    },
+    {
+      "sku_id": "CARTON",
+      "quantity": "1000",
+      "to_location": "PKG-01",
+      "lot_code": "CARTON-DEMO-01",
+      "expires_in_days": 365
+    },
+    {
+      "sku_id": "FLOUR",
+      "quantity": "50",
+      "to_location": "QC-01",
+      "lot_code": "FLOUR-DEMO-HOLD",
+      "expires_in_days": 5
+    }
+  ],
+  "production": [
+    {
+      "product": "NOODLE",
+      "quantity": "500",
+      "to_location": "WIP-01",
+      "expires_in_days": 10
+    },
+    {
+      "product": "SOUP",
+      "quantity": "100",
+      "to_location": "WIP-01",
+      "expires_in_days": 30
+    },
+    {
+      "product": "SOUP-PACK",
+      "quantity": "5000",
+      "to_location": "WIP-01",
+      "expires_in_days": 30
+    },
+    {
+      "product": "RAMEN",
+      "quantity": "2000",
+      "to_location": "FG-01",
+      "expires_in_days": 90
+    },
+    {
+      "product": "RAMEN-BOX",
+      "quantity": "40",
+      "to_location": "FG-01",
+      "expires_in_days": 90
+    }
+  ]
+}

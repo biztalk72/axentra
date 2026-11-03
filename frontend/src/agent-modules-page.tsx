@@ -1,3 +1,4 @@
+import { useIndustry } from "./industry-context";
 import { useEffect, useState } from "react";
 import {
   Bot,
@@ -29,6 +30,8 @@ export function AgentModulesPage({
   onChanged: () => void;
   onRun: (id: string) => void;
 }) {
+  const industry = useIndustry();
+  const [scope, setScope] = useState("all");
   const [items, setItems] = useState<AgentModule[]>([]),
     [selected, setSelected] = useState("equipment"),
     [draft, setDraft] = useState<AgentModuleConfig | null>(null),
@@ -154,6 +157,27 @@ export function AgentModulesPage({
           구성 리비전 고정
         </span>
       </div>
+      <div className="field-toolbar">
+        <div className="segmented">
+          {[
+            ["all", "전체 카탈로그"],
+            ["common", "업종 공통"],
+            ["ramen", "라면 전용"],
+          ].map(([id, label]) => (
+            <button
+              key={id}
+              className={scope === id ? "selected" : ""}
+              onClick={() => setScope(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <span className="field-dialog-description">
+          현재 업종: {industry.config.name} · 공통 에이전트는 업종 전환 후에도
+          재사용합니다.
+        </span>
+      </div>
       <div className="module-studio">
         <aside className="module-library">
           <div className="module-search">
@@ -173,6 +197,7 @@ export function AgentModulesPage({
             </button>
           </div>
           {items
+            .filter((m) => scope === "all" || m.industries?.includes(scope))
             .filter((m) =>
               (m.name + m.category + m.id)
                 .toLowerCase()
@@ -196,11 +221,22 @@ export function AgentModulesPage({
                   <small>{m.category}</small>
                   <b>{m.name}</b>
                   <em>
-                    {m.tool} · v{m.revision}
+                    {m.industries?.includes("common")
+                      ? "업종 공통"
+                      : "라면 전용"}{" "}
+                    · v{m.revision}
                   </em>
                 </span>
-                <i className={m.enabled ? "enabled" : "disabled"}>
-                  {m.enabled ? "사용" : "중지"}
+                <i
+                  className={
+                    m.enabled && m.compatible !== false ? "enabled" : "disabled"
+                  }
+                >
+                  {m.compatible === false
+                    ? "업종 외"
+                    : m.enabled
+                      ? "사용"
+                      : "중지"}
                 </i>
               </button>
             ))}
@@ -222,7 +258,13 @@ export function AgentModulesPage({
                 <div className="agent-run-actions">
                   <button
                     className="btn small-btn"
-                    disabled={busy || !write || !current.enabled || dirty}
+                    disabled={
+                      busy ||
+                      !write ||
+                      !current.enabled ||
+                      current.compatible === false ||
+                      dirty
+                    }
                     onClick={() => onRun(current.id)}
                   >
                     <Play size={13} />
@@ -544,7 +586,7 @@ export function AgentModulesPage({
                 minLength={2}
                 maxLength={80}
                 value={newName}
-                placeholder="예: 정밀 가공 설비 에이전트"
+                placeholder="예: 제면·포장 설비 에이전트"
                 onChange={(e) => setNewName(e.target.value)}
               />
             </label>

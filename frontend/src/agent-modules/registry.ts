@@ -1,3 +1,4 @@
+import { readIndustry } from "../supply/industry-demo.ts";
 import catalog from "./catalog.json" with { type: "json" };
 import type { AgentModule, AgentModuleConfig } from "./contracts.ts";
 const KEY = "forge-ax-agent-modules-v1";
@@ -22,11 +23,21 @@ export function readModules(): AgentModule[] {
             version: template.version,
             category: template.category,
             parameter_specs: structuredClone(template.parameter_specs),
+            industries: template.industries,
+            surfaces: template.surfaces,
+            data_products: template.data_products,
           }
         : m,
     );
   });
-  return [...map.values()];
+  const profile = readIndustry().config.id;
+  return [...map.values()].map((m) => ({
+    ...m,
+    compatible:
+      (m.industries || ["common"]).includes("common") ||
+      m.industries?.includes(profile) ||
+      false,
+  }));
 }
 export function editable(m: AgentModule): AgentModuleConfig {
   return {
@@ -122,7 +133,8 @@ export function planModules(
     visiting = new Set<string>();
   const add = (id: string) => {
     const m = graph.get(id);
-    if (!m || !m.enabled) throw new Error("없거나 비활성화된 에이전트입니다.");
+    if (!m || !m.enabled || m.compatible === false)
+      throw new Error("없거나 비활성화된 에이전트입니다.");
     if (visiting.has(id)) throw new Error("순환 의존성입니다.");
     if (selected.has(id)) return;
     visiting.add(id);
@@ -131,7 +143,10 @@ export function planModules(
     selected.add(id);
   };
   add("data");
-  (requested || items.filter((m) => m.enabled).map((m) => m.id)).forEach(add);
+  (
+    requested ||
+    items.filter((m) => m.enabled && m.compatible !== false).map((m) => m.id)
+  ).forEach(add);
   const result: AgentModule[] = [];
   let pending = items.filter((m) => selected.has(m.id));
   while (pending.length) {

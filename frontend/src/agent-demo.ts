@@ -1,5 +1,6 @@
-import type { ManufacturingSource } from "./panel-model";
-import type { BrowserDemoAuth } from "./demo-auth";
+import ramenAssetCatalog from "./supply/assets.json" with { type: "json" };
+import type { ManufacturingSource } from "./panel-model.ts";
+import type { BrowserDemoAuth } from "./demo-auth.ts";
 import {
   assertConfigKeys,
   builtinModules,
@@ -12,9 +13,9 @@ import {
 import { executeModule } from "./agent-modules/index.ts";
 import { captureContext } from "./agent-modules/context.ts";
 import type { AgentContext, AgentModule } from "./agent-modules/contracts.ts";
-import type { AgentRun, AgentConfig } from "./agent-model";
+import type { AgentRun, AgentConfig } from "./agent-model.ts";
 import { panelDemoInventory } from "./panel-demo.ts";
-import type { Resource } from "./api";
+import type { Resource } from "./api.ts";
 const KEY = "forge-ax-manufacturing-agents-v1";
 type StoredRun = AgentRun & {
   context: AgentContext;
@@ -79,6 +80,13 @@ export async function agentDemoRequest<T>(
     return structuredClone(rest);
   };
   const execute = (run: StoredRun) => {
+    if (
+      !run.context.industry &&
+      run.context.assets.some((a) =>
+        ramenAssetCatalog.some((t) => t.legacy_id === a.id),
+      )
+    )
+      throw new Error("업종 전환 이전 실행입니다. 새 진단을 시작하세요.");
     const began = performance.now();
     run.status = "running";
     run.blackboard = {
@@ -176,6 +184,8 @@ export async function agentDemoRequest<T>(
       const items = readModules(),
         base = items.find((m) => m.id === mid);
       if (!base) throw new Error("모듈을 찾을 수 없습니다.");
+      if (base.compatible === false)
+        throw new Error("현재 업종에서 사용할 수 없는 에이전트입니다.");
       const module = validateModule({ ...base, ...body }, items);
       result = {
         module_id: mid,
@@ -218,6 +228,7 @@ export async function agentDemoRequest<T>(
     )
       throw new Error("라인과 진단 목표(5~500자)를 확인하세요.");
     const frozen = planModules(readModules(), body.agent_ids) as AgentModule[];
+    const captured = captureContext(source, body.line);
     const inventory = panelDemoInventory(),
       lineAssets = source.assets.filter((a) => a.line === body.line),
       nodes = [
@@ -230,6 +241,34 @@ export async function agentDemoRequest<T>(
           .filter((c) => c.line === body.line)
           .map((c) => ({ id: c.id, label: c.name, kind: "camera" })),
       ];
+    const edges = nodes
+      .slice(1)
+      .map((n) => ({
+        source: "LINE-" + body.line,
+        target: n.id,
+        relation: "contains",
+      }));
+    if (captured.supply) {
+      nodes.push({
+        id: "SUPPLY-SHARED",
+        label: "공장 공용 공급망",
+        kind: "shared",
+      });
+      for (const category of ["skus", "locations", "lots", "boms"] as const) {
+        for (const item of captured.supply[category]) {
+          nodes.push({
+            id: item.id,
+            label: "name" in item ? item.name : item.code,
+            kind: category,
+          });
+          edges.push({
+            source: "SUPPLY-SHARED",
+            target: item.id,
+            relation: "references",
+          });
+        }
+      }
+    }
     const run: StoredRun = {
       id: "RUN-" + crypto.randomUUID().slice(0, 8),
       name: body.goal,
@@ -241,7 +280,7 @@ export async function agentDemoRequest<T>(
       concurrency: db.concurrency,
       created_at: now(),
       created_by: user.email,
-      context: captureContext(source, body.line),
+      context: captured,
       modules: structuredClone(frozen.map((m) => ({ ...m, history: [] }))),
       recommendation_ids: [],
       tasks: [
@@ -281,11 +320,7 @@ export async function agentDemoRequest<T>(
       approvals: [],
       knowledge_graph: {
         nodes,
-        edges: nodes.slice(1).map((n) => ({
-          source: "LINE-" + body.line,
-          target: n.id,
-          relation: "contains",
-        })),
+        edges,
       },
     };
     db.runs.unshift(run);

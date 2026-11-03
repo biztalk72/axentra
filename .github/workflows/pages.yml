@@ -47,6 +47,11 @@ jobs:
           .venv/bin/python -c 'from app.db import Base, engine; Base.metadata.drop_all(engine)'
           .venv/bin/alembic upgrade head
           .venv/bin/alembic current
+      - name: Optional MQTT Kafka MCP SDK compatibility
+        run: |
+          uv sync --directory backend --frozen --extra integrations
+          cd backend
+          .venv/bin/python -m pytest -q tests/test_optional_plugins.py
   build:
     runs-on: ubuntu-latest
     steps:

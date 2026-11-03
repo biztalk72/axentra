@@ -9,10 +9,10 @@ def test_multi_agent_line_diagnosis_and_human_approval(client,auth):
     rid=response.json()['id'];run=client.get('/api/agents/runs/'+rid,headers=h).json()
     assert run['status']=='awaiting_approval',run
     assert 'context' not in run
-    assert len(run['tasks'])==16
+    assert len(run['tasks'])==23
     assert all(run['blackboard'].get(role) for role in ['planner','data','equipment','production','quality','logistics','main'])
-    assert run['blackboard']['equipment']['maintenance_assets']==['CNC-003']
-    assert all(a['id'] not in ['ASM-001','ASM-002'] for a in run['knowledge_graph']['nodes'])
+    assert run['blackboard']['equipment']['maintenance_assets']==['NDL-STEAM']
+    assert all(a['id'] not in ['SUP-BLEND','SUP-SIEVE'] for a in run['knowledge_graph']['nodes'])
     assert len(run['traces'])>=5
     assert run['blackboard']['production']['metrics']['scenario_ea']>run['blackboard']['production']['metrics']['baseline_ea']
     approval=run['approvals'][0]
@@ -60,7 +60,7 @@ def test_optional_llm_adapter_with_reported_usage(client,auth,monkeypatch):
     monkeypatch.setattr(agents.urllib.request,'urlopen',respond)
     h=auth();rid=client.post('/api/agents/runs',headers=h,json={'goal':'로컬 모델과 함께 라인 상태 진단','line':'B','mode':'ollama'}).json()['id']
     result=client.get('/api/agents/runs/'+rid,headers=h).json()
-    assert result['status']=='completed' and len(calls)==12
+    assert result['status']=='completed' and len(calls)==19
     assert result['blackboard']['quality']['llm']['output_tokens']==12
     assert client.post('/api/agents/runs',headers=auth('operator'),json={'goal':'권한이 없는 모델 실행','line':'B','mode':'ollama'}).status_code==403
 

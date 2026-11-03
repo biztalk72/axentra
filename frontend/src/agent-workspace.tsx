@@ -1,3 +1,4 @@
+import { lineLabel } from "./industry-context";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import {
@@ -268,7 +269,9 @@ export function AgentWorkspace({
               <Bot size={17} />
               <b>
                 기능 에이전트 ×{" "}
-                {config?.roles?.filter((m) => m.enabled).length || 0}
+                {config?.roles?.filter(
+                  (m) => m.enabled && m.compatible !== false,
+                ).length || 0}
               </b>
             </span>
             <ArrowRight size={14} />
@@ -299,8 +302,8 @@ export function AgentWorkspace({
               <label>
                 대상 라인
                 <select value={line} onChange={(e) => setLine(e.target.value)}>
-                  <option value="A">A · 정밀 가공</option>
-                  <option value="B">B · 조립 / 포장</option>
+                  <option value="A">{lineLabel("A")}</option>
+                  <option value="B">{lineLabel("B")}</option>
                 </select>
               </label>
               <label>
@@ -337,7 +340,9 @@ export function AgentWorkspace({
               <span>
                 {selectedModules
                   ? selectedModules.length
-                  : config?.roles?.filter((m) => m.enabled).length || 0}
+                  : config?.roles?.filter(
+                      (m) => m.enabled && m.compatible !== false,
+                    ).length || 0}
                 개 선택 · 선행 의존성 자동 포함
               </span>
             </summary>
@@ -346,12 +351,17 @@ export function AgentWorkspace({
                 <label className="check-row" key={m.id}>
                   <input
                     type="checkbox"
-                    disabled={!m.enabled || m.id === "data"}
+                    disabled={
+                      !m.enabled || m.compatible === false || m.id === "data"
+                    }
                     checked={
                       m.enabled &&
+                      m.compatible !== false &&
                       (
                         selectedModules ||
-                        config.roles.filter((r) => r.enabled).map((r) => r.id)
+                        config.roles
+                          .filter((r) => r.enabled && r.compatible !== false)
+                          .map((r) => r.id)
                       ).includes(m.id)
                     }
                     onChange={(e) =>
@@ -360,14 +370,18 @@ export function AgentWorkspace({
                           ? [
                               ...(ids ||
                                 config.roles
-                                  .filter((r) => r.enabled)
+                                  .filter(
+                                    (r) => r.enabled && r.compatible !== false,
+                                  )
                                   .map((r) => r.id)),
                               m.id,
                             ]
                           : (
                               ids ||
                               config.roles
-                                .filter((r) => r.enabled)
+                                .filter(
+                                  (r) => r.enabled && r.compatible !== false,
+                                )
                                 .map((r) => r.id)
                             ).filter((id) => id !== m.id),
                       )

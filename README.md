@@ -2,7 +2,7 @@
 
 **데이터에서 실행까지, 제조 전주기를 하나로 연결하는 AX 플랫폼 MVP.**
 
-[공개 체험 사이트](https://biztalk72.github.io/forge-ax/) · [PRD](docs/PRD.md) · [아키텍처](docs/ARCHITECTURE.md) · [API](docs/API.md) · [검증 기록](docs/VERIFICATION.md) · [가입·계정 가이드](docs/ACCOUNTS.md) · [현장 패널](docs/FIELD-PANELS.md) · [CCTV](docs/CCTV.md) · [멀티 에이전트](docs/MULTI-AGENT.md)
+[공개 체험 사이트](https://biztalk72.github.io/forge-ax/) · [PRD](docs/PRD.md) · [아키텍처](docs/ARCHITECTURE.md) · [API](docs/API.md) · [검증 기록](docs/VERIFICATION.md) · [가입·계정 가이드](docs/ACCOUNTS.md) · [현장 패널](docs/FIELD-PANELS.md) · [CCTV](docs/CCTV.md) · [멀티 에이전트](docs/MULTI-AGENT.md) · [라면·공용 공급망](docs/RAMEN-SUPPLY-CHAIN.md) · [거버넌스·연동](docs/INTEGRATIONS.md)
 
 모던 한국어 콘솔과 기업형 백엔드를 함께 제공합니다. OCTOPUS의 공개된 8개 기능 영역을 참고한 독립 구현이며, UVC 제품이나 제휴 서비스가 아닙니다.
 
@@ -13,14 +13,17 @@
 - **Twin**: 8개 설비의 선택 가능한 디지털 맵과 현재 운전 상태.
 - **Simulator**: 병목 주기 기반 What-if 비교와 실험 이력.
 - **AI Hub**: Gaussian z-score 학습, 버전·배포, 현재 데이터 추론.
-- **Agentic Operations**: ARTEX 구조를 참고한 Planner·13개 독립 기능 에이전트·Main·승인 게이트, 실행/자산 그래프, 공유 사실·도구 기록·보고서, 중지·재개·취소. 기본 도구 분석 및 선택적 Ollama 요약 연계. 개별 구성·기준값·의존성·리비전 복원·미리보기·선택 실행을 제공하며 [기능별 개발 가이드](docs/AGENT-MODULES.md)를 따릅니다.
+- **Agentic Operations**: ARTEX 구조를 참고한 Planner·20개 독립 기능 에이전트(공용 18·라면 전용 2)·Main·승인 게이트, 실행/자산 그래프, 공유 사실·도구 기록·보고서, 중지·재개·취소. 기본 도구 분석 및 선택적 Ollama 요약 연계. 개별 구성·기준값·의존성·리비전 복원·미리보기·선택 실행을 제공하며 [기능별 개발 가이드](docs/AGENT-MODULES.md)를 따릅니다.
 - **Robot Hub**: 가상 AMR 작업 배정, 완료, 위치·배터리 갱신.
 - **Physical AI Lab**: 시나리오 파라미터 기반 합성 표 데이터 생성.
-- **현장 패널**: 라인별 TV·터치 화면 8종, 순환·테마·해상도, 미리보기, 초안/게시 분리, 일괄 배분·게시, 장치 키·하트비트·현장 입력.
+- **현장 패널**: 라인별 TV·터치 화면 9종, 순환·테마·해상도, 미리보기, 초안/게시 분리, 일괄 배분·게시, 장치 키·하트비트·현장 입력.
 - **CCTV**: HLS/MP4/MJPEG와 모의 화면, 단일/멀티뷰·최소화·최대화, 카메라 설정, 대시보드·패널 위젯.
+- **공용 공급망**: 라면 제면·스프 공정, 품목·분류·재고·창고·수불·LOT 계보·다단계 BOM·FEFO 생산. 업종 템플릿·공정 편집과 공통 원장 보존.
+- **설치형 에이전트 위젯**: 카탈로그에서 최대 4개 선택, 개인 대시보드와 라인 패널에 설치·미리보기·게시.
+- **거버넌스·연동**: 데이터 제품 8종의 소유자·스키마·계보·manifest export, 트랜잭션 outbox, 선택형 MQTT/Kafka publisher와 읽기 전용 MCP stdio 브리지.
 - **MES / 관리**: 생산 작업지시, 최종 공정 실적, RBAC, 감사로그.
 
-실장비 드라이버, 3D/물리 엔진, MCP·자율 도구 계획, 로봇 정책 학습, SSO와 다사업장은 후속 범위입니다. MVP의 통계 이상감지는 고장 예측 성능을 의미하지 않습니다. 실제 CCTV 주소와 LLM 서비스는 제공되지 않았으며 연결 설정이 필요합니다.
+실장비 드라이버, 3D/물리 엔진, 자율 도구 계획, 로봇 정책 학습, SSO와 다사업장은 후속 범위입니다. MVP의 통계 이상감지는 고장 예측 성능을 의미하지 않습니다. 실제 CCTV 주소와 LLM 서비스는 제공되지 않았으며 연결 설정이 필요합니다.
 
 ## GitHub Pages에서 확인
 
@@ -48,7 +51,7 @@ docker compose up --build -d
 - 상태: `docker compose ps`
 - 로그: `docker compose logs -f api`
 - 중지: `docker compose down` (DB 볼륨 보존)
-- 선택 인프라: `docker compose --profile integration up -d` (Redis·MQTT는 현재 앱과 미연결)
+- 선택형 연동: `INSTALL_INTEGRATIONS=true docker compose --profile integration up --build -d api web mqtt` ([설정·검증 범위](docs/INTEGRATIONS.md)).
 
 Nginx → FastAPI → PostgreSQL로 동작하며 시작 시 Alembic migration을 적용합니다. 관리자 계정은 ADMIN_EMAIL / ADMIN_PASSWORD 변경 시 갱신하고 기존 관리자 세션을 폐기합니다. 제조 데이터와 다른 사용자 계정은 유지합니다. ALLOW_REGISTRATION=true일 때 일반 사용자가 직접 가입할 수 있습니다.
 

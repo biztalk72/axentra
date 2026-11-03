@@ -2,7 +2,8 @@ FROM python:3.13-slim
 WORKDIR /app
 RUN pip install --no-cache-dir uv==0.8.22
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev
+ARG INSTALL_INTEGRATIONS=false
+RUN if [ "$INSTALL_INTEGRATIONS" = "true" ]; then uv sync --frozen --no-dev --extra integrations; else uv sync --frozen --no-dev; fi
 COPY app ./app
 COPY migrations ./migrations
 COPY alembic.ini ./

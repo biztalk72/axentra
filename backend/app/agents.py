@@ -17,6 +17,9 @@ from .security import current_user, roles
 from .services import add_resource, audit, asset_dict
 from .agent_modules import CATALOG, execute as execute_module
 from .agent_registry import modules, plan_modules
+from .industry import industry
+from .supply.api import state_for
+from .supply.engine import public_state
 
 _merge_lock=threading.RLock()
 
@@ -48,7 +51,7 @@ def source_context(db,line):
     simple=lambda r:{'id':r.id,'name':r.name,'status':r.status,**r.data}
     simulations=[simple(r) for r in rows if r.category=='simulation' and r.data.get('line')==line]
     simulation_ids={r['id'] for r in simulations}
-    return {'line':line,'captured_at':now(),'assets':[asset_dict(a) for a in assets],'events':[{'id':e.id,'asset_id':e.asset_id,'timestamp':e.timestamp,'good':e.good,'rejected':e.rejected} for e in events],
+    return {'line':line,'industry':industry(db)['config'],'supply':public_state(state_for(db)),'captured_at':now(),'assets':[asset_dict(a) for a in assets],'events':[{'id':e.id,'asset_id':e.asset_id,'timestamp':e.timestamp,'good':e.good,'rejected':e.rejected} for e in events],
       'orders':[simple(r) for r in rows if r.category=='order' and r.data.get('line')==line],
       'alerts':[simple(r) for r in rows if r.category=='alert' and r.status=='open' and r.data.get('asset_id') in ids],
       'robots':[simple(r) for r in rows if r.category=='robot'],
@@ -64,6 +67,11 @@ def graph_for(source):
     root='LINE-'+source['line'];nodes=[{'id':root,'label':source['line']+'라인','kind':'line'}];edges=[]
     for category,kind in [('assets','asset'),('orders','order'),('panels','panel'),('cameras','camera')]:
         for item in source[category]:nodes.append({'id':item['id'],'label':item.get('name',item['id']),'kind':kind});edges.append({'source':root,'target':item['id'],'relation':'contains'})
+    supply=source.get('supply',{})
+    if supply:
+        nodes.append({'id':'SUPPLY-SHARED','label':'공장 공용 공급망','kind':'shared'})
+        for category,kind in [('skus','sku'),('locations','location'),('lots','lot'),('boms','bom')]:
+            for item in supply.get(category,[]):nodes.append({'id':item['id'],'label':item.get('name',item.get('code',item['id'])),'kind':kind});edges.append({'source':'SUPPLY-SHARED','target':item['id'],'relation':'references'})
     return {'nodes':nodes,'edges':edges}
 
 def ollama_summary(goal,result,instruction=""):
@@ -209,6 +217,7 @@ def get_run(rid:str,user:User=Depends(current_user),db:Session=Depends(get_db)):
 def control(rid:str,body:RunControl,background:BackgroundTasks,user:User=Depends(roles('admin','operator')),db:Session=Depends(get_db)):
     row=db.scalar(select(Resource).where(Resource.id==rid,Resource.category=='agent_run').with_for_update())
     if not row:raise HTTPException(404,'진단 실행을 찾을 수 없습니다.')
+    if body.action=='resume' and row.data.get('migration_blocked'):raise HTTPException(409,'업종 전환 이전 실행입니다. 새 진단을 시작하세요.')
     allowed={'pause':['queued','running'],'resume':['paused'],'cancel':['queued','running','paused']}
     if row.status not in allowed[body.action]:raise HTTPException(409,'현재 상태에서 처리할 수 없는 요청입니다.')
     data=copy.deepcopy(row.data);data['generation']+=1

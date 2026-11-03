@@ -14,7 +14,10 @@ services:
       retries: 15
     restart: unless-stopped
   api:
-    build: ./backend
+    build:
+      context: ./backend
+      args:
+        INSTALL_INTEGRATIONS: ${INSTALL_INTEGRATIONS:-false}
     environment:
       DATABASE_URL: postgresql+psycopg://forge:${POSTGRES_PASSWORD}@postgres:5432/forge
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@admin.com}
@@ -24,6 +27,8 @@ services:
       LLM_MODEL: ${LLM_MODEL:-}
       DEMO_MODE: ${DEMO_MODE:-true}
       DEMO_STREAM: ${DEMO_STREAM:-true}
+      INTEGRATION_BROKER_USERNAME: ${INTEGRATION_BROKER_USERNAME:-}
+      INTEGRATION_BROKER_PASSWORD: ${INTEGRATION_BROKER_PASSWORD:-}
     depends_on:
       postgres: {condition: service_healthy}
     healthcheck:
@@ -38,7 +43,7 @@ services:
     depends_on:
       api: {condition: service_healthy}
     restart: unless-stopped
-  # Optional enterprise integration infrastructure; application adapters are future work.
+  # Optional internal MQTT broker for adapter validation; enable the integrations extra.
   redis:
     image: redis:7-alpine
     profiles: [integration]

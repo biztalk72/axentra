@@ -1,5 +1,12 @@
+import { DemoAuthError } from "./demo-auth.ts";
+import { integrationDemo } from "./integrations/demo.ts";
+import { widgetDemo } from "./agent-widget-demo.ts";
+import { industryDemo } from "./supply/industry-demo.ts";
+import { supplyDemo } from "./supply/demo.ts";
+import ramenAssets from "./supply/assets.json" with { type: "json" };
+import { migrateRamenDemo } from "./supply/industry-demo.ts";
 // GitHub Pages only: an explicit browser-local simulator, never a backend fallback.
-import type { Asset, Resource } from "./api";
+import type { Asset, Resource } from "./api.ts";
 import { agentDemoRequest } from "./agent-demo.ts";
 import { panelDemoRequest } from "./panel-demo.ts";
 import { demoAuth } from "./demo-auth.ts";
@@ -28,25 +35,25 @@ const stamp = () => new Date().toISOString();
 const id = (p: string) =>
   `${p}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
 function seed(): State {
-  const names: [string, string, string, string, number][] = [
-    ["CNC-001", "CNC 가공기 01", "CNC", "A", 38],
-    ["CNC-002", "CNC 가공기 02", "CNC", "A", 42],
-    ["CNC-003", "CNC 가공기 03", "CNC", "A", 52],
-    ["QC-001", "비전 검사기", "QC", "A", 28],
-    ["ASM-001", "자동 조립기 01", "Assembly", "B", 36],
-    ["ASM-002", "자동 조립기 02", "Assembly", "B", 40],
-    ["PKG-001", "패키징 셀", "Packaging", "B", 30],
-    ["WELD-001", "용접 로봇", "Robot", "B", 44],
-  ];
+  const names = ramenAssets.map(
+    (a) =>
+      [a.id, a.name, a.kind, a.line, a.cycle_time] as [
+        string,
+        string,
+        string,
+        string,
+        number,
+      ],
+  );
   const assets = names.map(([aid, name, kind, line, cycle], i) => ({
     id: aid,
     name,
     kind,
     line,
     cycle_time: cycle,
-    status: aid === "CNC-003" ? "warning" : "running",
-    temperature: aid === "CNC-003" ? 78.4 : 42 + i * 2.3,
-    vibration: aid === "CNC-003" ? 3.8 : 0.8 + i * 0.12,
+    status: aid === "NDL-STEAM" ? "warning" : "running",
+    temperature: aid === "NDL-STEAM" ? 78.4 : 42 + i * 2.3,
+    vibration: aid === "NDL-STEAM" ? 3.8 : 0.8 + i * 0.12,
     produced: 1450 + i * 83,
     rejected: 12 + i * 2,
     updated_at: stamp(),
@@ -92,20 +99,20 @@ function seed(): State {
         }),
       ],
       order: [
-        make("WO-2601", "11월 모터 하우징 생산", "running", {
-          product: "모터 하우징 M-240",
+        make("WO-2601", "순한맛 봉지라면 생산", "running", {
+          product: "순한맛 봉지라면 120g",
           line: "A",
           quantity: 18000,
           completed: 12640,
         }),
-        make("WO-2602", "배터리 모듈 브래킷", "running", {
-          product: "브래킷 B-120",
+        make("WO-2602", "분말스프 소포장 생산", "running", {
+          product: "분말스프 10g 소포장",
           line: "B",
           quantity: 12000,
           completed: 8540,
         }),
-        make("WO-2603", "정밀 기어 샤프트", "planned", {
-          product: "샤프트 S-080",
+        make("WO-2603", "건면 라면 생산 준비", "planned", {
+          product: "건면 라면 100g",
           line: "A",
           quantity: 6000,
           completed: 0,
@@ -124,22 +131,22 @@ function seed(): State {
         }),
       ],
       alert: [
-        make("ALERT-SEED", "CNC-003 스핀들 온도 상승", "open", {
-          asset_id: "CNC-003",
+        make("ALERT-SEED", "NDL-STEAM 구동부 온도 상승", "open", {
+          asset_id: "NDL-STEAM",
           severity: "warning",
           metric: "temperature",
           value: 78.4,
           threshold: 75,
           message:
-            "스핀들 온도가 운영 임계값 75°C를 초과했습니다. 냉각 상태 점검을 권장합니다.",
+            "구동부 온도가 운영 임계값 75°C를 초과했습니다. 냉각 상태 점검을 권장합니다.",
         }),
       ],
       recommendation: [
-        make("REC-SEED", "CNC-003 냉각 점검 작업 생성", "pending", {
-          asset_id: "CNC-003",
+        make("REC-SEED", "NDL-STEAM 냉각 점검 작업 생성", "pending", {
+          asset_id: "NDL-STEAM",
           alert_id: "ALERT-SEED",
           reason:
-            "온도 78.4°C, 임계값 75°C 초과. 냉각 상태 및 스핀들 점검이 필요합니다.",
+            "온도 78.4°C, 임계값 75°C 초과. 냉각 상태 및 구동부 점검이 필요합니다.",
           action: "maintenance",
           impact: "점검 작업 지시 생성 · 설비 자동 제어 없음",
           engine: "threshold-rule-v1",
@@ -156,7 +163,7 @@ function seed(): State {
 function load(): State {
   try {
     const stored = localStorage.getItem(KEY);
-    if (stored) return JSON.parse(stored);
+    if (stored) return migrateRamenDemo(JSON.parse(stored));
   } catch {
     /* seed a fresh synthetic workspace */
   }
@@ -210,15 +217,15 @@ function tick() {
   state.assets.forEach((a, i) => {
     const t = Date.now() / 1000;
     const good = 4 + (i % 3);
-    const rejected = a.id === "CNC-003" ? 1 : 0;
+    const rejected = a.id === "NDL-STEAM" ? 1 : 0;
     a.temperature = Number(
-      (a.id === "CNC-003"
+      (a.id === "NDL-STEAM"
         ? 78 + Math.sin(t / 30) * 2
         : 45 + i + Math.sin(t / 45) * 3
       ).toFixed(2),
     );
     a.vibration =
-      a.id === "CNC-003"
+      a.id === "NDL-STEAM"
         ? 3.8
         : Number((1 + Math.abs(Math.sin(t / 25 + i)) * 0.6).toFixed(2));
     a.produced += good;
@@ -258,6 +265,39 @@ export async function demoApi<T>(
   auth: BrowserDemoAuth = demoAuth,
   deviceKey?: string,
 ): Promise<T> {
+  if (deviceKey && !/^\/panels\/[^/]+\/(display|heartbeat|events)$/.test(path))
+    throw new DemoAuthError(
+      403,
+      "패널 키는 게시된 현장 화면에만 사용할 수 있습니다.",
+    );
+  if (path.startsWith("/integrations/"))
+    return integrationDemo(path, body, auth, state) as T;
+  if (path.startsWith("/agent-widgets/"))
+    return widgetDemo(path, body, auth, state) as T;
+  if (path === "/industry") {
+    const result = industryDemo(body, auth);
+    if (body !== undefined) {
+      recordAudit("industry.configure", result.config.id, auth.current().email);
+      save();
+    }
+    return result as T;
+  }
+  if (path === "/supply" || path.startsWith("/supply/")) {
+    const result = supplyDemo(path, body, auth);
+    if (
+      body !== undefined &&
+      !path.endsWith("preview") &&
+      !(result as any).duplicate
+    ) {
+      recordAudit(
+        "supply." + path.split("/")[2],
+        (result as any).id || (result as any).batch_id || "ledger",
+        auth.current().email,
+      );
+      save();
+    }
+    return result as T;
+  }
   if (/^\/(panels|cameras|cctv)(\/|$)/.test(path))
     return panelDemoRequest<T>(path, body, {
       auth,
@@ -289,6 +329,7 @@ export async function demoApi<T>(
     return result as T;
   }
   const user = auth.current();
+  if (path === "/assets") return structuredClone(state.assets) as T;
   const audit = (action: string, target: string) =>
     recordAudit(action, target, user.email);
   if (path === "/auth/logout") {

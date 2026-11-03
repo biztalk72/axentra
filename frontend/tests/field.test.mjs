@@ -33,7 +33,7 @@ const request = (path, body, key) => demoApi(path, body, auth, key);
 const login = () =>
   request("/auth/login", { email: "admin@admin.com", password });
 
-test("eight panel templates preview line data without publishing or heartbeats", async () => {
+test("nine panel templates preview line data without publishing or heartbeats", async () => {
   await login();
   const panels = await request("/panels"),
     cameras = await request("/cameras");
@@ -229,8 +229,10 @@ test("multi-agent planner, workers, graphs, shared facts and approvals form a co
   assert.equal(created.status, "queued");
   const result = await request(`/agents/runs/${created.id}`);
   assert.equal(result.status, "awaiting_approval");
-  assert.equal(result.tasks.length, 16);
-  assert.ok(result.blackboard.equipment.maintenance_assets.includes("CNC-003"));
+  assert.equal(result.tasks.length, 23);
+  assert.ok(
+    result.blackboard.equipment.maintenance_assets.includes("NDL-STEAM"),
+  );
   assert.ok(result.blackboard.quality.metrics.good > 0);
   assert.ok(
     result.blackboard.production.metrics.scenario_ea >
@@ -238,7 +240,7 @@ test("multi-agent planner, workers, graphs, shared facts and approvals form a co
   );
   assert.ok(result.knowledge_graph.nodes.some((n) => n.id === "CAM-A-01"));
   assert.ok(!result.knowledge_graph.nodes.some((n) => n.id === "CAM-B-01"));
-  assert.equal(result.traces.length, 13);
+  assert.equal(result.traces.length, 20);
   const approval = result.approvals[0];
   await request(`/recommendations/${approval.id}/decision`, {
     decision: "approve",
@@ -302,7 +304,7 @@ test("agent catalogs agree and modules validate dependencies and preview without
   assert.deepEqual(frontend, backend);
   await login();
   const items = await request("/agents/modules");
-  assert.equal(items.length, 13);
+  assert.equal(items.length, 20);
   const equipment = items.find((m) => m.id === "equipment");
   const cfg = (m) => ({
     name: m.name,

@@ -83,7 +83,7 @@ class SimulationInput(Input):
 
 class TrainInput(Input):
     name: str = Field(default='설비 온도 이상감지', min_length=1, max_length=100)
-    asset_id: str = 'CNC-003'
+    asset_id: str = 'NDL-STEAM'
     metric: Literal['temperature', 'vibration'] = 'temperature'
 
 class OrderInput(Input):
@@ -97,7 +97,7 @@ class DecisionInput(Input):
 
 class RobotInput(Input):
     robot_id: Literal['AMR-001', 'AMR-002']
-    destination: Literal['자재 창고', '가공 A라인', '조립 B라인', '출하 구역']
+    destination: Literal['자재 창고', '제면 A라인', '스프 B라인', '출하 구역']
 
 class DatasetInput(Input):
     simulation_id: str

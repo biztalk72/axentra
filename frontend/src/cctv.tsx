@@ -1,3 +1,4 @@
+import { lineLabel } from "./industry-context";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type Hls from "hls.js";
@@ -666,8 +667,8 @@ export function CamerasPage({ write }: { write: boolean }) {
         <div className="segmented">
           {[
             ["all", "전체 라인"],
-            ["A", "가공 A라인"],
-            ["B", "조립 B라인"],
+            ["A", lineLabel("A")],
+            ["B", lineLabel("B")],
           ].map(([id, name]) => (
             <button
               key={id}

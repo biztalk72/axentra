@@ -1,5 +1,13 @@
-import type { Asset, Resource } from "./api";
+import { demoWidgetResults } from "./agent-widget-demo.ts";
+import type { AgentWidgetResult } from "./agent-widget-model.ts";
+import type { Asset, Resource } from "./api.ts";
 export const TEMPLATES = [
+  {
+    id: "agents",
+    name: "공용 에이전트 현황",
+    description: "재고·창고·LOT·BOM 에이전트 위젯",
+    color: "#7acfc1",
+  },
   {
     id: "production",
     name: "생산 현황",
@@ -85,6 +93,7 @@ export type PanelConfig = {
   rotation_enabled: boolean;
   screens: Screen[];
   camera_widget: CameraWidgetConfig;
+  agent_widgets?: string[];
 };
 export type PanelRecord = {
   id: string;
@@ -101,6 +110,7 @@ export type PanelRecord = {
   device_expires_at?: string;
 };
 export type PanelSnapshot = {
+  agent_widgets?: AgentWidgetResult[];
   panel_id: string;
   config: PanelConfig;
   revision: number;
@@ -150,6 +160,7 @@ export function makeConfig(line: "A" | "B" = "A"): PanelConfig {
     refresh_interval: 6,
     rotation_enabled: true,
     screens: [makeScreen("production")],
+    agent_widgets: [],
     camera_widget: {
       enabled: false,
       camera_ids: [],
@@ -198,6 +209,12 @@ export function validatePanelConfig(config: PanelConfig, cameras: Camera[]) {
       screen.duration > 300
     )
       throw new Error("화면 제목·유형·노출 시간(10~300초)을 확인하세요.");
+  if (
+    (config.agent_widgets || []).length > 4 ||
+    new Set(config.agent_widgets || []).size !==
+      (config.agent_widgets || []).length
+  )
+    throw new Error("에이전트 위젯은 중복 없이 최대 4개입니다.");
   const widget = config.camera_widget;
   if (widget.enabled && !widget.camera_ids.length)
     throw new Error("CCTV 카메라를 하나 이상 선택하세요.");
@@ -274,6 +291,11 @@ export function buildPanelSnapshot(
   }
   return {
     panel_id,
+    agent_widgets: demoWidgetResults(
+      source,
+      config.line,
+      config.agent_widgets || [],
+    ),
     config: structuredClone(config),
     revision,
     source: kind,
@@ -287,7 +309,7 @@ export function buildPanelSnapshot(
     robots: source.resources.robot || [],
     jobs: (source.resources.job || []).filter(
       (j) =>
-        j.destination === (config.line === "A" ? "가공 A라인" : "조립 B라인"),
+        j.destination === (config.line === "A" ? "제면 A라인" : "스프 B라인"),
     ),
     events: (source.resources.panel_event || [])
       .filter((e) => e.line === config.line)

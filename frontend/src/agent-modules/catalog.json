@@ -10,7 +10,10 @@
     "enabled": true,
     "instruction": "",
     "parameters": {},
-    "parameter_specs": []
+    "parameter_specs": [],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["manufacturing.telemetry"]
   },
   {
     "id": "equipment",
@@ -43,7 +46,10 @@
         "max": 100,
         "step": 0.1
       }
-    ]
+    ],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["manufacturing.telemetry"]
   },
   {
     "id": "production",
@@ -56,7 +62,10 @@
     "enabled": true,
     "instruction": "",
     "parameters": {},
-    "parameter_specs": []
+    "parameter_specs": [],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["manufacturing.telemetry"]
   },
   {
     "id": "quality",
@@ -80,7 +89,10 @@
         "max": 100,
         "step": 0.1
       }
-    ]
+    ],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["manufacturing.telemetry"]
   },
   {
     "id": "logistics",
@@ -88,12 +100,15 @@
     "category": "Logistics",
     "tool": "floor.inspect",
     "description": "공용 AMR와 현장 지원 요청을 확인합니다.",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "depends": ["data"],
     "enabled": true,
     "instruction": "",
     "parameters": {},
-    "parameter_specs": []
+    "parameter_specs": [],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["manufacturing.telemetry"]
   },
   {
     "id": "edge",
@@ -106,7 +121,10 @@
     "enabled": true,
     "instruction": "",
     "parameters": {},
-    "parameter_specs": []
+    "parameter_specs": [],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["manufacturing.telemetry"]
   },
   {
     "id": "twin",
@@ -119,7 +137,10 @@
     "enabled": true,
     "instruction": "",
     "parameters": {},
-    "parameter_specs": []
+    "parameter_specs": [],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["manufacturing.telemetry"]
   },
   {
     "id": "simulation",
@@ -152,7 +173,10 @@
         "max": 50,
         "step": 1
       }
-    ]
+    ],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["manufacturing.telemetry"]
   },
   {
     "id": "models",
@@ -165,7 +189,10 @@
     "enabled": true,
     "instruction": "",
     "parameters": {},
-    "parameter_specs": []
+    "parameter_specs": [],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["manufacturing.telemetry"]
   },
   {
     "id": "robots",
@@ -189,7 +216,10 @@
         "max": 100,
         "step": 1
       }
-    ]
+    ],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["manufacturing.telemetry"]
   },
   {
     "id": "physical",
@@ -202,7 +232,10 @@
     "enabled": true,
     "instruction": "",
     "parameters": {},
-    "parameter_specs": []
+    "parameter_specs": [],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["manufacturing.telemetry"]
   },
   {
     "id": "panels",
@@ -215,7 +248,10 @@
     "enabled": true,
     "instruction": "",
     "parameters": {},
-    "parameter_specs": []
+    "parameter_specs": [],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["manufacturing.telemetry"]
   },
   {
     "id": "cctv",
@@ -228,6 +264,143 @@
     "enabled": true,
     "instruction": "",
     "parameters": {},
-    "parameter_specs": []
+    "parameter_specs": [],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["manufacturing.telemetry"]
+  },
+  {
+    "id": "inventory",
+    "name": "인벤토리 에이전트",
+    "category": "Inventory",
+    "tool": "inventory.inspect",
+    "description": "품목별 단위와 사용 가능한 LOT 재고·최소재고를 확인합니다.",
+    "version": "1.0.0",
+    "depends": ["data"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {
+      "coverage_factor": 1
+    },
+    "parameter_specs": [
+      {
+        "key": "coverage_factor",
+        "label": "최소재고 기준 배수",
+        "default": 1,
+        "min": 0.1,
+        "max": 10,
+        "step": 0.1
+      }
+    ],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["supply.stock", "supply.lots", "supply.boms"]
+  },
+  {
+    "id": "classification",
+    "name": "분류 에이전트",
+    "category": "Classification",
+    "tool": "classification.inspect",
+    "description": "원료·반제품·완제품·포장재 분류와 적치 규칙을 점검합니다.",
+    "version": "1.0.0",
+    "depends": ["inventory"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {},
+    "parameter_specs": [],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["supply.stock", "supply.lots", "supply.boms"]
+  },
+  {
+    "id": "warehouse",
+    "name": "창고관리 에이전트",
+    "category": "Warehouse",
+    "tool": "warehouse.inspect",
+    "description": "창고·구역·로케이션별 적치 상태를 확인합니다.",
+    "version": "1.0.0",
+    "depends": ["inventory"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {},
+    "parameter_specs": [],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["supply.stock", "supply.lots", "supply.boms"]
+  },
+  {
+    "id": "lot",
+    "name": "LOT 추적 에이전트",
+    "category": "Traceability",
+    "tool": "lot.inspect",
+    "description": "보류·차단·기한 경과 및 기한 임박 LOT를 확인합니다.",
+    "version": "1.0.0",
+    "depends": ["inventory"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {
+      "expiry_days": 14
+    },
+    "parameter_specs": [
+      {
+        "key": "expiry_days",
+        "label": "기한 임박 기준 (일)",
+        "default": 14,
+        "min": 1,
+        "max": 365,
+        "step": 1
+      }
+    ],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["supply.stock", "supply.lots", "supply.boms"]
+  },
+  {
+    "id": "bom",
+    "name": "BOM 에이전트",
+    "category": "BOM / MRP",
+    "tool": "bom.inspect",
+    "description": "버전별 BOM과 기준 배치의 투입 소요량·부족을 확인합니다.",
+    "version": "1.0.0",
+    "depends": ["inventory"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {},
+    "parameter_specs": [],
+    "industries": ["common"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["supply.stock", "supply.lots", "supply.boms"]
+  },
+  {
+    "id": "noodles",
+    "name": "제면 공정 에이전트",
+    "category": "Ramen / Noodles",
+    "tool": "noodles.inspect",
+    "description": "제면 설비와 면 생산 작업 흐름을 확인합니다.",
+    "version": "1.0.0",
+    "depends": ["production"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {},
+    "parameter_specs": [],
+    "industries": ["ramen"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["manufacturing.telemetry"]
+  },
+  {
+    "id": "soup",
+    "name": "스프 생산 에이전트",
+    "category": "Ramen / Soup",
+    "tool": "soup.inspect",
+    "description": "스프 배합·분쇄·충전·소포장 공정을 확인합니다.",
+    "version": "1.0.0",
+    "depends": ["production"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {},
+    "parameter_specs": [],
+    "industries": ["ramen"],
+    "surfaces": ["dashboard", "panel"],
+    "data_products": ["manufacturing.telemetry"]
   }
 ]

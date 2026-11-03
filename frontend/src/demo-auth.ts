@@ -1,4 +1,4 @@
-import type { User } from "./api";
+import type { User } from "./api.ts";
 import { ADMIN_EMAIL, normalizeEmail, validateRegistration } from "./auth.ts";
 import type { Registration } from "./auth.ts";
 import { DEMO_ADMIN } from "./demo-admin.ts";

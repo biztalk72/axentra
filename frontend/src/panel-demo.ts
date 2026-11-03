@@ -15,6 +15,7 @@ import type {
 } from "./panel-model.ts";
 type StoredPanel = PanelRecord & { device_token_hash?: string };
 type Store = {
+  agent_widgets_migrated?: boolean;
   panels: StoredPanel[];
   cameras: Camera[];
   layouts: Record<string, CctvLayout>;
@@ -25,7 +26,7 @@ function seed(): Store {
   const cameras: Camera[] = (["A", "B"] as const).flatMap((line) =>
     [1, 2].map((i) => ({
       id: `CAM-${line}-0${i}`,
-      name: `${line}라인 · ${i === 1 ? "가공 구역" : "검사·이송 구역"}`,
+      name: `${line}라인 · ${i === 1 ? (line === "A" ? "제면 구역" : "스프 배합 구역") : "포장·이송 구역"}`,
       line,
       location: `생산동 ${line}-0${i}`,
       source_type: "demo" as const,
@@ -45,12 +46,14 @@ function seed(): Store {
       config.rotation_enabled = mode === "tv";
       config.screens = (
         mode === "tv"
-          ? (["production", "equipment", "quality"] as const)
+          ? (["production", "equipment", "quality", "agents"] as const)
           : (["work-order", "andon", "logistics"] as const)
       ).map((template) => ({
         ...makeScreen(template),
         id: `screen-${template}`,
       }));
+      config.agent_widgets =
+        mode === "tv" ? ["inventory", "warehouse", "lot", "bom"] : [];
       config.camera_widget = {
         enabled: mode === "tv",
         camera_ids: [`CAM-${line}-01`, `CAM-${line}-02`],
@@ -75,7 +78,38 @@ function seed(): Store {
 function read(): Store {
   try {
     const text = localStorage.getItem(KEY);
-    if (text) return JSON.parse(text);
+    if (text) {
+      const store = JSON.parse(text) as Store;
+      if (!store.agent_widgets_migrated) {
+        for (const panel of store.panels) {
+          if (!["PANEL-A-TV", "PANEL-B-TV"].includes(panel.id)) continue;
+          for (const kind of ["draft", "published"] as const) {
+            const config = panel[kind];
+            if (
+              config &&
+              !config.screens.some((s) => s.template === "agents") &&
+              config.screens.length < 12
+            ) {
+              config.screens.push({
+                ...makeScreen("agents"),
+                id: "screen-agents",
+              });
+              config.agent_widgets = ["inventory", "warehouse", "lot", "bom"];
+              if (kind === "draft") panel.revision++;
+              else panel.published_revision++;
+            }
+          }
+        }
+        for (const camera of store.cameras)
+          camera.name = camera.name.replace(
+            "가공 구역",
+            camera.line === "A" ? "제면 구역" : "스프 배합 구역",
+          );
+        store.agent_widgets_migrated = true;
+        localStorage.setItem(KEY, JSON.stringify(store));
+      }
+      return store;
+    }
   } catch {
     throw new Error("현장 설정 저장소를 읽을 수 없습니다.");
   }
@@ -351,6 +385,9 @@ export async function panelDemoRequest<T>(
             theme: body.theme,
             refresh_interval: body.refresh_interval,
             rotation_enabled: body.rotation_enabled,
+            ...(body.agent_widgets
+              ? { agent_widgets: body.agent_widgets }
+              : {}),
           };
           validatePanelConfig(draft, store.cameras);
           return { p, draft };

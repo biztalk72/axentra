@@ -13,12 +13,12 @@ def find(client,h,mid):
 
 def test_registry_covers_all_features_and_independent_results(client,auth):
     h=auth();items=client.get('/api/agents/modules',headers=h).json()
-    assert len(items)==13 and len(HANDLERS)==13
+    assert len(items)==20 and len(HANDLERS)==20
     rid=client.post('/api/agents/runs',headers=h,json={'goal':'전체 기능 모듈 진단','line':'A'}).json()['id']
     result=client.get('/api/agents/runs/'+rid,headers=h).json()
     assert {m['id'] for m in items}<=set(result['blackboard'])
-    assert len(result['modules'])==13
-    assert all(m['revision']==1 and m['version']=='1.0.0' for m in result['modules'])
+    assert len(result['modules'])==20
+    assert all(m['revision']==1 and m['version']==('1.1.0' if m['id']=='logistics' else '1.0.0') for m in result['modules'])
     assert result['blackboard']['cctv']['metrics']['demo_cameras']==2
     assert result['blackboard']['panels']['metrics']['panels']==2
 

@@ -1,0 +1,74 @@
+[
+  {
+    "id": "NDL-MIX",
+    "name": "배합·반죽기",
+    "kind": "Mixing",
+    "line": "A",
+    "cycle_time": 38,
+    "legacy_id": "CNC-001",
+    "legacy_name": "CNC 가공기 01"
+  },
+  {
+    "id": "NDL-SHEET",
+    "name": "압연·절출기",
+    "kind": "Noodle",
+    "line": "A",
+    "cycle_time": 42,
+    "legacy_id": "CNC-002",
+    "legacy_name": "CNC 가공기 02"
+  },
+  {
+    "id": "NDL-STEAM",
+    "name": "증숙·건조 설비",
+    "kind": "Thermal",
+    "line": "A",
+    "cycle_time": 52,
+    "legacy_id": "CNC-003",
+    "legacy_name": "CNC 가공기 03"
+  },
+  {
+    "id": "NDL-PACK",
+    "name": "면·완제품 포장기",
+    "kind": "Packaging",
+    "line": "A",
+    "cycle_time": 28,
+    "legacy_id": "QC-001",
+    "legacy_name": "비전 검사기"
+  },
+  {
+    "id": "SUP-BLEND",
+    "name": "스프 배합·혼합기",
+    "kind": "Blending",
+    "line": "B",
+    "cycle_time": 36,
+    "legacy_id": "ASM-001",
+    "legacy_name": "자동 조립기 01"
+  },
+  {
+    "id": "SUP-SIEVE",
+    "name": "스프 분쇄·체질기",
+    "kind": "Sieving",
+    "line": "B",
+    "cycle_time": 40,
+    "legacy_id": "ASM-002",
+    "legacy_name": "자동 조립기 02"
+  },
+  {
+    "id": "SUP-PACK",
+    "name": "스프 소포장기",
+    "kind": "Packaging",
+    "line": "B",
+    "cycle_time": 30,
+    "legacy_id": "PKG-001",
+    "legacy_name": "패키징 셀"
+  },
+  {
+    "id": "SUP-FILL",
+    "name": "스프 정량 충전기",
+    "kind": "Dosing",
+    "line": "B",
+    "cycle_time": 44,
+    "legacy_id": "WELD-001",
+    "legacy_name": "용접 로봇"
+  }
+]

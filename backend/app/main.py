@@ -25,6 +25,10 @@ from .schemas import RegisterInput, LoginInput, BatchInput, EventInput, Connecto
 from .seed import initialize, DEMO_MODE
 from .panels import router as field_router, initialize_field_devices
 from .agents import router as agent_router, recover_agent_runs
+from .integrations import router as integration_router,initialize_integrations
+from .agent_widgets import router as widget_router
+from .industry import router as industry_router, initialize_industry
+from .supply.api import router as supply_router, initialize_supply
 from .agent_registry import router as module_router, initialize_agent_registry
 from .services import resource_dict, asset_dict, add_resource, get_resource, identifier, audit, ingest, calculate_simulation
 
@@ -46,12 +50,15 @@ def demo_tick(db):
     tick=time.time()
     events=[]
     for i, a in enumerate(db.scalars(select(Asset).order_by(Asset.id)).all()):
-        events.append(EventInput(event_id=identifier('DEMO'),asset_id=a.id,source='demo-gateway',temperature=round(78+math.sin(tick/30)*2 if a.id=='CNC-003' else 45+i+math.sin(tick/45)*3,2),vibration=round(3.8 if a.id=='CNC-003' else 1+abs(math.sin(tick/25+i))*.6,2),good=4+i%3,rejected=int(a.id=='CNC-003')))
+        events.append(EventInput(event_id=identifier('DEMO'),asset_id=a.id,source='demo-gateway',temperature=round(78+math.sin(tick/30)*2 if a.id=='NDL-STEAM' else 45+i+math.sin(tick/45)*3,2),vibration=round(3.8 if a.id=='NDL-STEAM' else 1+abs(math.sin(tick/25+i))*.6,2),good=4+i%3,rejected=int(a.id=='NDL-STEAM')))
     return ingest(db,events)
 
 @asynccontextmanager
 async def lifespan(app):
     initialize()
+    initialize_industry()
+    initialize_integrations()
+    initialize_supply()
     initialize_field_devices()
     initialize_agent_registry()
     recover_agent_runs()
@@ -66,6 +73,10 @@ app=FastAPI(title='FORGE AX API',description='전주기 제조 AX 플랫폼 · M
 app.include_router(field_router)
 app.include_router(agent_router)
 app.include_router(module_router)
+app.include_router(industry_router)
+app.include_router(supply_router)
+app.include_router(widget_router)
+app.include_router(integration_router)
 app.add_middleware(CORSMiddleware,allow_origins=os.getenv('CORS_ORIGINS','http://127.0.0.1:5173,http://localhost:5173').split(','),allow_credentials=False,allow_methods=['GET','POST'],allow_headers=['Authorization','Content-Type'])
 
 @app.exception_handler(RequestValidationError)

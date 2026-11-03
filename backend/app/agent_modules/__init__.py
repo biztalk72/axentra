@@ -16,8 +16,16 @@ from .physical import run as physical_run
 from .panels import run as panels_run
 from .cctv import run as cctv_run
 
+from .inventory import run as inventory_run
+from .classification import run as classification_run
+from .warehouse import run as warehouse_run
+from .lot import run as lot_run
+from .bom import run as bom_run
+from .noodles import run as noodles_run
+from .soup import run as soup_run
+
 CATALOG=json.loads(Path(__file__).with_name('catalog.json').read_text())
-HANDLERS={'data.inspect':data_run,'equipment.assess':equipment_run,'production.inspect':production_run,'quality.assess':quality_run,'floor.inspect':logistics_run,'edge.inspect':edge_run,'twin.inspect':twin_run,'simulation.inspect':simulation_run,'models.inspect':models_run,'robots.inspect':robots_run,'physical.inspect':physical_run,'panels.inspect':panels_run,'cctv.inspect':cctv_run}
+HANDLERS={'data.inspect':data_run,'equipment.assess':equipment_run,'production.inspect':production_run,'quality.assess':quality_run,'floor.inspect':logistics_run,'edge.inspect':edge_run,'twin.inspect':twin_run,'simulation.inspect':simulation_run,'models.inspect':models_run,'robots.inspect':robots_run,'physical.inspect':physical_run,'panels.inspect':panels_run,'cctv.inspect':cctv_run,'inventory.inspect':inventory_run,'classification.inspect':classification_run,'warehouse.inspect':warehouse_run,'lot.inspect':lot_run,'bom.inspect':bom_run,'noodles.inspect':noodles_run,'soup.inspect':soup_run}
 
 def execute(module,source,blackboard):
     # Each agent receives an isolated snapshot; accidental mutations cannot affect peers.
