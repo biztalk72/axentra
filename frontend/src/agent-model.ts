@@ -1,41 +1,12 @@
-export const AGENT_ROLES = [
-  {
-    id: "data",
-    name: "데이터 에이전트",
-    tool: "data.inspect",
-    depends: ["planner"],
-  },
-  {
-    id: "equipment",
-    name: "설비 에이전트",
-    tool: "equipment.assess",
-    depends: ["data"],
-  },
-  {
-    id: "production",
-    name: "생산 에이전트",
-    tool: "production.inspect",
-    depends: ["data"],
-  },
-  {
-    id: "quality",
-    name: "품질 에이전트",
-    tool: "quality.assess",
-    depends: ["data"],
-  },
-  {
-    id: "logistics",
-    name: "물류·현장 에이전트",
-    tool: "floor.inspect",
-    depends: ["data"],
-  },
-];
+import type { AgentModule } from "./agent-modules/contracts";
 export type AgentTask = {
   id: string;
   name: string;
   tool: string;
   depends: string[];
   status: string;
+  module_revision?: number;
+  tool_version?: string;
   elapsed_ms?: number;
   started_at?: string;
   finished_at?: string;
@@ -60,6 +31,7 @@ export type AgentRun = {
   created_at: string;
   created_by: string;
   tasks: AgentTask[];
+  modules?: AgentModule[];
   blackboard?: Record<string, AgentFact>;
   traces?: {
     id: string;
@@ -88,6 +60,7 @@ export type AgentRun = {
   finished_at?: string;
 };
 export type AgentConfig = {
+  roles: AgentModule[];
   concurrency: number;
   provider: string;
   llm_configured: boolean;

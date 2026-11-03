@@ -1,0 +1,233 @@
+[
+  {
+    "id": "data",
+    "name": "데이터 에이전트",
+    "category": "Data Hub",
+    "tool": "data.inspect",
+    "description": "수집 이벤트와 라인 데이터 범위를 확인합니다.",
+    "version": "1.0.0",
+    "depends": [],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {},
+    "parameter_specs": []
+  },
+  {
+    "id": "equipment",
+    "name": "설비 에이전트",
+    "category": "Maintenance",
+    "tool": "equipment.assess",
+    "description": "온도·진동 기준으로 점검 대상을 제안합니다.",
+    "version": "1.0.0",
+    "depends": ["data"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {
+      "temperature_threshold": 75,
+      "vibration_threshold": 3.5
+    },
+    "parameter_specs": [
+      {
+        "key": "temperature_threshold",
+        "label": "온도 기준 (°C)",
+        "default": 75,
+        "min": 0,
+        "max": 250,
+        "step": 1
+      },
+      {
+        "key": "vibration_threshold",
+        "label": "진동 기준 (mm/s)",
+        "default": 3.5,
+        "min": 0,
+        "max": 100,
+        "step": 0.1
+      }
+    ]
+  },
+  {
+    "id": "production",
+    "name": "생산 에이전트",
+    "category": "MES",
+    "tool": "production.inspect",
+    "description": "작업지시와 직렬 공정 병목 용량을 확인합니다.",
+    "version": "1.0.0",
+    "depends": ["data"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {},
+    "parameter_specs": []
+  },
+  {
+    "id": "quality",
+    "name": "품질 에이전트",
+    "category": "Quality",
+    "tool": "quality.assess",
+    "description": "설비 누적 양품률과 불량 수량을 분석합니다.",
+    "version": "1.0.0",
+    "depends": ["data"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {
+      "target_quality": 98
+    },
+    "parameter_specs": [
+      {
+        "key": "target_quality",
+        "label": "목표 양품률 (%)",
+        "default": 98,
+        "min": 0,
+        "max": 100,
+        "step": 0.1
+      }
+    ]
+  },
+  {
+    "id": "logistics",
+    "name": "물류 에이전트",
+    "category": "Logistics",
+    "tool": "floor.inspect",
+    "description": "공용 AMR와 현장 지원 요청을 확인합니다.",
+    "version": "1.0.0",
+    "depends": ["data"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {},
+    "parameter_specs": []
+  },
+  {
+    "id": "edge",
+    "name": "엣지 에이전트",
+    "category": "Edge Connect",
+    "tool": "edge.inspect",
+    "description": "커넥터 구성과 실제 수집 이력을 구분합니다.",
+    "version": "1.0.0",
+    "depends": ["data"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {},
+    "parameter_specs": []
+  },
+  {
+    "id": "twin",
+    "name": "디지털 트윈 에이전트",
+    "category": "Digital Twin",
+    "tool": "twin.inspect",
+    "description": "설비 맵과 현재 운전 상태를 확인합니다.",
+    "version": "1.0.0",
+    "depends": ["data"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {},
+    "parameter_specs": []
+  },
+  {
+    "id": "simulation",
+    "name": "시뮬레이션 에이전트",
+    "category": "Simulator",
+    "tool": "simulation.inspect",
+    "description": "입력 가정에 따른 생산 용량을 비교합니다.",
+    "version": "1.0.0",
+    "depends": ["production"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {
+      "hours": 8,
+      "cycle_reduction": 15
+    },
+    "parameter_specs": [
+      {
+        "key": "hours",
+        "label": "분석 시간 (h)",
+        "default": 8,
+        "min": 1,
+        "max": 24,
+        "step": 1
+      },
+      {
+        "key": "cycle_reduction",
+        "label": "주기 단축 (%)",
+        "default": 15,
+        "min": 0,
+        "max": 50,
+        "step": 1
+      }
+    ]
+  },
+  {
+    "id": "models",
+    "name": "AI 모델 에이전트",
+    "category": "AI Hub",
+    "tool": "models.inspect",
+    "description": "통계 모델의 학습·배포 메타데이터를 확인합니다.",
+    "version": "1.0.0",
+    "depends": ["data"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {},
+    "parameter_specs": []
+  },
+  {
+    "id": "robots",
+    "name": "로봇 에이전트",
+    "category": "Robot Hub",
+    "tool": "robots.inspect",
+    "description": "공용 가상 로봇 상태와 저전압 대상을 확인합니다.",
+    "version": "1.0.0",
+    "depends": ["logistics"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {
+      "min_battery": 20
+    },
+    "parameter_specs": [
+      {
+        "key": "min_battery",
+        "label": "최소 배터리 (%)",
+        "default": 20,
+        "min": 0,
+        "max": 100,
+        "step": 1
+      }
+    ]
+  },
+  {
+    "id": "physical",
+    "name": "피지컬 AI 에이전트",
+    "category": "Physical AI Lab",
+    "tool": "physical.inspect",
+    "description": "합성 데이터셋과 실험 가정을 확인합니다.",
+    "version": "1.0.0",
+    "depends": ["simulation"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {},
+    "parameter_specs": []
+  },
+  {
+    "id": "panels",
+    "name": "현장 패널 에이전트",
+    "category": "Shopfloor",
+    "tool": "panels.inspect",
+    "description": "라인 패널의 게시 상태와 구성 리비전을 확인합니다.",
+    "version": "1.0.0",
+    "depends": ["data"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {},
+    "parameter_specs": []
+  },
+  {
+    "id": "cctv",
+    "name": "CCTV 에이전트",
+    "category": "CCTV",
+    "tool": "cctv.inspect",
+    "description": "카메라 설정과 모의·실영상 소스를 분류합니다.",
+    "version": "1.0.0",
+    "depends": ["panels"],
+    "enabled": true,
+    "instruction": "",
+    "parameters": {},
+    "parameter_specs": []
+  }
+]

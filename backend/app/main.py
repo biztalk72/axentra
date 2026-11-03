@@ -25,6 +25,7 @@ from .schemas import RegisterInput, LoginInput, BatchInput, EventInput, Connecto
 from .seed import initialize, DEMO_MODE
 from .panels import router as field_router, initialize_field_devices
 from .agents import router as agent_router, recover_agent_runs
+from .agent_registry import router as module_router, initialize_agent_registry
 from .services import resource_dict, asset_dict, add_resource, get_resource, identifier, audit, ingest, calculate_simulation
 
 logger=logging.getLogger('forge')
@@ -52,6 +53,7 @@ def demo_tick(db):
 async def lifespan(app):
     initialize()
     initialize_field_devices()
+    initialize_agent_registry()
     recover_agent_runs()
     task=asyncio.create_task(demo_stream()) if DEMO_MODE and os.getenv('DEMO_STREAM','true').lower()=='true' else None
     yield
@@ -63,6 +65,7 @@ async def lifespan(app):
 app=FastAPI(title='FORGE AX API',description='전주기 제조 AX 플랫폼 · MVP',version='0.1.0',lifespan=lifespan)
 app.include_router(field_router)
 app.include_router(agent_router)
+app.include_router(module_router)
 app.add_middleware(CORSMiddleware,allow_origins=os.getenv('CORS_ORIGINS','http://127.0.0.1:5173,http://localhost:5173').split(','),allow_credentials=False,allow_methods=['GET','POST'],allow_headers=['Authorization','Content-Type'])
 
 @app.exception_handler(RequestValidationError)

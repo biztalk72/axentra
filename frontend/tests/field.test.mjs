@@ -229,7 +229,7 @@ test("multi-agent planner, workers, graphs, shared facts and approvals form a co
   assert.equal(created.status, "queued");
   const result = await request(`/agents/runs/${created.id}`);
   assert.equal(result.status, "awaiting_approval");
-  assert.equal(result.tasks.length, 8);
+  assert.equal(result.tasks.length, 16);
   assert.ok(result.blackboard.equipment.maintenance_assets.includes("CNC-003"));
   assert.ok(result.blackboard.quality.metrics.good > 0);
   assert.ok(
@@ -238,7 +238,7 @@ test("multi-agent planner, workers, graphs, shared facts and approvals form a co
   );
   assert.ok(result.knowledge_graph.nodes.some((n) => n.id === "CAM-A-01"));
   assert.ok(!result.knowledge_graph.nodes.some((n) => n.id === "CAM-B-01"));
-  assert.equal(result.traces.length, 5);
+  assert.equal(result.traces.length, 13);
   const approval = result.approvals[0];
   await request(`/recommendations/${approval.id}/decision`, {
     decision: "approve",
@@ -283,4 +283,176 @@ test("queued agent runs can pause, resume or cancel without silently changing sc
   await assert.rejects(
     request(`/agents/runs/${cancel.id}/control`, { action: "resume" }),
   );
+});
+
+test("agent catalogs agree and modules validate dependencies and preview without effects", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const backend = JSON.parse(
+    await readFile(
+      new URL("../../backend/app/agent_modules/catalog.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  const frontend = JSON.parse(
+    await readFile(
+      new URL("../src/agent-modules/catalog.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  assert.deepEqual(frontend, backend);
+  await login();
+  const items = await request("/agents/modules");
+  assert.equal(items.length, 13);
+  const equipment = items.find((m) => m.id === "equipment");
+  const cfg = (m) => ({
+    name: m.name,
+    description: m.description,
+    enabled: m.enabled,
+    depends: m.depends,
+    instruction: m.instruction,
+    parameters: m.parameters,
+  });
+  const before = await request("/agents/runs");
+  const preview = await request("/agents/modules/equipment/preview", {
+    ...cfg(equipment),
+    parameters: { temperature_threshold: 200, vibration_threshold: 100 },
+  });
+  assert.equal(preview.line_results.A.metrics.warnings, 0);
+  assert.equal((await request("/agents/runs")).length, before.length);
+  const production = items.find((m) => m.id === "production");
+  await assert.rejects(
+    request("/agents/modules/production", {
+      expected_revision: 1,
+      config: { ...cfg(production), depends: ["simulation"] },
+    }),
+  );
+  await assert.rejects(
+    request("/agents/modules/equipment", {
+      expected_revision: 1,
+      config: { ...cfg(equipment), tool: "shell.exec" },
+    }),
+  );
+  const updated = await request("/agents/modules/equipment", {
+    expected_revision: 1,
+    config: {
+      ...cfg(equipment),
+      name: "별도 설비 분석",
+      parameters: { temperature_threshold: 80, vibration_threshold: 4 },
+    },
+  });
+  assert.equal(updated.revision, 2);
+  assert.equal(updated.history[0].parameters.temperature_threshold, 75);
+  await assert.rejects(
+    request("/agents/modules/equipment", {
+      expected_revision: 1,
+      config: cfg(equipment),
+    }),
+  );
+  await request("/agents/modules/equipment", {
+    expected_revision: 2,
+    config: cfg(equipment),
+  });
+});
+
+test("individual module runs include dependency closure and freeze configured values", async () => {
+  await login();
+  const cfg = (m) => ({
+    name: m.name,
+    description: m.description,
+    enabled: m.enabled,
+    depends: m.depends,
+    instruction: m.instruction,
+    parameters: m.parameters,
+  });
+  const m = (await request("/agents/modules")).find(
+    (m) => m.id === "equipment",
+  );
+  const frozen = await request("/agents/runs", {
+    goal: "생성 시점 구성 고정 확인",
+    line: "A",
+    mode: "tools",
+    agent_ids: ["equipment"],
+  });
+  await request("/agents/modules/equipment", {
+    expected_revision: m.revision,
+    config: {
+      ...cfg(m),
+      parameters: { temperature_threshold: 200, vibration_threshold: 100 },
+    },
+  });
+  const result = await request(`/agents/runs/${frozen.id}`);
+  assert.equal(result.blackboard.equipment.metrics.warnings, 1);
+  assert.equal(
+    result.modules.find((m) => m.id === "equipment").revision,
+    m.revision,
+  );
+  const fresh = await request("/agents/runs", {
+    goal: "수정 후 별도 에이전트 진단",
+    line: "A",
+    mode: "tools",
+    agent_ids: ["equipment"],
+  });
+  assert.equal(
+    (await request(`/agents/runs/${fresh.id}`)).blackboard.equipment.metrics
+      .warnings,
+    0,
+  );
+  const camera = (await request("/agents/modules")).find(
+    (m) => m.id === "cctv",
+  );
+  await assert.rejects(
+    request("/agents/modules", {
+      ...cfg(camera),
+      id: "main",
+      name: "예약 이름 거부",
+      template_id: "cctv",
+    }),
+  );
+  const clone = await request("/agents/modules", {
+    ...cfg(camera),
+    id: "camera-inspector",
+    name: "카메라 독립 구성",
+    template_id: "cctv",
+  });
+  assert.equal(clone.builtin, false);
+  const selected = await request("/agents/runs", {
+    goal: "CCTV 의존성 포함 선택 실행",
+    line: "B",
+    mode: "tools",
+    agent_ids: ["camera-inspector"],
+  });
+  const completed = await request(`/agents/runs/${selected.id}`);
+  assert.deepEqual(
+    new Set(completed.tasks.map((t) => t.id)),
+    new Set([
+      "planner",
+      "data",
+      "panels",
+      "camera-inspector",
+      "main",
+      "approval",
+    ]),
+  );
+  assert.equal(completed.status, "completed");
+  await assert.rejects(
+    request("/agents/runs", {
+      goal: "잘못된 선택 실행 확인",
+      line: "B",
+      mode: "tools",
+      agent_ids: [],
+    }),
+  );
+  await request("/auth/logout", {});
+  await request("/auth/login", {
+    email: "floor@example.com",
+    password: "TrialFloor!2026",
+  });
+  await assert.rejects(
+    request("/agents/modules/equipment", {
+      expected_revision: m.revision + 1,
+      config: cfg(m),
+    }),
+    (e) => e.status === 403,
+  );
+  await login();
 });

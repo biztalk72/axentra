@@ -90,3 +90,16 @@ PanelConfig와 카메라 필드의 전체 스키마는 OpenAPI를 따른다. `su
 | /api/agents/runs/{id}/control | POST | operator | `{action:"pause"|"resume"|"cancel"}` |
 
 `mode:"ollama"`는 관리자 및 서버 LLM 설정이 필요하다. 실행 생성은 201 후 BackgroundTasks에서 분석한다. GET으로 진행을 확인한다. 제안 승인은 기존 `/api/recommendations/{id}/decision`을 재사용한다. 원본 스냅샷과 장치 키 해시는 응답에 포함하지 않는다. 오류/중지/취소를 완료로 표시하지 않는다.
+
+## 독립 에이전트 모듈
+
+| 경로 | 메서드 | 권한 | 계약 |
+|---|---|---|---|
+| /api/agents/modules | GET | viewer | 기본 13개 + 사용자 구성, 매개변수 계약·리비전·이력 |
+| /api/agents/modules | POST | admin | `{id,template_id,name,description,enabled,depends,instruction,parameters}` 독립 구성 등록 |
+| /api/agents/modules/{id} | POST | admin | `{expected_revision,config}` 구성 변경·이력 저장 |
+| /api/agents/modules/{id}/preview | POST | viewer | config로 A/B 라인 도구 결과 미리보기, 쓰기·LLM 호출 없음 |
+
+config는 name, description, enabled, depends, instruction, parameters이다. ID/기반 도구는 변경할 수 없다. 모듈은 최대 32개, 이전 구성은 최근 20개를 보관한다. 범위·순환/없는 의존성·중지된 선행 모듈은 422, 리비전 충돌은 409다. data는 항상 활성이다.
+
+`POST /api/agents/runs`에 `agent_ids:["cctv"]`를 추가하면 data·panels를 자동 포함한다. 생략하면 사용 중인 전체 모듈이다. 빈 배열·중복·없는 ID는 422. 실행 응답의 modules는 생성 당시 코드 버전·구성 리비전·기준·지침을 보관한다. 자세한 계약은 [모듈 가이드](AGENT-MODULES.md)를 따른다.

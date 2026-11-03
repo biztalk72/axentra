@@ -23,6 +23,7 @@ import { api, date } from "./api";
 import type { AgentRun, AgentConfig, AgentTask } from "./agent-model";
 import { FieldDialog } from "./field-ui";
 import "./agents.css";
+import { AgentModulesPage } from "./agent-modules-page";
 const labels: Record<string, string> = {
   queued: "대기",
   running: "실행 중",
@@ -69,7 +70,7 @@ export function AgentWorkspace({
   action: (path: string, body: unknown, message: string) => Promise<unknown>;
   approvalContent: ReactNode;
 }) {
-  const [tab, setTab] = useState<"runs" | "approvals">("runs"),
+  const [tab, setTab] = useState<"runs" | "approvals" | "modules">("runs"),
     [runs, setRuns] = useState<AgentRun[]>([]),
     [run, setRun] = useState<AgentRun | null>(null),
     [selected, setSelected] = useState(""),
@@ -84,7 +85,8 @@ export function AgentWorkspace({
     [node, setNode] = useState("equipment"),
     [view, setView] = useState<"execution" | "assets" | "traces">("execution"),
     [settingsOpen, setSettingsOpen] = useState(false),
-    [concurrency, setConcurrency] = useState(3);
+    [concurrency, setConcurrency] = useState(3),
+    [selectedModules, setSelectedModules] = useState<string[] | null>(null);
   const load = () =>
     Promise.all([
       api<AgentRun[]>("/agents/runs"),
@@ -112,6 +114,11 @@ export function AgentWorkspace({
         const result = await api<AgentRun>(`/agents/runs/${selected}`);
         if (!alive) return;
         setRun(result);
+        setNode((id) =>
+          result.tasks.some((t) => t.id === id)
+            ? id
+            : result.tasks.find((t) => t.id !== "planner")?.id || "planner",
+        );
         setRuns((rows) => rows.map((r) => (r.id === result.id ? result : r)));
         if (["queued", "running", "awaiting_approval"].includes(result.status))
           timer = setTimeout(
@@ -128,14 +135,25 @@ export function AgentWorkspace({
       clearTimeout(timer);
     };
   }, [selected, revision]);
-  async function create() {
+  async function create(agentIds?: string[]) {
     setBusy(true);
     setError("");
     try {
-      const result = await api<AgentRun>("/agents/runs", { goal, line, mode });
+      const result = await api<AgentRun>("/agents/runs", {
+        goal,
+        line,
+        mode,
+        agent_ids: agentIds || selectedModules || undefined,
+      });
       setRuns((rows) => [result, ...rows]);
       setSelected(result.id);
       setRun(result);
+      setNode(
+        agentIds?.[0] ||
+          (result.modules?.some((m) => m.id === "equipment")
+            ? "equipment"
+            : result.modules?.[0]?.id || "data"),
+      );
       setTab("runs");
     } catch (e) {
       setError((e as Error).message);
@@ -198,9 +216,23 @@ export function AgentWorkspace({
           <ShieldCheck size={15} />
           작업 제안 · 승인
         </button>
+        <button
+          className={tab === "modules" ? "selected" : ""}
+          onClick={() => setTab("modules")}
+        >
+          <Bot size={15} />
+          기능별 에이전트
+        </button>
       </div>
       {tab === "approvals" ? (
         approvalContent
+      ) : tab === "modules" ? (
+        <AgentModulesPage
+          admin={admin}
+          write={write}
+          onChanged={() => void load()}
+          onRun={(id) => void create([id])}
+        />
       ) : (
         <>
           <div className="page-heading">
@@ -234,7 +266,10 @@ export function AgentWorkspace({
             <ArrowRight size={14} />
             <span>
               <Bot size={17} />
-              <b>전문 Worker × 5</b>
+              <b>
+                기능 에이전트 ×{" "}
+                {config?.roles?.filter((m) => m.enabled).length || 0}
+              </b>
             </span>
             <ArrowRight size={14} />
             <span>
@@ -251,7 +286,7 @@ export function AgentWorkspace({
             <div>
               <span className="subtle-label">NEW MANUFACTURING MISSION</span>
               <h2>라인 진단 목표</h2>
-              <p>데이터·설비·생산·품질·물류를 공통 스냅샷으로 분석합니다.</p>
+              <p>필요한 기능을 선택하면 선행 에이전트를 포함해 실행합니다.</p>
             </div>
             <textarea
               aria-label="에이전트 진단 목표"
@@ -283,14 +318,73 @@ export function AgentWorkspace({
               </label>
               <button
                 className="btn primary"
-                disabled={!write || busy || goal.trim().length < 5}
-                onClick={create}
+                disabled={
+                  !write ||
+                  busy ||
+                  goal.trim().length < 5 ||
+                  selectedModules?.length === 0
+                }
+                onClick={() => void create()}
               >
                 <Play size={15} />
                 {busy ? "진단 요청 중…" : "에이전트 진단 실행"}
               </button>
             </div>
           </section>
+          <details className="panel agent-module-picker">
+            <summary>
+              실행할 에이전트 선택{" "}
+              <span>
+                {selectedModules
+                  ? selectedModules.length
+                  : config?.roles?.filter((m) => m.enabled).length || 0}
+                개 선택 · 선행 의존성 자동 포함
+              </span>
+            </summary>
+            <div>
+              {config?.roles?.map((m) => (
+                <label className="check-row" key={m.id}>
+                  <input
+                    type="checkbox"
+                    disabled={!m.enabled || m.id === "data"}
+                    checked={
+                      m.enabled &&
+                      (
+                        selectedModules ||
+                        config.roles.filter((r) => r.enabled).map((r) => r.id)
+                      ).includes(m.id)
+                    }
+                    onChange={(e) =>
+                      setSelectedModules((ids) =>
+                        e.target.checked
+                          ? [
+                              ...(ids ||
+                                config.roles
+                                  .filter((r) => r.enabled)
+                                  .map((r) => r.id)),
+                              m.id,
+                            ]
+                          : (
+                              ids ||
+                              config.roles
+                                .filter((r) => r.enabled)
+                                .map((r) => r.id)
+                            ).filter((id) => id !== m.id),
+                      )
+                    }
+                  />
+                  {m.name}
+                  {!m.enabled && <small>중지됨</small>}
+                </label>
+              ))}
+            </div>
+            <button
+              className="btn small-btn"
+              onClick={() => setSelectedModules(null)}
+            >
+              사용 중인 전체 에이전트 선택
+            </button>
+          </details>
           <div className="agent-run-layout">
             <aside className="agent-run-list">
               <div className="agent-list-title">
@@ -517,7 +611,12 @@ export function AgentWorkspace({
                           </span>
                           <div>
                             <h3>{activeTask?.name}</h3>
-                            <small>{activeTask?.tool}</small>
+                            <small>
+                              {activeTask?.tool}
+                              {activeTask?.module_revision
+                                ? ` · 구성 v${activeTask.module_revision}`
+                                : ""}
+                            </small>
                           </div>
                           <RunStatus
                             value={activeTask?.status || "completed"}
@@ -670,7 +769,7 @@ export function AgentWorkspace({
                   <div>
                     <span>Planner</span>
                     <ChevronRight size={14} />
-                    <span>5 Workers</span>
+                    <span>기능별 Agents</span>
                     <ChevronRight size={14} />
                     <span>Main & Approval</span>
                   </div>
@@ -754,30 +853,41 @@ function ExecutionGraph({
   selected: string;
   onSelect: (id: string) => void;
 }) {
-  const positions: Record<string, [number, number]> = {
-    planner: [15, 140],
-    data: [205, 140],
-    equipment: [435, 20],
-    production: [435, 100],
-    quality: [435, 180],
-    logistics: [435, 260],
-    main: [680, 140],
-    approval: [900, 140],
+  const depths: Record<string, number> = {};
+  const depth = (id: string, seen = new Set<string>()): number => {
+    if (id in depths) return depths[id];
+    if (seen.has(id)) return 0;
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return 0;
+    seen.add(id);
+    return (depths[id] = task.depends.length
+      ? 1 + Math.max(...task.depends.map((d) => depth(d, new Set(seen))))
+      : 0);
   };
-  const names: Record<string, string> = {
-    planner: "Planner",
-    data: "데이터",
-    equipment: "설비",
-    production: "생산",
-    quality: "품질",
-    logistics: "물류·현장",
-    main: "Main Agent",
-    approval: "승인 게이트",
-  };
+  tasks.forEach((t) => depth(t.id));
+  const layers: Array<AgentTask[]> = [];
+  tasks.forEach((t) => {
+    (layers[depths[t.id]] ||= []).push(t);
+  });
+  const positions: Record<string, [number, number]> = {},
+    height = Math.max(180, ...layers.map((l) => l.length * 82 + 30)),
+    width = layers.length * 205 + 10;
+  layers.forEach((layer, col) =>
+    layer.forEach((task, row) => {
+      positions[task.id] = [
+        15 + col * 205,
+        (height - layer.length * 82) / 2 + row * 82,
+      ];
+    }),
+  );
   return (
     <div className="agent-execution-graph">
       <svg
-        viewBox="0 0 1080 345"
+        viewBox={`0 0 ${width} ${height}`}
+        style={{
+          minWidth: Math.max(760, width),
+          height: Math.max(300, height),
+        }}
         aria-label="Planner, 데이터 워커, 병렬 전문 워커, Main, 승인 게이트의 실행 그래프"
       >
         {tasks.flatMap((t) =>
@@ -817,7 +927,13 @@ function ExecutionGraph({
               <rect width="154" height="60" rx="10" />
               <circle cx="17" cy="21" r="3" />
               <text x="29" y="25">
-                {names[t.id]}
+                {t.id === "planner"
+                  ? "Planner"
+                  : t.id === "main"
+                    ? "Main Agent"
+                    : t.id === "approval"
+                      ? "승인 게이트"
+                      : t.name.replace(" 에이전트", "").slice(0, 14)}
               </text>
               <text className="graph-node-status" x="17" y="45">
                 {labels[t.status] || t.status}

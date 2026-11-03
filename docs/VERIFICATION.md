@@ -6,12 +6,12 @@
 |---|---|
 | TypeScript 검사·실제 API 연결 Vite 빌드 | 통과 |
 | TypeScript 검사·Pages 체험 Vite 빌드 | 통과 |
-| SQLite API 통합 테스트 | 32개 통과 · PostgreSQL 전용 3개 건너뜀 |
-| Pages 브라우저 어댑터 업무·계정 흐름 12개 테스트 | 통과 |
+| SQLite API 통합 테스트 | 38개 통과 · PostgreSQL 전용 3개 건너뜀 |
+| Pages 브라우저 어댑터 업무·계정 흐름 14개 테스트 | 통과 |
 | Chrome 실제 API 로그인·대시보드 | 확인. KPI·설비 맵·인사이트 표시 |
 | 반응형 UI | 데스크톱 및 390×844 모바일 확인. 모바일 상단 바 줄바꿈 개선 |
 | Pages 시뮬레이션 UI | 버튼 실행 후 488 → 609 ea, +24.8%의 결정론적 결과 및 이력 표시 확인 |
-| PostgreSQL 테스트·migration | 35개 통과. 가입·관리자 설정·동시 중복 가입·동시 승인·로봇 배정 포함 |
+| PostgreSQL 테스트·migration | 41개 통과. 가입·관리자 설정·동시 중복 가입·동시 승인·로봇 배정 포함 |
 | Docker Compose 빌드 및 통합 실행 | API·웹 이미지 빌드 성공. PostgreSQL/API healthy, Nginx 8088에서 로그인·overview 응답 확인 |
 | GitHub Pages 공개 배포 | Actions 성공, 실제 배포 URL을 Chrome에서 열어 표시 확인 |
 
@@ -58,3 +58,12 @@ Pages 체험 테스트는 브라우저 저장소 기반 데이터 수집 → 시
 
 최신 기능 릴리스: [8a0f7ec](https://github.com/biztalk72/forge-ax/commit/8a0f7ec4c07c6e950ef872e1acbc608eb8ea607e), [CI 및 Pages 배포 성공](https://github.com/biztalk72/forge-ax/actions/runs/41570072208).
 공개 Pages에서 일반 체험 계정 로그인 → 멀티 에이전트 진단 → 승인 대기·관리자 전용 버튼 비활성화 → 패널 초안 저장·확대 미리보기 → 게시 원본 유지 확인. 공개 런타임 콘솔 오류 없음. 관리자 전용 작업은 로컬 실제 API 및 자동 테스트로 검증했다.
+
+## 기능별 독립 에이전트 검증
+
+- 독립 코드 모듈 13개, 구성 추가·조회·수정·사용 중지, 관리자 권한, 매개변수·예약 ID·도구 바인딩 검증, 낡은 리비전 거부, 구성 이력, 순환·비활성 선행 의존성 거부.
+- 생성 시점의 기준값·리비전 고정, 개별 실행의 의존성 자동 포함, 도구 미리보기의 쓰기·LLM 호출 없음, 기존 업무·계정·현장·CCTV 회귀 검증.
+- SQLite 전체 38개 통과/3개 PostgreSQL 전용 생략, PostgreSQL 41개 통과, Pages 어댑터 14개 통과. Python/Pages 카탈로그 계약 일치 검사 포함.
+- Chrome 실제 API에서 설비 기준값 편집·미리보기·저장, v1 복원→v3 저장, CCTV 개별 실행(data→panels→cctv), 독립 구성 등록(중지 상태)과 A/B 읽기 전용 결과 확인.
+
+- 390×844 모바일의 페이지 가로 넘침 없음. Docker Nginx→API→PostgreSQL에서 모듈 13개 목록과 CCTV 선택 실행의 의존성·완료 결과 확인.
