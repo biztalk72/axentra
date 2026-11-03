@@ -1,0 +1,52 @@
+name: forge-ax
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: forge
+      POSTGRES_USER: forge
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Copy .env.example to .env and set a password}
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U forge -d forge]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://forge:${POSTGRES_PASSWORD}@postgres:5432/forge
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD}
+      DEMO_MODE: ${DEMO_MODE:-true}
+      DEMO_STREAM: ${DEMO_STREAM:-true}
+    depends_on:
+      postgres: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, .venv/bin/python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+  web:
+    build: ./frontend
+    ports: ["127.0.0.1:${WEB_PORT:-8088}:80"]
+    depends_on:
+      api: {condition: service_healthy}
+    restart: unless-stopped
+  # Optional enterprise integration infrastructure; application adapters are future work.
+  redis:
+    image: redis:7-alpine
+    profiles: [integration]
+    command: [redis-server, --appendonly, 'yes']
+    volumes: [redis-data:/data]
+    restart: unless-stopped
+  mqtt:
+    image: eclipse-mosquitto:2
+    profiles: [integration]
+    volumes: [./infra/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro, mqtt-data:/mosquitto/data]
+    restart: unless-stopped
+volumes:
+  postgres-data:
+  redis-data:
+  mqtt-data:

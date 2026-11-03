@@ -1,0 +1,88 @@
+name: Verify and deploy FORGE AX
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: forge-ax-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: forge_test
+          POSTGRES_USER: forge
+          POSTGRES_PASSWORD: test-only-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U forge -d forge_test"
+          --health-interval 5s --health-timeout 3s --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.8.22'
+          python-version: '3.13'
+      - run: uv sync --directory backend --frozen
+      - name: SQLite integration tests
+        working-directory: backend
+        run: .venv/bin/python -m pytest -q
+      - name: PostgreSQL integration tests
+        working-directory: backend
+        env:
+          TEST_DATABASE_URL: postgresql+psycopg://forge:test-only-password@localhost:5432/forge_test
+        run: .venv/bin/python -m pytest -q
+      - name: Verify migration on PostgreSQL
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+psycopg://forge:test-only-password@localhost:5432/forge_test
+        run: |
+          .venv/bin/python -c 'from app.db import Base, engine; Base.metadata.drop_all(engine)'
+          .venv/bin/alembic upgrade head
+          .venv/bin/alembic current
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+        working-directory: frontend
+      - run: npm test
+        working-directory: frontend
+      - name: Build API-connected console
+        run: npm run build
+        working-directory: frontend
+      - name: Build public browser demo
+        run: npm run build:pages
+        working-directory: frontend
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          path: frontend/dist
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: [api-tests, build]
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

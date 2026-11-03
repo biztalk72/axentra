@@ -1,0 +1,13 @@
+node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+.env
+*.db
+*.db-*
+frontend/dist/
+artifacts/
+.DS_Store
+*.tsbuildinfo
+.harness-mem/
