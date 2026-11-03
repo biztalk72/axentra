@@ -74,7 +74,7 @@ admin은 모든 역할의 작업을 수행한다. 직접 가입한 계정은 ope
 | /api/panels/bulk-publish | POST | admin | `{targets:[{id,expected_revision}]}` 원자적 게시 |
 | /api/panels/{id}/access | POST | admin | 30일 access_token 발급, 이전 키 무효 |
 | /api/panels/{id}/display | GET | viewer 또는 해당 장치 키 | 게시본·라인 데이터만 반환 |
-| /api/panels/{id}/heartbeat | POST | operator 또는 해당 장치 키 | `{screen_id,revision}` 실제 연결 기록 |
+| /api/panels/{id}/heartbeat | POST | viewer 또는 해당 장치 키 | `{screen_id,revision}` 실제 연결 기록 |
 | /api/panels/{id}/events | POST | operator 또는 해당 장치 키 | `{event_id,action,reason?,order_id?}` 멱등 입력 |
 
 PanelConfig와 카메라 필드의 전체 스키마는 OpenAPI를 따른다. `support.request`는 reason=equipment/material/quality, `work.acknowledge`는 해당 라인의 진행 작업 ID가 필요하다. TV 패널·미게시 화면·허용되지 않은 템플릿의 입력은 거부한다. 장치 키는 다른 API에 사용할 수 없다. 카메라 URL은 HTTP(S)만 허용하고 사용자명·암호 내장을 거부한다.
