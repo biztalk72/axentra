@@ -6,16 +6,22 @@
 |---|---|
 | TypeScript 검사·실제 API 연결 Vite 빌드 | 통과 |
 | TypeScript 검사·Pages 체험 Vite 빌드 | 통과 |
-| SQLite API 통합 테스트 | 통과. PostgreSQL 전용 동시성 테스트는 별도 실행 |
+| SQLite API 통합 테스트 | 14개 통과 · PostgreSQL 전용 2개 건너뜀 |
 | Pages 브라우저 어댑터 업무 흐름 2개 테스트 | 통과 |
 | Chrome 실제 API 로그인·대시보드 | 확인. KPI·설비 맵·인사이트 표시 |
-| PostgreSQL 테스트·migration | GitHub Actions의 api-tests에서 확인 가능 |
-| Docker Compose 빌드 및 통합 실행 | 검증 진행 중. 최종 상태는 후속 커밋에 기록 |
-| GitHub Pages 공개 배포 | Actions 배포 결과와 아래 URL에서 확인 |
+| 반응형 UI | 데스크톱 및 390×844 모바일 확인. 모바일 상단 바 줄바꿈 개선 |
+| Pages 시뮬레이션 UI | 버튼 실행 후 488 → 609 ea, +24.8%의 결정론적 결과 및 이력 표시 확인 |
+| PostgreSQL 테스트·migration | 16개 통과, 동시 승인·로봇 배정 포함. 001_initial migration 적용 확인 |
+| Docker Compose 빌드 및 통합 실행 | API·웹 이미지 빌드 성공. PostgreSQL/API healthy, Nginx 8088에서 로그인·overview 응답 확인 |
+| GitHub Pages 공개 배포 | Actions 성공, 실제 배포 URL을 Chrome에서 열어 표시 확인 |
 
 공개 체험: https://biztalk72.github.io/forge-ax/
 
 CI: https://github.com/biztalk72/forge-ax/actions
+
+최초 전체 파이프라인 성공: https://github.com/biztalk72/forge-ax/actions/runs/41562269261
+
+로컬 Docker 콘솔: http://127.0.0.1:8088. 기존 서비스의 8080 사용을 피하도록 WEB_PORT를 구성했다.
 
 ## 자동 검증의 범위
 

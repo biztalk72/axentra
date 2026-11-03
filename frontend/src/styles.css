@@ -3409,3 +3409,20 @@ dd {
     scroll-behavior: auto !important;
   }
 }
+
+@media (max-width: 720px) {
+  .topbar .breadcrumb {
+    display: none;
+  }
+  .topbar-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .global-search {
+    margin-right: auto;
+    min-width: 0;
+  }
+  .global-search input {
+    width: 110px;
+  }
+}

@@ -681,9 +681,10 @@ function Login({ onLogin }: { onLogin: (u: User) => void }) {
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [boot, setBoot] = useState(true);
-  const [page, setPage] = useState<Page>(
-    (location.hash.slice(1) as Page) || "overview",
-  );
+  const [page, setPage] = useState<Page>(() => {
+    const initial = location.hash.slice(1) as Page;
+    return nav.some((n) => n.id === initial) ? initial : "overview";
+  });
   const [overview, setOverview] = useState<Overview | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [error, setError] = useState("");
