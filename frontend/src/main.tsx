@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
+  Monitor,
+  Video,
   Eye,
   EyeOff,
   Activity,
@@ -47,9 +49,15 @@ import {
   normalizeEmail,
   validateRegistration,
 } from "./auth";
+import { AgentWorkspace } from "./agent-workspace";
+import { PanelsPage } from "./panels-page";
+import { CamerasPage, DashboardCctv } from "./cctv";
+import { PanelPlayer, panelRoute } from "./panel-player";
 import "./styles.css";
 
 type Page =
+  | "panels"
+  | "cctv"
   | "overview"
   | "edge"
   | "data"
@@ -120,7 +128,7 @@ const nav: {
   },
   {
     id: "agent",
-    label: "AX 에이전트",
+    label: "멀티 AI 에이전트",
     en: "Agentic AI",
     icon: Sparkles,
     group: "SIMULATE & DECIDE",
@@ -138,6 +146,20 @@ const nav: {
     en: "Physical AI",
     icon: FlaskConical,
     group: "ACT & OPTIMIZE",
+  },
+  {
+    id: "panels",
+    label: "현장 패널 스튜디오",
+    en: "Field Panels",
+    icon: Monitor,
+    group: "SHOPFLOOR EXPERIENCE",
+  },
+  {
+    id: "cctv",
+    label: "라인 CCTV",
+    en: "Line CCTV",
+    icon: Video,
+    group: "SHOPFLOOR EXPERIENCE",
   },
   {
     id: "settings",
@@ -1164,7 +1186,14 @@ function App() {
                 </div>
               </div>
               {page === "overview" ? (
-                <OverviewPage data={overview} go={go} refresh={refresh} />
+                <>
+                  <OverviewPage data={overview} go={go} refresh={refresh} />
+                  <DashboardCctv />
+                </>
+              ) : page === "panels" ? (
+                <PanelsPage write={write} admin={admin} />
+              ) : page === "cctv" ? (
+                <CamerasPage write={write} />
               ) : page === "twin" ? (
                 <TwinPage data={overview} query={query} />
               ) : page === "data" ? (
@@ -1198,12 +1227,20 @@ function App() {
                   toast={toast}
                 />
               ) : page === "agent" ? (
-                <AgentPage
-                  admin={admin}
+                <AgentWorkspace
                   write={write}
-                  busy={busy}
-                  action={action}
+                  admin={admin}
                   revision={revision}
+                  action={action}
+                  approvalContent={
+                    <AgentPage
+                      admin={admin}
+                      write={write}
+                      busy={busy}
+                      action={action}
+                      revision={revision}
+                    />
+                  }
                 />
               ) : page === "robot" ? (
                 <RobotPage
@@ -3429,8 +3466,21 @@ function CreateForm({
   );
 }
 
+function ExperienceRoot() {
+  const [route, setRoute] = useState(panelRoute);
+  useEffect(() => {
+    const change = () => setRoute(panelRoute());
+    window.addEventListener("hashchange", change);
+    return () => window.removeEventListener("hashchange", change);
+  }, []);
+  return route ? (
+    <PanelPlayer key={route.id} id={route.id} initialKey={route.key} />
+  ) : (
+    <App />
+  );
+}
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <ExperienceRoot />
   </React.StrictMode>,
 );

@@ -20,6 +20,8 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@admin.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD}
       ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://host.docker.internal:11434}
+      LLM_MODEL: ${LLM_MODEL:-}
       DEMO_MODE: ${DEMO_MODE:-true}
       DEMO_STREAM: ${DEMO_STREAM:-true}
     depends_on:

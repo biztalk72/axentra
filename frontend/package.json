@@ -12,6 +12,7 @@
     "format": "prettier --write src vite.config.ts index.html *.json tests"
   },
   "dependencies": {
+    "hls.js": "^1.7.4",
     "lucide-react": "^0.468.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"

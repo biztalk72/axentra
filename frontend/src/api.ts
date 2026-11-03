@@ -55,14 +55,19 @@ export function setToken(value: string) {
     ? sessionStorage.setItem("forge-token", value)
     : sessionStorage.removeItem("forge-token");
 }
-export async function api<T>(path: string, body?: unknown): Promise<T> {
+export async function api<T>(
+  path: string,
+  body?: unknown,
+  deviceKey?: string,
+): Promise<T> {
   if (STATIC_DEMO) {
     try {
-      return await demoApi<T>(path, body);
+      return await demoApi<T>(path, body, undefined, deviceKey);
     } catch (error) {
       if (
         error instanceof DemoAuthError &&
         error.status === 401 &&
+        !deviceKey &&
         token &&
         !path.startsWith("/auth/")
       ) {
@@ -76,7 +81,9 @@ export async function api<T>(path: string, body?: unknown): Promise<T> {
     method: body === undefined ? "GET" : "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(deviceKey || token
+        ? { Authorization: `Bearer ${deviceKey || token}` }
+        : {}),
     },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
@@ -84,7 +91,12 @@ export async function api<T>(path: string, body?: unknown): Promise<T> {
     const detail = await response
       .json()
       .catch(() => ({ detail: "서버에 연결할 수 없습니다." }));
-    if (response.status === 401 && token && !path.includes("login")) {
+    if (
+      response.status === 401 &&
+      !deviceKey &&
+      token &&
+      !path.includes("login")
+    ) {
       setToken("");
       window.dispatchEvent(new Event("session-expired"));
     }

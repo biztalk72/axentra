@@ -1,5 +1,7 @@
 // GitHub Pages only: an explicit browser-local simulator, never a backend fallback.
 import type { Asset, Resource } from "./api";
+import { agentDemoRequest } from "./agent-demo.ts";
+import { panelDemoRequest } from "./panel-demo.ts";
 import { demoAuth } from "./demo-auth.ts";
 import type { BrowserDemoAuth } from "./demo-auth.ts";
 type DemoEvent = {
@@ -254,7 +256,23 @@ export async function demoApi<T>(
   path: string,
   body?: any,
   auth: BrowserDemoAuth = demoAuth,
+  deviceKey?: string,
 ): Promise<T> {
+  if (/^\/(panels|cameras|cctv)(\/|$)/.test(path))
+    return panelDemoRequest<T>(path, body, {
+      auth,
+      deviceKey,
+      source: state,
+      record: recordAudit,
+      saveSource: save,
+    });
+  if (path.startsWith("/agents/"))
+    return agentDemoRequest<T>(path, body, {
+      auth,
+      source: state,
+      record: recordAudit,
+      saveSource: save,
+    });
   let response: unknown;
   if (path === "/auth/me") return auth.current() as T;
   if (path === "/auth/register") {
