@@ -1,4 +1,5 @@
 import { demoApi, demoCSV } from "./demo";
+import { DemoAuthError } from "./demo-auth";
 export const STATIC_DEMO = import.meta.env.VITE_STATIC_DEMO === "true";
 export type User = {
   name: string;
@@ -55,7 +56,22 @@ export function setToken(value: string) {
     : sessionStorage.removeItem("forge-token");
 }
 export async function api<T>(path: string, body?: unknown): Promise<T> {
-  if (STATIC_DEMO) return demoApi<T>(path, body);
+  if (STATIC_DEMO) {
+    try {
+      return await demoApi<T>(path, body);
+    } catch (error) {
+      if (
+        error instanceof DemoAuthError &&
+        error.status === 401 &&
+        token &&
+        !path.startsWith("/auth/")
+      ) {
+        setToken("");
+        window.dispatchEvent(new Event("session-expired"));
+      }
+      throw error;
+    }
+  }
   const response = await fetch("/api" + path, {
     method: body === undefined ? "GET" : "POST",
     headers: {
@@ -75,7 +91,16 @@ export async function api<T>(path: string, body?: unknown): Promise<T> {
     throw new Error(
       typeof detail.detail === "string"
         ? detail.detail
-        : "입력값을 확인하세요. 허용 범위를 벗어난 값이 있습니다.",
+        : Array.isArray(detail.detail)
+          ? detail.detail
+              .map((item: { msg?: string }) =>
+                (item.msg || "입력값을 확인하세요.").replace(
+                  /^Value error, /,
+                  "",
+                ),
+              )
+              .join(" ")
+          : "입력값을 확인하세요. 허용 범위를 벗어난 값이 있습니다.",
     );
   }
   return response.json();

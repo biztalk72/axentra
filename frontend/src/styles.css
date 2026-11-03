@@ -3426,3 +3426,122 @@ dd {
     width: 110px;
   }
 }
+.auth-tabs {
+  display: flex;
+  gap: 4px;
+  background: #f2f5fb;
+  border: 1px solid #e6edf7;
+  padding: 4px;
+  border-radius: 9px;
+  margin-top: 24px;
+}
+.auth-tabs button {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 10px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #8da1be;
+  font-weight: 550;
+}
+.auth-tabs button[aria-selected="true"] {
+  color: #5278c8;
+  background: white;
+  box-shadow: 0 2px 5px #243c6910;
+}
+.login-form .auth-tabs + form {
+  margin-top: 24px;
+}
+.auth-fields {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+  min-width: 0;
+}
+.password-input {
+  position: relative;
+}
+.password-input input {
+  padding-right: 43px;
+}
+.password-input button {
+  position: absolute;
+  right: 7px;
+  top: 6px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #8fa4c2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.password-input button:hover {
+  background: #edf2fb;
+  color: #547abd;
+}
+.password-hint {
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: #8fa3bf;
+}
+.registration-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 14px;
+  border: 1px solid #e5edf8;
+  border-radius: 8px;
+  background: #f7faff;
+  margin-top: 22px;
+}
+.registration-note > svg {
+  color: #8ba9d3;
+  margin-top: 2px;
+}
+.registration-note b {
+  font-size: 10px;
+  color: #6b86ad;
+  font-weight: 550;
+}
+.registration-note p {
+  font-size: 9px;
+  line-height: 1.9;
+  color: #8ba1bf;
+  margin-top: 5px;
+}
+.login-form .auth-storage-note {
+  font-size: 9px;
+  line-height: 1.9;
+  color: #9aacc6;
+  margin-top: 20px;
+  text-align: center;
+}
+.login-form .secure-note {
+  margin-top: 18px;
+  font-size: 8px;
+}
+.account-panel {
+  margin-bottom: 24px;
+}
+@media (max-width: 720px) {
+  .auth-tabs {
+    margin-top: 20px;
+  }
+  .auth-tabs button {
+    font-size: 10px;
+  }
+  .auth-fields {
+    gap: 17px;
+  }
+  .login-form .auth-storage-note {
+    font-size: 8px;
+  }
+}

@@ -1,12 +1,59 @@
 from typing import Literal
-from pydantic import BaseModel, Field, AwareDatetime, ConfigDict
+import re
+from pydantic import BaseModel, Field, AwareDatetime, ConfigDict, field_validator, model_validator
 
 class Input(BaseModel):
     model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
 
+def normalize_email(value: str):
+    value = value.strip().lower()
+    if not re.fullmatch(r"[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\.[a-z]{2,63}", value) or '..' in value or value.startswith('.') or value.split('@')[0].endswith('.'):
+        raise ValueError('올바른 이메일 주소를 입력하세요.')
+    return value
+
+def validate_password(value: str):
+    if not 8 <= len(value) <= 128 or not re.search(r'[A-Za-z]', value) or not re.search(r'[0-9]', value):
+        raise ValueError('비밀번호는 8~128자이며 영문과 숫자를 포함해야 합니다.')
+    return value
+
 class LoginInput(Input):
-    email: str = Field(max_length=200)
+    email: str = Field(min_length=3, max_length=200)
     password: str = Field(min_length=1, max_length=256)
+
+    @field_validator('email')
+    @classmethod
+    def email_format(cls, value):
+        return normalize_email(value)
+
+class RegisterInput(Input):
+    name: str = Field(min_length=2, max_length=60)
+    email: str = Field(min_length=3, max_length=200)
+    password: str = Field(min_length=8, max_length=128)
+    password_confirm: str = Field(min_length=1, max_length=128)
+
+    @field_validator('name')
+    @classmethod
+    def name_format(cls, value):
+        value = value.strip()
+        if len(value) < 2:
+            raise ValueError('이름은 공백을 제외하고 2자 이상 입력하세요.')
+        return value
+
+    @field_validator('email')
+    @classmethod
+    def email_format(cls, value):
+        return normalize_email(value)
+
+    @field_validator('password')
+    @classmethod
+    def password_format(cls, value):
+        return validate_password(value)
+
+    @model_validator(mode='after')
+    def passwords_match(self):
+        if self.password != self.password_confirm:
+            raise ValueError('비밀번호 확인이 일치하지 않습니다.')
+        return self
 
 class EventInput(Input):
     event_id: str = Field(min_length=1, max_length=100)

@@ -1,5 +1,7 @@
 // GitHub Pages only: an explicit browser-local simulator, never a backend fallback.
-import type { Asset, Resource, User } from "./api";
+import type { Asset, Resource } from "./api";
+import { demoAuth } from "./demo-auth.ts";
+import type { BrowserDemoAuth } from "./demo-auth.ts";
 type DemoEvent = {
   id: number;
   event_id: string;
@@ -23,11 +25,6 @@ const KEY = "forge-ax-public-demo-v1";
 const stamp = () => new Date().toISOString();
 const id = (p: string) =>
   `${p}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
-const user: User = {
-  name: "김민수",
-  email: "admin@forge.local",
-  role: "admin",
-};
 function seed(): State {
   const names: [string, string, string, string, number][] = [
     ["CNC-001", "CNC 가공기 01", "CNC", "A", 38],
@@ -190,13 +187,13 @@ function add(
   state.resources[category] = state.resources[category].slice(0, 200);
   return r;
 }
-function audit(action: string, target: string) {
+function recordAudit(action: string, target: string, actor: string) {
   state.audit.unshift({
     id: id("LOG"),
     name: action,
     status: "recorded",
     created_at: stamp(),
-    actor: user.email,
+    actor,
     action,
     target,
   });
@@ -253,30 +250,42 @@ function tick() {
     .filter((c) => c.driver === "demo-rest")
     .forEach((c) => (c.last_seen = stamp()));
 }
-export async function demoApi<T>(path: string, body?: any): Promise<T> {
+export async function demoApi<T>(
+  path: string,
+  body?: any,
+  auth: BrowserDemoAuth = demoAuth,
+): Promise<T> {
   let response: unknown;
-  if (path === "/auth/me") {
-    if (sessionStorage.getItem("forge-demo-loggedout"))
-      throw new Error("로그인이 필요합니다.");
-    return user as T;
+  if (path === "/auth/me") return auth.current() as T;
+  if (path === "/auth/register") {
+    const result = await auth.register(body);
+    recordAudit("auth.register", result.user.email, result.user.email);
+    recordAudit("auth.login", result.user.email, result.user.email);
+    save();
+    return result as T;
   }
   if (path === "/auth/login") {
-    if (
-      body.email !== "admin@forge.local" ||
-      body.password !== "ForgeDemo!2026"
-    )
-      throw new Error("공개 데모 계정으로 로그인하세요.");
-    sessionStorage.removeItem("forge-demo-loggedout");
-    return {
-      access_token: "public-browser-demo",
-      token_type: "demo",
-      user,
-    } as T;
+    const result = await auth.login(body);
+    recordAudit("auth.login", result.user.email, result.user.email);
+    save();
+    return result as T;
   }
+  const user = auth.current();
+  const audit = (action: string, target: string) =>
+    recordAudit(action, target, user.email);
   if (path === "/auth/logout") {
-    sessionStorage.setItem("forge-demo-loggedout", "true");
-    return { ok: true } as T;
+    audit("auth.logout", user.email);
+    save();
+    return auth.logout() as T;
   }
+  if (path === "/users") return auth.listUsers() as T;
+  const adminOnly =
+    path === "/audit" ||
+    path === "/connectors" ||
+    /^\/models\/[^/]+\/deploy$/.test(path) ||
+    /^\/recommendations\/[^/]+\/decision$/.test(path);
+  if (adminOnly) auth.requireRole("admin");
+  else if (body !== undefined) auth.requireRole("operator", "admin");
   if (path === "/overview") {
     if (Date.now() - state.lastTick > 8000) tick();
     const good = state.assets.reduce((s, a) => s + a.produced, 0),
@@ -519,7 +528,11 @@ export async function demoApi<T>(path: string, body?: any): Promise<T> {
   save();
   return structuredClone(response) as T;
 }
-export function demoCSV(path: string): string {
+export function demoCSV(
+  path: string,
+  auth: BrowserDemoAuth = demoAuth,
+): string {
+  auth.current();
   if (path === "/telemetry/export")
     return (
       "id,asset_id,temperature,vibration,good,rejected,timestamp\n" +

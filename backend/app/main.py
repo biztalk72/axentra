@@ -13,14 +13,15 @@ from datetime import datetime, timedelta, timezone
 from typing import Literal
 from fastapi import FastAPI, Depends, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from sqlalchemy import select, func, update, delete, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from .db import SessionLocal, User, LoginSession, Asset, Telemetry, Resource, Audit, get_db, now
-from .security import current_user, roles, verify_password
-from .schemas import LoginInput, BatchInput, EventInput, ConnectorInput, SimulationInput, TrainInput, OrderInput, DecisionInput, RobotInput, DatasetInput
+from .security import current_user, roles, verify_password, hash_password
+from .schemas import RegisterInput, LoginInput, BatchInput, EventInput, ConnectorInput, SimulationInput, TrainInput, OrderInput, DecisionInput, RobotInput, DatasetInput
 from .seed import initialize, DEMO_MODE
 from .services import resource_dict, asset_dict, add_resource, get_resource, identifier, audit, ingest, calculate_simulation
 
@@ -58,6 +59,11 @@ async def lifespan(app):
 app=FastAPI(title='FORGE AX API',description='전주기 제조 AX 플랫폼 · MVP',version='0.1.0',lifespan=lifespan)
 app.add_middleware(CORSMiddleware,allow_origins=os.getenv('CORS_ORIGINS','http://127.0.0.1:5173,http://localhost:5173').split(','),allow_credentials=False,allow_methods=['GET','POST'],allow_headers=['Authorization','Content-Type'])
 
+@app.exception_handler(RequestValidationError)
+async def validation_error(request: Request, exc: RequestValidationError):
+    # Never echo submitted passwords or whole registration payloads in errors.
+    return JSONResponse(status_code=422, content={'detail':[{'loc':e['loc'], 'msg':e['msg'], 'type':e['type']} for e in exc.errors()]})
+
 @app.middleware('http')
 async def observe(request: Request, call_next):
     started=time.perf_counter()
@@ -71,23 +77,57 @@ async def observe(request: Request, call_next):
 @app.get('/health')
 def health(db: Session=Depends(get_db)):
     db.execute(text('SELECT 1'))
-    return {'status':'ok','version':'0.1.0','demo':DEMO_MODE,'stream':DEMO_MODE and os.getenv('DEMO_STREAM','true').lower()=='true'}
+    return {'status':'ok','version':'0.1.0','demo':DEMO_MODE,'registration_enabled':registration_enabled(),'stream':DEMO_MODE and os.getenv('DEMO_STREAM','true').lower()=='true'}
 
 @app.get('/metrics', include_in_schema=False)
 def metrics(user: User=Depends(roles('admin'))):
     return Response(generate_latest(),media_type=CONTENT_TYPE_LATEST)
 
+def registration_enabled():
+    return os.getenv('ALLOW_REGISTRATION', 'true' if DEMO_MODE else 'false').lower() == 'true'
+
+def user_dict(user):
+    return {'name':user.name, 'email':user.email, 'role':user.role}
+
+def issue_session(db, user):
+    token = secrets.token_urlsafe(40)
+    db.execute(delete(LoginSession).where(LoginSession.expires_at < now()))
+    db.add(LoginSession(token_hash=hashlib.sha256(token.encode()).hexdigest(), user_id=user.id, expires_at=(datetime.now(timezone.utc)+timedelta(hours=8)).isoformat()))
+    audit(db, user.email, 'auth.login', user.id)
+    return {'access_token':token, 'token_type':'bearer', 'user':user_dict(user)}
+
+@app.post('/api/auth/register', status_code=201)
+def register(body: RegisterInput, db: Session=Depends(get_db)):
+    if not registration_enabled():
+        raise HTTPException(403, '이 워크스페이스는 직접 가입을 허용하지 않습니다.')
+    if body.email in {os.getenv('ADMIN_EMAIL', 'admin@admin.com').strip().lower(), 'admin@admin.com', 'admin@forge.local'}:
+        raise HTTPException(409, '관리자 전용 이메일입니다. 다른 이메일을 사용하세요.')
+    if db.scalar(select(User).where(User.email == body.email)):
+        raise HTTPException(409, '이미 가입된 이메일입니다. 로그인해 주세요.')
+    user = User(id=identifier('USR'), name=body.name, email=body.email, role='operator', password_hash=hash_password(body.password))
+    try:
+        db.add(user)
+        db.flush()
+        audit(db, user.email, 'auth.register', user.id, {'role':'operator'})
+        result = issue_session(db, user)
+        db.commit()
+        return result
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, '이미 가입된 이메일입니다. 로그인해 주세요.')
+
 @app.post('/api/auth/login')
 def login(body: LoginInput, db: Session=Depends(get_db)):
-    user=db.scalar(select(User).where(User.email==body.email.lower()))
-    if not user or not verify_password(body.password,user.password_hash):
-        raise HTTPException(401,'이메일 또는 비밀번호를 확인하세요.')
-    token=secrets.token_urlsafe(40)
-    db.execute(delete(LoginSession).where(LoginSession.expires_at < now()))
-    db.add(LoginSession(token_hash=hashlib.sha256(token.encode()).hexdigest(),user_id=user.id,expires_at=(datetime.now(timezone.utc)+timedelta(hours=8)).isoformat()))
-    audit(db,user.email,'auth.login',user.id)
+    user = db.scalar(select(User).where(User.email == body.email))
+    if not user or not verify_password(body.password, user.password_hash):
+        raise HTTPException(401, '이메일 또는 비밀번호를 확인하세요.')
+    result = issue_session(db, user)
     db.commit()
-    return {'access_token':token,'token_type':'bearer','user':{'name':user.name,'email':user.email,'role':user.role}}
+    return result
+
+@app.get('/api/users')
+def list_users(user: User=Depends(roles('admin')), db: Session=Depends(get_db)):
+    return [user_dict(row) for row in db.scalars(select(User).order_by(User.email)).all()]
 
 @app.get('/api/auth/me')
 def me(user: User=Depends(current_user)):

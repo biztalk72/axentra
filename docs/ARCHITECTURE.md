@@ -4,7 +4,7 @@
 
 | 모드 | 데이터·권한 | 실행 위치 |
 |---|---|---|
-| GitHub Pages 공개 체험 | localStorage의 합성 데이터, 공개 관리자 역할, 인증 보안 경계 없음 | 방문자 브라우저 |
+| GitHub Pages 공개 체험 | localStorage의 합성 데이터·가입 계정, 명시적 로그인, 인증 보안 경계 없음 | 방문자 브라우저 |
 | 로컬 빠른 시작 | SQLite + FastAPI 세션/RBAC + 가상 스트림 | 개발 머신 |
 | Docker 기업형 MVP | PostgreSQL + FastAPI 세션/RBAC + Nginx | Docker Compose |
 
@@ -38,7 +38,7 @@ flowchart LR
 | Alembic | 동작 | 명시적 001_initial migration |
 | PostgreSQL 16 | Compose 핵심 | 영속 업무 데이터, 잠금·유일키 |
 | Nginx | Compose 핵심 | 정적 콘솔 및 API reverse proxy |
-| scrypt + opaque sessions | 동작 | 해시 비밀번호·8시간 세션·RBAC |
+| PBKDF2 + opaque sessions | 동작 | 신규 PBKDF2 해시·기존 scrypt 검증·8시간 세션·RBAC |
 | Prometheus client | 동작 | 요청 수, 지연 히스토그램; 관리자 토큰 필요 |
 | Redis 7 | 선택 프로필 | 미래 캐시·작업 큐 기반; 현재 미연결 |
 | Eclipse Mosquitto 2 | 선택 프로필 | 미래 MQTT gateway 기반; 현재 미연결 |
@@ -74,3 +74,7 @@ OT 수집 프로토콜 어댑터와 실로봇 제어는 구현하지 않았다. 
 현재 리소스 목록은 최근 200개, 이벤트 화면 100개, CSV 10,000개로 제한한다. 보존 정책, 일괄 export, pagination, 알림 dedup window, 재학습 기준, 사용자 관리, 로그인 rate limit, DB 백업, 비밀 관리, 외부 감사 저장은 파일럿 요구사항이다.
 
 Compose는 `127.0.0.1:8088`만 호스트로 노출한다. 선택 MQTT는 Docker 내부에서만 익명 접근 가능하며 현장 네트워크에 노출하기 전 인증과 TLS를 구성해야 한다. TLS와 백업은 배포 환경에서 구성한다.
+
+## 계정 흐름 확장
+
+자가 가입 → operator 고정 → 자동 세션 발급을 추가했다. 관리자만 GET /api/users를 조회한다. 가입·로그인 감사 기록과 관리자 설정 변경 시 세션 폐기를 지원한다. 테이블 구조는 그대로 사용하므로 추가 migration이 필요하지 않다. [계정 가이드](ACCOUNTS.md)를 참고한다.

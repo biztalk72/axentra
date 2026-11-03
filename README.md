@@ -2,7 +2,7 @@
 
 **데이터에서 실행까지, 제조 전주기를 하나로 연결하는 AX 플랫폼 MVP.**
 
-[공개 체험 사이트](https://biztalk72.github.io/forge-ax/) · [PRD](docs/PRD.md) · [아키텍처](docs/ARCHITECTURE.md) · [API](docs/API.md) · [검증 기록](docs/VERIFICATION.md)
+[공개 체험 사이트](https://biztalk72.github.io/forge-ax/) · [PRD](docs/PRD.md) · [아키텍처](docs/ARCHITECTURE.md) · [API](docs/API.md) · [검증 기록](docs/VERIFICATION.md) · [가입·계정 가이드](docs/ACCOUNTS.md)
 
 모던 한국어 콘솔과 기업형 백엔드를 함께 제공합니다. OCTOPUS의 공개된 8개 기능 영역을 참고한 독립 구현이며, UVC 제품이나 제휴 서비스가 아닙니다.
 
@@ -24,9 +24,11 @@
 
 **https://biztalk72.github.io/forge-ax/**
 
-로그인 없이 공개 체험 역할로 시작합니다. 데이터는 각 방문자 브라우저의 localStorage에 저장되며 실제 서버·공장과 연결되지 않습니다. 사이트 데이터를 초기화하면 원래 가상 상태로 돌아갑니다. 로그아웃한 경우 화면의 데모 계정 입력 버튼으로 다시 로그인할 수 있습니다.
+로그인 화면의 **체험 계정 만들기**에서 직접 가입할 수 있습니다. 가입 직후 일반 사용자(체험 운영자)로 입장하며, 로그아웃 후 같은 계정으로 재로그인합니다. 관리자 이메일은 `admin@admin.com`이며 지정한 관리자 암호로 로그인합니다.
 
-권장 순서: 대시보드 → 시뮬레이터 실행 → AI 모델 학습·배포·추론 → 에이전트 제안 승인 → 로봇 가상 작업 배정·완료 → 합성 데이터 생성·CSV → 감사로그.
+Pages의 계정·제조 데이터는 각 브라우저의 localStorage에 저장됩니다. 다른 기기와 공유되지 않고 실제 서버·공장에 연결되지 않습니다. 사이트 데이터를 지우면 그 브라우저의 체험 계정도 삭제됩니다. 실제 서버의 계정은 PostgreSQL에 저장됩니다. [가입·계정 가이드](docs/ACCOUNTS.md)를 확인하세요.
+
+일반 사용자 체험: 직접 가입 → 대시보드 → 시뮬레이션 → AI 모델 학습 → 가상 로봇 작업 → 합성 데이터·CSV. 모델 배포·제안 승인·사용자 목록·감사로그는 관리자 계정으로 확인합니다.
 
 ## 기업형 MVP 실행 — Docker
 
@@ -46,7 +48,7 @@ docker compose up --build -d
 - 중지: `docker compose down` (DB 볼륨 보존)
 - 선택 인프라: `docker compose --profile integration up -d` (Redis·MQTT는 현재 앱과 미연결)
 
-Nginx → FastAPI → PostgreSQL로 동작하며 시작 시 Alembic migration을 적용합니다. 최초 실행에만 사용자를 생성하므로 ADMIN_PASSWORD를 바꿔 재시작해도 기존 사용자 비밀번호는 바뀌지 않습니다.
+Nginx → FastAPI → PostgreSQL로 동작하며 시작 시 Alembic migration을 적용합니다. 관리자 계정은 ADMIN_EMAIL / ADMIN_PASSWORD 변경 시 갱신하고 기존 관리자 세션을 폐기합니다. 제조 데이터와 다른 사용자 계정은 유지합니다. ALLOW_REGISTRATION=true일 때 일반 사용자가 직접 가입할 수 있습니다.
 
 ## 빠른 로컬 개발 — SQLite
 
@@ -61,18 +63,20 @@ Nginx → FastAPI → PostgreSQL로 동작하며 시작 시 Alembic migration을
 개별 실행:
 
 ```bash
+cp .env.example .env
+# .env에서 실제 서버 관리자 이메일·암호 설정
 uv sync --directory backend --frozen
 npm --prefix frontend ci
 # 터미널 1
 cd backend
-.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+.venv/bin/uvicorn app.main:app --env-file ../.env --host 127.0.0.1 --port 8000
 # 터미널 2, 저장소 루트에서
 npm --prefix frontend run dev
 ```
 
-데모 계정: `admin@forge.local`, `operator@forge.local`, `viewer@forge.local` / 기본 비밀번호 `ForgeDemo!2026`. `ADMIN_PASSWORD`로 최초 bootstrap 비밀번호 변경 가능. 가상 스트림은 기본 8초 주기이며 `DEMO_STREAM=false`로 중지합니다.
+관리자: `admin@admin.com` / 실제 서버 암호는 `.env`의 `ADMIN_PASSWORD` 값입니다. 공유 일반 계정을 자동 생성하지 않으며 **체험 계정 만들기**로 직접 가입합니다. 신규 계정은 operator 권한으로 고정되고, 관리자 작업은 서버에서도 거부합니다. 가상 스트림은 기본 8초 주기이며 `DEMO_STREAM=false`로 중지합니다.
 
-`DEMO_MODE=false`는 가상 기능과 seed를 끕니다. migration과 12자 이상 ADMIN_PASSWORD가 필요합니다. 설비/사업장 관리와 실수집 어댑터는 현장 연동 작업이므로 이 설정만으로 운영 배포가 완성되지는 않습니다.
+`DEMO_MODE=false`는 가상 기능과 seed를 끕니다. migration과 유효한 ADMIN_PASSWORD가 필요합니다. 설비/사업장 관리와 실수집 어댑터는 현장 연동 작업이므로 이 설정만으로 운영 배포가 완성되지는 않습니다.
 
 ## 검증과 빌드
 
@@ -98,7 +102,7 @@ TEST_DATABASE_URL=postgresql+psycopg://forge:password@localhost:5432/forge_test 
 
 ```text
 frontend/src/        React 콘솔, Pages 브라우저 어댑터, 공통 스타일
-backend/app/         인증, DB, API, 업무 서비스, demo seed
+backend/app/         가입·세션·권한, DB, API, 업무 서비스, demo seed
 backend/migrations/ 명시적 Alembic migration
 backend/tests/      API 통합 테스트
 frontend/tests/     공개 체험 업무 흐름 테스트

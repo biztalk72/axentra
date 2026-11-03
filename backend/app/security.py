@@ -11,13 +11,21 @@ bearer = HTTPBearer(auto_error=False)
 
 def hash_password(password: str):
     salt = secrets.token_hex(16)
-    value = hashlib.scrypt(password.encode(), salt=salt.encode(), n=16384, r=8, p=1).hex()
-    return f'{salt}:{value}'
+    value = hashlib.pbkdf2_hmac('sha256', password.encode(), bytes.fromhex(salt), 600000).hex()
+    return f'pbkdf2_sha256$600000${salt}${value}'
 
 def verify_password(password: str, stored: str):
-    salt, digest = stored.split(':')
-    actual = hashlib.scrypt(password.encode(), salt=salt.encode(), n=16384, r=8, p=1).hex()
-    return hmac.compare_digest(actual, digest)
+    try:
+        if stored.startswith('pbkdf2_sha256$'):
+            _, iterations, salt, digest = stored.split('$')
+            actual = hashlib.pbkdf2_hmac('sha256', password.encode(), bytes.fromhex(salt), int(iterations)).hex()
+        else:
+            # Existing installations keep their scrypt credentials until changed.
+            salt, digest = stored.split(':')
+            actual = hashlib.scrypt(password.encode(), salt=salt.encode(), n=16384, r=8, p=1).hex()
+        return hmac.compare_digest(actual, digest)
+    except (ValueError, TypeError):
+        return False
 
 def current_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer), db: Session = Depends(get_db)):
     if not credentials:

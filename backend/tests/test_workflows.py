@@ -7,7 +7,7 @@ def event(event_id='test-1',asset_id='CNC-001',**kwargs):
 def test_health_auth_expiry_and_logout(client,auth):
     assert client.get('/health').json()['status']=='ok'
     assert client.get('/api/overview').status_code==401
-    assert client.post('/api/auth/login',json={'email':'admin@forge.local','password':'bad'}).status_code==401
+    assert client.post('/api/auth/login',json={'email':'admin@admin.com','password':'bad'}).status_code==401
     h=auth()
     assert client.get('/api/auth/me',headers=h).json()['role']=='admin'
     assert client.post('/api/auth/logout',headers=h).status_code==200

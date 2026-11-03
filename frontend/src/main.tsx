@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
+  Eye,
+  EyeOff,
   Activity,
   ArrowDownToLine,
   ArrowRight,
@@ -39,6 +41,12 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { api, download, num, time, date, setToken, STATIC_DEMO } from "./api";
 import type { Asset, Overview, Resource, User } from "./api";
+import {
+  ADMIN_EMAIL,
+  PASSWORD_HINT,
+  normalizeEmail,
+  validateRegistration,
+} from "./auth";
 import "./styles.css";
 
 type Page =
@@ -545,35 +553,69 @@ function FactoryMap({
     </div>
   );
 }
-function Login({ onLogin }: { onLogin: (u: User) => void }) {
+function Login({
+  onLogin,
+}: {
+  onLogin: (user: User, registered?: boolean) => void;
+}) {
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [demo, setDemo] = useState(false);
+  const [registrationEnabled, setRegistrationEnabled] = useState(STATIC_DEMO);
   useEffect(() => {
-    if (STATIC_DEMO) {
-      setDemo(true);
-      return;
-    }
+    if (STATIC_DEMO) return;
+    let active = true;
     fetch("/health")
-      .then((r) => r.json())
-      .then((r) => setDemo(r.demo))
-      .catch(() => {});
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
+      .then((r) => {
+        if (active) setRegistrationEnabled(r.registration_enabled === true);
+      })
+      .catch(() => {
+        if (active)
+          setError("서버에 연결하지 못했습니다. 잠시 후 다시 시도하세요.");
+      });
+    return () => {
+      active = false;
+    };
   }, []);
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
+  function changeMode(next: "login" | "register") {
+    setMode(next);
+    setError("");
+    setPassword("");
+    setConfirm("");
+    setShowPassword(false);
+  }
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (loading) return;
     setError("");
     try {
-      const r = await api<{ access_token: string; user: User }>("/auth/login", {
-        email,
-        password,
-      });
-      setToken(r.access_token);
-      onLogin(r.user);
-    } catch (e) {
-      setError((e as Error).message);
+      const body =
+        mode === "register"
+          ? validateRegistration({
+              name,
+              email,
+              password,
+              password_confirm: confirm,
+            })
+          : { email: normalizeEmail(email), password };
+      setLoading(true);
+      const result = await api<{ access_token: string; user: User }>(
+        mode === "register" ? "/auth/register" : "/auth/login",
+        body,
+      );
+      setToken(result.access_token);
+      onLogin(result.user, mode === "register");
+    } catch (error) {
+      setError((error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -617,62 +659,175 @@ function Login({ onLogin }: { onLogin: (u: User) => void }) {
         </span>
       </div>
       <div className="login-form">
-        <span className="subtle-label">WORKSPACE LOGIN</span>
-        <h2>워크스페이스에 오신 것을 환영합니다.</h2>
-        <p>계정으로 로그인하여 제조 운영을 시작하세요.</p>
-        <form onSubmit={submit}>
-          <label>
-            이메일
-            <input
-              type="email"
-              required
-              autoComplete="username"
-              placeholder="name@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </label>
-          <label>
-            비밀번호
-            <input
-              type="password"
-              required
-              autoComplete="current-password"
-              placeholder="비밀번호 입력"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </label>
-          {error && (
-            <div className="form-error" role="alert">
-              {error}
-            </div>
-          )}
-          <button className="btn primary wide" disabled={loading}>
-            {loading ? "로그인 중…" : "워크스페이스 로그인"}
-            <ArrowRight size={16} />
-          </button>
+        <span className="subtle-label">
+          {mode === "register"
+            ? "CREATE YOUR WORKSPACE ACCOUNT"
+            : "WORKSPACE LOGIN"}
+        </span>
+        <h2>
+          {mode === "register"
+            ? "제조 AX, 직접 체험해 보세요."
+            : "워크스페이스에 오신 것을 환영합니다."}
+        </h2>
+        <p>
+          {mode === "register"
+            ? "계정을 만들면 바로 가상 제조라인으로 입장합니다."
+            : "관리자 또는 직접 만든 체험 계정으로 로그인하세요."}
+        </p>
+        {registrationEnabled && (
+          <div className="auth-tabs" role="tablist" aria-label="계정 시작 방식">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === "login"}
+              disabled={loading}
+              onClick={() => changeMode("login")}
+            >
+              로그인
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === "register"}
+              disabled={loading}
+              onClick={() => changeMode("register")}
+            >
+              체험 계정 만들기
+            </button>
+          </div>
+        )}
+        <form
+          onSubmit={submit}
+          aria-label={mode === "register" ? "체험 계정 가입" : "계정 로그인"}
+        >
+          <fieldset disabled={loading} className="auth-fields">
+            {mode === "register" && (
+              <label>
+                이름
+                <input
+                  autoComplete="name"
+                  required
+                  minLength={2}
+                  maxLength={60}
+                  value={name}
+                  placeholder="표시할 이름을 입력하세요"
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </label>
+            )}
+            <label>
+              이메일
+              <input
+                type="email"
+                required
+                autoComplete={mode === "register" ? "email" : "username"}
+                maxLength={200}
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </label>
+            <label>
+              비밀번호
+              <div className="password-input">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  autoComplete={
+                    mode === "register" ? "new-password" : "current-password"
+                  }
+                  minLength={mode === "register" ? 8 : 1}
+                  maxLength={mode === "register" ? 128 : 256}
+                  placeholder={
+                    mode === "register"
+                      ? "영문·숫자를 포함해 8자 이상"
+                      : "비밀번호 입력"
+                  }
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  aria-label={
+                    showPassword ? "비밀번호 숨기기" : "비밀번호 표시"
+                  }
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((v) => !v)}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {mode === "register" && (
+                <small className="password-hint">{PASSWORD_HINT}</small>
+              )}
+            </label>
+            {mode === "register" && (
+              <label>
+                비밀번호 확인
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  autoComplete="new-password"
+                  maxLength={128}
+                  placeholder="비밀번호를 한 번 더 입력하세요"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                />
+              </label>
+            )}
+            {error && (
+              <div className="form-error" role="alert">
+                {error}
+              </div>
+            )}
+            <button className="btn primary wide" disabled={loading}>
+              {loading
+                ? mode === "register"
+                  ? "가입 및 입장 중…"
+                  : "로그인 중…"
+                : mode === "register"
+                  ? "체험 계정 만들고 시작하기"
+                  : "워크스페이스 로그인"}
+              <ArrowRight size={16} />
+            </button>
+          </fieldset>
         </form>
-        {demo && (
+        {mode === "register" ? (
+          <div className="registration-note">
+            <ShieldCheck size={17} />
+            <div>
+              <b>일반 사용자 · 체험 운영자</b>
+              <p>
+                데이터 수집, 시뮬레이션, 모델 학습, 생산·가상 로봇 작업을 체험할
+                수 있습니다. 승인·모델 배포는 관리자에게 요청하세요.
+              </p>
+            </div>
+          </div>
+        ) : (
           <div className="demo-login">
-            <span>가상 제조라인으로 제품을 살펴보세요.</span>
+            <span>
+              관리자 계정: <b>{ADMIN_EMAIL}</b>
+            </span>
             <button
               type="button"
               onClick={() => {
-                setEmail("admin@forge.local");
-                setPassword("ForgeDemo!2026");
+                setEmail(ADMIN_EMAIL);
+                setError("");
               }}
             >
-              데모 관리자 계정 입력 <ArrowUpRight size={14} />
+              관리자 이메일 입력
+              <ArrowUpRight size={14} />
             </button>
-            <small>
-              로컬 데모 기본값 · 관리자 비밀번호를 변경했다면 직접 입력하세요.
-            </small>
           </div>
         )}
+        <p className="auth-storage-note">
+          {STATIC_DEMO
+            ? "브라우저 체험 모드 · 가입 계정은 이 브라우저에만 저장됩니다. 다른 기기에서는 별도로 가입하세요."
+            : "서버 연결 모드 · 가입 계정은 워크스페이스 데이터베이스에 저장됩니다."}
+        </p>
         <div className="secure-note">
           <ShieldCheck size={15} />
-          권한 기반 접근 · 작업 이력 기록
+          비밀번호 해시 저장 · 역할별 권한 · 8시간 세션
         </div>
       </div>
     </div>
@@ -793,9 +948,19 @@ function App() {
   if (!user)
     return (
       <>
-        <Login onLogin={setUser} />
+        <Login
+          onLogin={(next, registered) => {
+            setUser(next);
+            go("overview");
+            toast(
+              registered
+                ? "체험 계정이 생성되었습니다. 제조 AX 체험을 시작하세요."
+                : `${next.name}님, 환영합니다.`,
+            );
+          }}
+        />
         {notice && (
-          <div className="toast error" role="status">
+          <div className={`toast ${notice.error ? "error" : ""}`} role="status">
             {notice.message}
           </div>
         )}
@@ -2953,12 +3118,16 @@ function SettingsPage({
   user: User;
   revision: number;
 }) {
+  const [members, setMembers] = useState<User[]>([]);
   const [logs, setLogs] = useState<Resource[]>([]);
   const [error, setError] = useState("");
   useEffect(() => {
     if (admin)
-      api<Resource[]>("/audit")
-        .then(setLogs)
+      Promise.all([api<Resource[]>("/audit"), api<User[]>("/users")])
+        .then(([audit, members]) => {
+          setLogs(audit);
+          setMembers(members);
+        })
         .catch((e) => setError(e.message));
   }, [admin, revision]);
   return (
@@ -3004,6 +3173,54 @@ function SettingsPage({
           </div>
         </section>
       </div>
+      {admin && (
+        <section className="panel account-panel">
+          <div className="panel-header">
+            <div>
+              <h2>
+                사용자 계정
+                <span className="label neutral">{members.length}명</span>
+              </h2>
+              <p>
+                {STATIC_DEMO
+                  ? "현재 브라우저에 등록된 체험 계정"
+                  : "이 워크스페이스에 등록된 계정"}{" "}
+                · 직접 가입한 사용자는 체험 운영자 권한입니다.
+              </p>
+            </div>
+          </div>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>이름</th>
+                  <th>이메일</th>
+                  <th>권한</th>
+                </tr>
+              </thead>
+              <tbody>
+                {members.map((member) => (
+                  <tr key={member.email}>
+                    <td>
+                      <b>{member.name}</b>
+                    </td>
+                    <td>{member.email}</td>
+                    <td>
+                      <span className="code-tag">
+                        {member.role === "admin"
+                          ? "관리자"
+                          : member.role === "operator"
+                            ? "일반 사용자 · 체험 운영자"
+                            : "조회 사용자"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
       <section className="panel">
         <div className="panel-header">
           <h2>감사로그</h2>

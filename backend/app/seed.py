@@ -1,9 +1,10 @@
 import os
 import math
 from datetime import datetime, timezone, timedelta
-from sqlalchemy import select, func
-from .db import Base, engine, SessionLocal, User, Asset, Resource, Telemetry, Audit
-from .security import hash_password
+from sqlalchemy import select, func, delete
+from .db import Base, engine, SessionLocal, User, LoginSession, Asset, Resource, Telemetry, Audit
+from .security import hash_password, verify_password
+from .schemas import normalize_email, validate_password
 
 DEMO_MODE = os.getenv('DEMO_MODE', 'true').lower() == 'true'
 
@@ -12,17 +13,36 @@ def initialize():
     if DEMO_MODE:
         Base.metadata.create_all(engine)
     with SessionLocal() as db:
-        if db.scalar(select(func.count()).select_from(User)):
-            return
-        password = os.getenv('ADMIN_PASSWORD', 'ForgeDemo!2026' if DEMO_MODE else '')
-        if len(password) < 12:
-            raise RuntimeError('ADMIN_PASSWORD must contain at least 12 characters')
-        db.add(User(id='admin', email='admin@forge.local', name='김민수', role='admin', password_hash=hash_password(password)))
-        if not DEMO_MODE:
+        email = normalize_email(os.getenv('ADMIN_EMAIL', 'admin@admin.com'))
+        password = os.getenv('ADMIN_PASSWORD', '')
+        admin = db.get(User, 'admin')
+        configured = db.scalar(select(User).where(User.email == email))
+        if configured and configured.id != 'admin':
+            raise RuntimeError('ADMIN_EMAIL is already owned by a different account')
+        if not admin and not password:
+            raise RuntimeError('Set ADMIN_PASSWORD in .env before starting the API')
+        if password:
+            validate_password(password)
+        changed = False
+        if not admin:
+            admin = User(id='admin', email=email, name='관리자', role='admin', password_hash=hash_password(password))
+            db.add(admin)
+            changed = True
+        else:
+            if admin.email != email:
+                admin.email = email
+                changed = True
+            if password and not verify_password(password, admin.password_hash):
+                admin.password_hash = hash_password(password)
+                changed = True
+        if changed:
+            db.execute(delete(LoginSession).where(LoginSession.user_id == 'admin'))
+            db.add(Audit(actor='system', action='auth.admin.configure', target=email, detail={'sessions_revoked': True}))
+        # Reconfigure the administrator without deleting any existing factory or user data.
+        db.flush()
+        if not DEMO_MODE or db.scalar(select(func.count()).select_from(Asset)):
             db.commit()
             return
-        for role, name in [('operator', '이현장'), ('viewer', '박분석')]:
-            db.add(User(id=role, email=f'{role}@forge.local', name=name, role=role, password_hash=hash_password(password)))
         names = [('CNC-001', 'CNC 가공기 01', 'CNC', 'A', 38), ('CNC-002', 'CNC 가공기 02', 'CNC', 'A', 42), ('CNC-003', 'CNC 가공기 03', 'CNC', 'A', 52), ('QC-001', '비전 검사기', 'QC', 'A', 28), ('ASM-001', '자동 조립기 01', 'Assembly', 'B', 36), ('ASM-002', '자동 조립기 02', 'Assembly', 'B', 40), ('PKG-001', '패키징 셀', 'Packaging', 'B', 30), ('WELD-001', '용접 로봇', 'Robot', 'B', 44)]
         stamp = datetime.now(timezone.utc)
         for i, (aid, name, kind, line, cycle) in enumerate(names):

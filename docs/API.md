@@ -2,12 +2,16 @@
 
 로컬 API 문서: http://127.0.0.1:8000/docs · Compose: http://127.0.0.1:8088/docs
 
-로그인 `POST /api/auth/login`: `{ "email":"admin@forge.local", "password":"ForgeDemo!2026" }`. 반환한 `access_token`을 `Authorization: Bearer <token>` 헤더에 사용한다. 예제 비밀번호는 데모 전용이며 ADMIN_PASSWORD를 변경하면 그 값을 사용한다.
+로그인 `POST /api/auth/login`: `{ "email":"admin@admin.com", "password":"<ADMIN_PASSWORD 환경설정 값>" }`. 반환한 `access_token`을 `Authorization: Bearer <token>` 헤더에 사용한다. 관리자 암호 원문을 문서·공개 저장소에 저장하지 않는다.
+
+가입 `POST /api/auth/register`: `{ "name":"체험 사용자", "email":"trial@example.com", "password":"<8~128자, 영문·숫자>", "password_confirm":"<동일한 암호>" }`. 성공은 201이며 operator 역할의 사용자와 로그인 토큰을 반환한다. 이름·이메일 정규화, 중복·예약 주소·확인값 검사를 적용한다. 임의 역할 필드는 422, 중복은 409, 가입 비활성화는 403이다. 자세한 흐름은 [계정 가이드](ACCOUNTS.md)를 따른다.
 
 | 경로 | 메서드 | 최소 역할 | 기능 |
 |---|---|---|---|
-| /health | GET | 익명 | DB health, demo/stream 여부 |
+| /health | GET | 익명 | DB health, demo/stream/registration_enabled 여부 |
+| /api/auth/register | POST | 익명 | 일반 사용자 가입 + 8시간 세션 |
 | /api/auth/login | POST | 익명 | 8시간 세션 |
+| /api/users | GET | admin | 이름·이메일·역할 목록 |
 | /api/auth/me, /api/auth/logout | GET, POST | viewer | 사용자, 세션 폐기 |
 | /api/overview, /api/assets | GET | viewer | KPI와 설비 |
 | /api/resources/{category} | GET | viewer | 최근 200개 범주별 업무 리소스 |
@@ -29,7 +33,7 @@
 | /api/datasets/{id}/download | GET | viewer | 합성 CSV |
 | /api/audit, /metrics | GET | admin | 감사로그, Prometheus metrics |
 
-admin은 모든 역할의 작업을 수행한다. viewer/operator 계정은 DEMO_MODE=true 최초 bootstrap에서만 생성한다.
+admin은 모든 역할의 작업을 수행한다. 직접 가입한 계정은 operator로 고정한다. 테스트용 viewer는 테스트 fixture에서만 생성한다. ALLOW_REGISTRATION=false이면 가입을 차단한다.
 
 수집 예시:
 
