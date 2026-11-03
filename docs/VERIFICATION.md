@@ -80,3 +80,11 @@ Pages 체험 테스트는 브라우저 저장소 기반 데이터 수집 → 시
 - 최종 PostgreSQL 전체 57개 통과(선택형 SDK 포함). 동시 700kg 두 번 출고 시 1건만 성공해 잔량 400kg을 보존하는 검증 포함.
 
 - Chrome 실제 API에서 일반 제조 전환→라면 복원 후 품목 14개·위치 6개·생산 후 LOT 16개 보존. 390×844 공급망 화면의 문서 가로 너비 390px, 브라우저 console error 없음.
+
+## FORGE favicon·Docker 배포 패키지 (2026-11-03)
+
+- 네이비/코발트 적층 심볼의 SVG·16/32/48px ICO·32px PNG·180px Apple touch icon 생성. API/Pages 두 빌드에서 상대 경로 확인.
+- 독립 compose.production.yaml에서 PostgreSQL/API/web 모두 healthy. 합성 seed·스트림 비활성, 관리자 로그인/로그아웃·Nginx 프록시·favicon MIME·index no-cache·해시 자산 1년 캐시·없는 JS 404 확인.
+- 웹/API 비루트 UID와 read-only root filesystem, /tmp 임시 경로 확인. 컨테이너 전체 재생성 후 관리자 레코드 fingerprint 일치와 DB·프록시 복구 확인.
+- 기존 체험용 Compose의 8088도 새 favicon/비루트 웹 이미지로 갱신. 독립 배포 모드는 8090, 다른 DB 볼륨으로 실행.
+- CI에 일회용 자격증명으로 실제 Docker 배포 smoke 검증을 추가하고 통과 후 Pages가 배포되도록 연결. 운영용 환경 파일·DB 암호·관리자 암호 원문은 커밋에서 제외.

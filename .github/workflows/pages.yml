@@ -75,9 +75,30 @@ jobs:
         if: github.event_name != 'pull_request'
         with:
           path: frontend/dist
+  docker-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate disposable deployment credentials
+        run: |
+          python3 - <<'PY'
+          import secrets
+          from pathlib import Path
+          env = Path('.env.production')
+          env.write_text('POSTGRES_PASSWORD=' + secrets.token_hex(24) + '\nADMIN_EMAIL=admin@admin.com\nADMIN_PASSWORD=CiDeploy!' + secrets.token_hex(24) + '\n')
+          env.chmod(0o600)
+          PY
+      - name: Build and verify standalone deployment
+        run: ./scripts/verify-production.sh
+      - name: Deployment logs on failure
+        if: failure()
+        run: docker compose --env-file .env.production -f compose.production.yaml logs --tail 80
+      - name: Remove disposable deployment
+        if: always()
+        run: docker compose --env-file .env.production -f compose.production.yaml down --volumes
   deploy:
     if: github.event_name != 'pull_request'
-    needs: [api-tests, build]
+    needs: [api-tests, build, docker-tests]
     runs-on: ubuntu-latest
     permissions:
       pages: write

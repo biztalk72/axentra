@@ -2,7 +2,7 @@
 
 **데이터에서 실행까지, 제조 전주기를 하나로 연결하는 AX 플랫폼 MVP.**
 
-[공개 체험 사이트](https://biztalk72.github.io/forge-ax/) · [PRD](docs/PRD.md) · [아키텍처](docs/ARCHITECTURE.md) · [API](docs/API.md) · [검증 기록](docs/VERIFICATION.md) · [가입·계정 가이드](docs/ACCOUNTS.md) · [현장 패널](docs/FIELD-PANELS.md) · [CCTV](docs/CCTV.md) · [멀티 에이전트](docs/MULTI-AGENT.md) · [라면·공용 공급망](docs/RAMEN-SUPPLY-CHAIN.md) · [거버넌스·연동](docs/INTEGRATIONS.md)
+[공개 체험 사이트](https://biztalk72.github.io/forge-ax/) · [PRD](docs/PRD.md) · [아키텍처](docs/ARCHITECTURE.md) · [API](docs/API.md) · [검증 기록](docs/VERIFICATION.md) · [가입·계정 가이드](docs/ACCOUNTS.md) · [현장 패널](docs/FIELD-PANELS.md) · [CCTV](docs/CCTV.md) · [멀티 에이전트](docs/MULTI-AGENT.md) · [라면·공용 공급망](docs/RAMEN-SUPPLY-CHAIN.md) · [거버넌스·연동](docs/INTEGRATIONS.md) · [Docker 배포](docs/DEPLOYMENT.md)
 
 모던 한국어 콘솔과 기업형 백엔드를 함께 제공합니다. OCTOPUS의 공개된 8개 기능 영역을 참고한 독립 구현이며, UVC 제품이나 제휴 서비스가 아닙니다.
 
@@ -35,7 +35,18 @@ Pages의 계정·제조 데이터는 각 브라우저의 localStorage에 저장�
 
 일반 사용자 체험: 직접 가입 → 대시보드 → 시뮬레이션 → AI 모델 학습 → 가상 로봇 작업 → 합성 데이터·CSV. 현장 패널 스튜디오에서 화면을 구성·미리보기하고, 멀티 AI 에이전트에서 라인 진단을 실행할 수 있습니다. 모델 배포·패널 게시·설치 키·제안 승인·사용자 목록·감사로그는 관리자 계정으로 확인합니다.
 
-## 기업형 MVP 실행 — Docker
+## 배포용 Docker
+
+```bash
+cp .env.production.example .env.production
+# DB·관리자 암호와 실제 origin 설정 (기존 파일이 있으면 유지)
+chmod 600 .env.production
+./scripts/verify-production.sh
+```
+
+독립 배포 콘솔은 http://127.0.0.1:8090 이며 비루트·읽기 전용 웹/API, DB 영속 볼륨, 상태 검사, 로그 순환을 적용합니다. 합성 데이터·가상 스트림은 꺼지며 현장 데이터는 별도 등록/이관합니다. [배포·업데이트·백업 가이드](docs/DEPLOYMENT.md)를 확인하세요.
+
+## 기업형 MVP 체험 실행 — Docker
 
 필수: Docker Engine + Compose.
 

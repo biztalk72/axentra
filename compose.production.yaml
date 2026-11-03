@@ -1,0 +1,71 @@
+# Standalone deployment: docker compose --env-file .env.production -f compose.production.yaml up --build -d --wait
+name: forge-ax-production
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '3'
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: forge
+      POSTGRES_USER: forge
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.production}
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U forge -d forge]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+    logging: *logging
+  api:
+    image: forge-ax-api:${IMAGE_TAG:-production}
+    build:
+      context: ./backend
+      args:
+        INSTALL_INTEGRATIONS: ${INSTALL_INTEGRATIONS:-true}
+    environment:
+      DATABASE_URL: postgresql+psycopg://forge:${POSTGRES_PASSWORD}@postgres:5432/forge
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@admin.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env.production}
+      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-false}
+      DEMO_MODE: 'false'
+      DEMO_STREAM: 'false'
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://127.0.0.1:8090}
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://host.docker.internal:11434}
+      LLM_MODEL: ${LLM_MODEL:-}
+      INTEGRATION_BROKER_USERNAME: ${INTEGRATION_BROKER_USERNAME:-}
+      INTEGRATION_BROKER_PASSWORD: ${INTEGRATION_BROKER_PASSWORD:-}
+    depends_on:
+      postgres: {condition: service_healthy}
+    init: true
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=64m"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, .venv/bin/python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    stop_grace_period: 30s
+    restart: unless-stopped
+    logging: *logging
+  web:
+    image: forge-ax-web:${IMAGE_TAG:-production}
+    build: ./frontend
+    ports: ["127.0.0.1:${WEB_PORT:-8090}:8080"]
+    depends_on:
+      api: {condition: service_healthy}
+    init: true
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=64m"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    logging: *logging
+volumes:
+  postgres-data:

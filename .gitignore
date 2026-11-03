@@ -4,6 +4,10 @@ __pycache__/
 .pytest_cache/
 *.pyc
 .env
+.env.*
+!.env.example
+!.env.production.example
+backups/
 *.db
 *.db-*
 frontend/dist/
