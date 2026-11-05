@@ -63,7 +63,7 @@ export type Camera = {
   name: string;
   line: "A" | "B";
   location: string;
-  source_type: "demo" | "hls" | "mp4" | "mjpeg";
+  source_type: "demo" | "hls" | "mp4" | "mjpeg" | "device";
   url: string;
   enabled: boolean;
   fit: "cover" | "contain";
@@ -232,6 +232,21 @@ export function validatePanelConfig(config: PanelConfig, cameras: Camera[]) {
 }
 export function validateCamera(camera: Omit<Camera, "id" | "revision">) {
   if (
+    Object.keys(camera).some(
+      (key) =>
+        ![
+          "name",
+          "line",
+          "location",
+          "source_type",
+          "url",
+          "enabled",
+          "fit",
+        ].includes(key),
+    )
+  )
+    throw new Error("카메라 설정 필드를 확인하세요.");
+  if (
     camera.name.trim().length < 2 ||
     camera.location.trim().length < 2 ||
     camera.name.length > 80 ||
@@ -239,12 +254,12 @@ export function validateCamera(camera: Omit<Camera, "id" | "revision">) {
   )
     throw new Error("카메라 이름과 위치는 2~80자입니다.");
   if (
-    !["demo", "hls", "mp4", "mjpeg"].includes(camera.source_type) ||
+    !["demo", "hls", "mp4", "mjpeg", "device"].includes(camera.source_type) ||
     !["A", "B"].includes(camera.line) ||
     !["cover", "contain"].includes(camera.fit)
   )
     throw new Error("카메라 유형·라인·화면 맞춤을 확인하세요.");
-  if (camera.source_type !== "demo") {
+  if (!["demo", "device"].includes(camera.source_type)) {
     let url: URL;
     try {
       url = new URL(camera.url);

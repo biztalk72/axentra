@@ -89,7 +89,7 @@ class CameraConfig(Input):
     name:str=Field(min_length=2,max_length=80)
     line:Literal['A','B']
     location:str=Field(min_length=2,max_length=80)
-    source_type:Literal['demo','hls','mp4','mjpeg']='demo'
+    source_type:Literal['demo','hls','mp4','mjpeg','device']='demo'
     url:str=Field(default='',max_length=1500)
     enabled:bool=True
     fit:Literal['contain','cover']='cover'
@@ -97,7 +97,7 @@ class CameraConfig(Input):
     def source_url(self):
         self.name=self.name.strip();self.location=self.location.strip();self.url=self.url.strip()
         if len(self.name)<2 or len(self.location)<2:raise ValueError('카메라 이름과 위치를 입력하세요.')
-        if self.source_type=='demo':self.url='';return self
+        if self.source_type in ('demo','device'):self.url='';return self
         parsed=urlsplit(self.url)
         if parsed.scheme not in ('https','http') or not parsed.hostname or parsed.username or parsed.password or any(c.isspace() for c in self.url):
             raise ValueError('HTTP(S) 재생 주소를 입력하세요. 주소에 사용자명·암호를 포함할 수 없습니다.')

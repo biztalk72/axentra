@@ -2,7 +2,7 @@
 
 **데이터에서 실행까지, 제조 전주기를 하나로 연결하는 AX 플랫폼 MVP.**
 
-[공개 체험 사이트](https://biztalk72.github.io/forge-ax/) · [PRD](docs/PRD.md) · [아키텍처](docs/ARCHITECTURE.md) · [API](docs/API.md) · [검증 기록](docs/VERIFICATION.md) · [가입·계정 가이드](docs/ACCOUNTS.md) · [현장 패널](docs/FIELD-PANELS.md) · [CCTV](docs/CCTV.md) · [멀티 에이전트](docs/MULTI-AGENT.md) · [라면·공용 공급망](docs/RAMEN-SUPPLY-CHAIN.md) · [거버넌스·연동](docs/INTEGRATIONS.md) · [Docker 배포](docs/DEPLOYMENT.md)
+[공개 체험 사이트](https://biztalk72.github.io/forge-ax/) · [PRD](docs/PRD.md) · [아키텍처](docs/ARCHITECTURE.md) · [API](docs/API.md) · [검증 기록](docs/VERIFICATION.md) · [가입·계정 가이드](docs/ACCOUNTS.md) · [현장 패널](docs/FIELD-PANELS.md) · [CCTV](docs/CCTV.md) · [멀티 에이전트](docs/MULTI-AGENT.md) · [라면·공용 공급망](docs/RAMEN-SUPPLY-CHAIN.md) · [거버넌스·연동](docs/INTEGRATIONS.md) · [Docker 배포](docs/DEPLOYMENT.md) · [한국어·English](docs/LANGUAGES.md)
 
 모던 한국어 콘솔과 기업형 백엔드를 함께 제공합니다. OCTOPUS의 공개된 8개 기능 영역을 참고한 독립 구현이며, UVC 제품이나 제휴 서비스가 아닙니다.
 
@@ -17,7 +17,9 @@
 - **Robot Hub**: 가상 AMR 작업 배정, 완료, 위치·배터리 갱신.
 - **Physical AI Lab**: 시나리오 파라미터 기반 합성 표 데이터 생성.
 - **현장 패널**: 라인별 TV·터치 화면 9종, 순환·테마·해상도, 미리보기, 초안/게시 분리, 일괄 배분·게시, 장치 키·하트비트·현장 입력.
-- **CCTV**: HLS/MP4/MJPEG와 모의 화면, 단일/멀티뷰·최소화·최대화, 카메라 설정, 대시보드·패널 위젯.
+- **언어**: 로그인·상단 바·독립 패널에서 한국어/English 선택, 언어 유지, 날짜·상태·오류·공통 카탈로그 영문 표시.
+- **패널 뷰**: 라인별 게시 화면 최대 2개 비교, 독립 읽기 화면·전체 화면·순환 제어. 조회는 장치 응답이나 현장 작업 입력을 기록하지 않습니다.
+- **CCTV**: HLS/MP4/MJPEG와 모의 화면, 단일/멀티뷰·최소화·최대화, 카메라 설정, 대시보드·패널 위젯. CCTV 미연결 시 Mac·iPhone 연속성·외장 웹캠 등 브라우저 입력을 명시적 권한 승인으로 사용합니다. iPad는 기기 브라우저 직접 사용 또는 웹캠 입력 연결이 필요합니다.
 - **공용 공급망**: 라면 제면·스프 공정, 품목·분류·재고·창고·수불·LOT 계보·다단계 BOM·FEFO 생산. 업종 템플릿·공정 편집과 공통 원장 보존.
 - **설치형 에이전트 위젯**: 카탈로그에서 최대 4개 선택, 개인 대시보드와 라인 패널에 설치·미리보기·게시.
 - **거버넌스·연동**: 데이터 제품 8종의 소유자·스키마·계보·manifest export, 트랜잭션 outbox, 선택형 MQTT/Kafka publisher와 읽기 전용 MCP stdio 브리지.

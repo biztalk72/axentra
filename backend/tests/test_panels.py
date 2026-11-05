@@ -90,3 +90,13 @@ def test_cameras_and_personal_dashboard_widget_settings(client,auth):
     assert client.get('/api/cctv/layout',headers=h).json()['minimized'] is True
     assert client.get('/api/cctv/layout',headers=auth('operator')).json()['minimized'] is False
     assert client.post('/api/cctv/layout',headers=h,json={'camera_ids':['unknown']}).status_code==422
+
+
+def test_device_camera_config_is_portable_and_contains_no_device_credentials(client,auth):
+    h=auth('operator')
+    response=client.post('/api/cameras',headers=h,json={'name':'Mac operator camera','line':'A','location':'Browser device','source_type':'device','url':'https://unused.example/feed','enabled':True,'fit':'contain'})
+    assert response.status_code==201
+    camera=response.json();assert camera['source_type']=='device' and camera['url']==''
+    bad=client.post('/api/cameras',headers=h,json={'name':'Mac operator camera','line':'A','location':'Browser device','source_type':'device','device_id':'private-browser-id'})
+    assert bad.status_code==422
+    assert client.post('/api/cameras',headers=auth('viewer'),json={'name':'Viewer camera','line':'A','location':'Browser device','source_type':'device'}).status_code==403

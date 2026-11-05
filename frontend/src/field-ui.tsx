@@ -1,3 +1,4 @@
+import { ui } from "./i18n/locale";
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { X } from "lucide-react";
@@ -58,16 +59,20 @@ export function FieldDialog({
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-label={ui(title)}
         className={`field-dialog ${wide ? "wide-dialog" : ""}`}
       >
         <header>
-          <h2>{title}</h2>
-          <button className="icon-button" aria-label="닫기" onClick={onClose}>
+          <h2>{ui(title)}</h2>
+          <button
+            className="icon-button"
+            aria-label={ui("닫기")}
+            onClick={onClose}
+          >
             <X size={19} />
           </button>
         </header>
-        {children}
+        {ui(children)}
       </div>
     </div>
   );

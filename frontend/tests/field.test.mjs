@@ -458,3 +458,34 @@ test("individual module runs include dependency closure and freeze configured va
   );
   await login();
 });
+
+test("device camera sources discard playback URLs and reject private browser device IDs", async () => {
+  await login();
+  const config = {
+    name: "기기 카메라",
+    location: "현재 기기",
+    line: "A",
+    source_type: "device",
+    url: "https://unused.example/feed",
+    enabled: true,
+    fit: "contain",
+  };
+  const camera = await request("/cameras", config);
+  assert.equal(camera.source_type, "device");
+  assert.equal(camera.url, "");
+  await assert.rejects(
+    request("/cameras", { ...config, device_id: "private-device-id" }),
+  );
+  const panels = await request("/panels");
+  const preview = await request("/panels/preview", {
+    ...panels.find((p) => p.draft.line === "A").draft,
+    camera_widget: {
+      enabled: true,
+      camera_ids: [camera.id],
+      layout: "single",
+      position: "right",
+    },
+  });
+  assert.equal(preview.cameras[0].source_type, "device");
+  assert.equal(preview.cameras[0].url, "");
+});

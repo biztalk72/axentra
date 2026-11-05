@@ -105,57 +105,42 @@
       "warehouse": "원료 창고",
       "zone": "분체 구역",
       "name": "원료 적치 A-01",
-      "allowed_categories": [
-        "raw"
-      ]
+      "allowed_categories": ["raw"]
     },
     {
       "id": "RAW-02",
       "warehouse": "원료 창고",
       "zone": "액상 구역",
       "name": "원료 적치 A-02",
-      "allowed_categories": [
-        "raw"
-      ]
+      "allowed_categories": ["raw"]
     },
     {
       "id": "WIP-01",
       "warehouse": "공정 창고",
       "zone": "반제품 구역",
       "name": "반제품 랙 B-01",
-      "allowed_categories": [
-        "wip"
-      ]
+      "allowed_categories": ["wip"]
     },
     {
       "id": "PKG-01",
       "warehouse": "포장재 창고",
       "zone": "포장재 구역",
       "name": "포장재 랙 C-01",
-      "allowed_categories": [
-        "packaging"
-      ]
+      "allowed_categories": ["packaging"]
     },
     {
       "id": "FG-01",
       "warehouse": "완제품 창고",
       "zone": "출하 대기",
       "name": "완제품 랙 D-01",
-      "allowed_categories": [
-        "finished"
-      ]
+      "allowed_categories": ["finished"]
     },
     {
       "id": "QC-01",
       "warehouse": "검사 대기 창고",
       "zone": "격리 구역",
       "name": "보류 LOT 구역",
-      "allowed_categories": [
-        "raw",
-        "wip",
-        "finished",
-        "packaging"
-      ]
+      "allowed_categories": ["raw", "wip", "finished", "packaging"]
     }
   ],
   "boms": [

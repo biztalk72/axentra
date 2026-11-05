@@ -241,13 +241,11 @@ export async function agentDemoRequest<T>(
           .filter((c) => c.line === body.line)
           .map((c) => ({ id: c.id, label: c.name, kind: "camera" })),
       ];
-    const edges = nodes
-      .slice(1)
-      .map((n) => ({
-        source: "LINE-" + body.line,
-        target: n.id,
-        relation: "contains",
-      }));
+    const edges = nodes.slice(1).map((n) => ({
+      source: "LINE-" + body.line,
+      target: n.id,
+      relation: "contains",
+    }));
     if (captured.supply) {
       nodes.push({
         id: "SUPPLY-SHARED",

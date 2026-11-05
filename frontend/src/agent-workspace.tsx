@@ -1,3 +1,4 @@
+import { ui } from "./i18n/locale";
 import { lineLabel } from "./industry-context";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
@@ -54,7 +55,7 @@ function RunStatus({ value }: { value: string }) {
   return (
     <span className={`agent-status ${value}`}>
       <i />
-      {labels[value] || value}
+      {ui(labels[value] || value)}
     </span>
   );
 }
@@ -208,594 +209,646 @@ export function AgentWorkspace({
           onClick={() => setTab("runs")}
         >
           <Workflow size={15} />
-          멀티 에이전트 워크스페이스
+          {ui("멀티 에이전트 워크스페이스")}
         </button>
         <button
           className={tab === "approvals" ? "selected" : ""}
           onClick={() => setTab("approvals")}
         >
           <ShieldCheck size={15} />
-          작업 제안 · 승인
+          {ui("작업 제안 · 승인")}
         </button>
         <button
           className={tab === "modules" ? "selected" : ""}
           onClick={() => setTab("modules")}
         >
           <Bot size={15} />
-          기능별 에이전트
+          {ui("기능별 에이전트")}
         </button>
       </div>
-      {tab === "approvals" ? (
-        approvalContent
-      ) : tab === "modules" ? (
-        <AgentModulesPage
-          admin={admin}
-          write={write}
-          onChanged={() => void load()}
-          onRun={(id) => void create([id])}
-        />
-      ) : (
-        <>
-          <div className="page-heading">
-            <div>
-              <div className="eyebrow">MANUFACTURING AGENT CONTROL PLANE</div>
-              <h1>전문 에이전트가 함께 읽는 공장.</h1>
-              <p>
-                Planner가 배치하고, 전문 워커가 분석하고, 담당자가 실행을
-                결정합니다.
-              </p>
-            </div>
-            <button
-              className="btn"
-              disabled={!admin}
-              onClick={() => setSettingsOpen(true)}
-            >
-              <Settings2 size={15} />
-              실행 설정
-            </button>
-          </div>
-          {error && (
-            <div className="form-error" role="alert">
-              {error}
-            </div>
-          )}
-          <div className="agent-architecture-ribbon">
-            <span>
-              <GitBranch size={17} />
-              <b>목표 · Planner</b>
-            </span>
-            <ArrowRight size={14} />
-            <span>
-              <Bot size={17} />
-              <b>
-                기능 에이전트 ×{" "}
-                {config?.roles?.filter(
-                  (m) => m.enabled && m.compatible !== false,
-                ).length || 0}
-              </b>
-            </span>
-            <ArrowRight size={14} />
-            <span>
-              <Database size={17} />
-              <b>공유 사실 · 이중 그래프</b>
-            </span>
-            <ArrowRight size={14} />
-            <span>
-              <ShieldCheck size={17} />
-              <b>Main · 승인 게이트</b>
-            </span>
-          </div>
-          <section className="panel agent-create">
-            <div>
-              <span className="subtle-label">NEW MANUFACTURING MISSION</span>
-              <h2>라인 진단 목표</h2>
-              <p>필요한 기능을 선택하면 선행 에이전트를 포함해 실행합니다.</p>
-            </div>
-            <textarea
-              aria-label="에이전트 진단 목표"
-              maxLength={500}
-              value={goal}
-              onChange={(e) => setGoal(e.target.value)}
-              disabled={!write}
-            />
-            <div className="agent-create-options">
-              <label>
-                대상 라인
-                <select value={line} onChange={(e) => setLine(e.target.value)}>
-                  <option value="A">{lineLabel("A")}</option>
-                  <option value="B">{lineLabel("B")}</option>
-                </select>
-              </label>
-              <label>
-                분석 엔진
-                <select value={mode} onChange={(e) => setMode(e.target.value)}>
-                  <option value="tools">제조 도구 에이전트</option>
-                  <option
-                    value="ollama"
-                    disabled={!admin || !config?.llm_configured}
-                  >
-                    로컬 LLM + 제조 도구
-                    {!config?.llm_configured ? " · 미연결" : ""}
-                  </option>
-                </select>
-              </label>
+      {ui(
+        tab === "approvals" ? (
+          approvalContent
+        ) : tab === "modules" ? (
+          <AgentModulesPage
+            admin={admin}
+            write={write}
+            onChanged={() => void load()}
+            onRun={(id) => void create([id])}
+          />
+        ) : (
+          <>
+            <div className="page-heading">
+              <div>
+                <div className="eyebrow">MANUFACTURING AGENT CONTROL PLANE</div>
+                <h1>{ui("전문 에이전트가 함께 읽는 공장.")}</h1>
+                <p>
+                  {ui(
+                    "Planner가 배치하고, 전문 워커가 분석하고, 담당자가 실행을 결정합니다.",
+                  )}
+                </p>
+              </div>
               <button
-                className="btn primary"
-                disabled={
-                  !write ||
-                  busy ||
-                  goal.trim().length < 5 ||
-                  selectedModules?.length === 0
-                }
-                onClick={() => void create()}
+                className="btn"
+                disabled={!admin}
+                onClick={() => setSettingsOpen(true)}
               >
-                <Play size={15} />
-                {busy ? "진단 요청 중…" : "에이전트 진단 실행"}
+                <Settings2 size={15} />
+                {ui("실행 설정")}
               </button>
             </div>
-          </section>
-          <details className="panel agent-module-picker">
-            <summary>
-              실행할 에이전트 선택{" "}
+            {error && (
+              <div className="form-error" role="alert">
+                {ui(error)}
+              </div>
+            )}
+            <div className="agent-architecture-ribbon">
               <span>
-                {selectedModules
-                  ? selectedModules.length
-                  : config?.roles?.filter(
-                      (m) => m.enabled && m.compatible !== false,
-                    ).length || 0}
-                개 선택 · 선행 의존성 자동 포함
+                <GitBranch size={17} />
+                <b>{ui("목표 · Planner")}</b>
               </span>
-            </summary>
-            <div>
-              {config?.roles?.map((m) => (
-                <label className="check-row" key={m.id}>
-                  <input
-                    type="checkbox"
-                    disabled={
-                      !m.enabled || m.compatible === false || m.id === "data"
-                    }
-                    checked={
-                      m.enabled &&
-                      m.compatible !== false &&
-                      (
-                        selectedModules ||
-                        config.roles
-                          .filter((r) => r.enabled && r.compatible !== false)
-                          .map((r) => r.id)
-                      ).includes(m.id)
-                    }
-                    onChange={(e) =>
-                      setSelectedModules((ids) =>
-                        e.target.checked
-                          ? [
-                              ...(ids ||
+              <ArrowRight size={14} />
+              <span>
+                <Bot size={17} />
+                <b>
+                  {ui("기능 에이전트 ×")}{" "}
+                  {ui(
+                    config?.roles?.filter(
+                      (m) => m.enabled && m.compatible !== false,
+                    ).length || 0,
+                  )}
+                </b>
+              </span>
+              <ArrowRight size={14} />
+              <span>
+                <Database size={17} />
+                <b>{ui("공유 사실 · 이중 그래프")}</b>
+              </span>
+              <ArrowRight size={14} />
+              <span>
+                <ShieldCheck size={17} />
+                <b>{ui("Main · 승인 게이트")}</b>
+              </span>
+            </div>
+            <section className="panel agent-create">
+              <div>
+                <span className="subtle-label">NEW MANUFACTURING MISSION</span>
+                <h2>{ui("라인 진단 목표")}</h2>
+                <p>
+                  {ui(
+                    "필요한 기능을 선택하면 선행 에이전트를 포함해 실행합니다.",
+                  )}
+                </p>
+              </div>
+              <textarea
+                aria-label={ui("에이전트 진단 목표")}
+                maxLength={500}
+                value={goal}
+                onChange={(e) => setGoal(e.target.value)}
+                disabled={!write}
+              />
+              <div className="agent-create-options">
+                <label>
+                  {ui("대상 라인")}
+                  <select
+                    value={line}
+                    onChange={(e) => setLine(e.target.value)}
+                  >
+                    <option value="A">{ui(lineLabel("A"))}</option>
+                    <option value="B">{ui(lineLabel("B"))}</option>
+                  </select>
+                </label>
+                <label>
+                  {ui("분석 엔진")}
+                  <select
+                    value={mode}
+                    onChange={(e) => setMode(e.target.value)}
+                  >
+                    <option value="tools">{ui("제조 도구 에이전트")}</option>
+                    <option
+                      value="ollama"
+                      disabled={!admin || !config?.llm_configured}
+                    >
+                      {ui("로컬 LLM + 제조 도구")}
+                      {ui(!config?.llm_configured ? " · 미연결" : "")}
+                    </option>
+                  </select>
+                </label>
+                <button
+                  className="btn primary"
+                  disabled={
+                    !write ||
+                    busy ||
+                    goal.trim().length < 5 ||
+                    selectedModules?.length === 0
+                  }
+                  onClick={() => void create()}
+                >
+                  <Play size={15} />
+                  {ui(busy ? "진단 요청 중…" : "에이전트 진단 실행")}
+                </button>
+              </div>
+            </section>
+            <details className="panel agent-module-picker">
+              <summary>
+                {ui("실행할 에이전트 선택")}{" "}
+                <span>
+                  {ui(
+                    selectedModules
+                      ? selectedModules.length
+                      : config?.roles?.filter(
+                          (m) => m.enabled && m.compatible !== false,
+                        ).length || 0,
+                  )}
+                  {ui("개 선택 · 선행 의존성 자동 포함")}
+                </span>
+              </summary>
+              <div>
+                {config?.roles?.map((m) => (
+                  <label className="check-row" key={m.id}>
+                    <input
+                      type="checkbox"
+                      disabled={
+                        !m.enabled || m.compatible === false || m.id === "data"
+                      }
+                      checked={
+                        m.enabled &&
+                        m.compatible !== false &&
+                        (
+                          selectedModules ||
+                          config.roles
+                            .filter((r) => r.enabled && r.compatible !== false)
+                            .map((r) => r.id)
+                        ).includes(m.id)
+                      }
+                      onChange={(e) =>
+                        setSelectedModules((ids) =>
+                          e.target.checked
+                            ? [
+                                ...(ids ||
+                                  config.roles
+                                    .filter(
+                                      (r) =>
+                                        r.enabled && r.compatible !== false,
+                                    )
+                                    .map((r) => r.id)),
+                                m.id,
+                              ]
+                            : (
+                                ids ||
                                 config.roles
                                   .filter(
                                     (r) => r.enabled && r.compatible !== false,
                                   )
-                                  .map((r) => r.id)),
-                              m.id,
-                            ]
-                          : (
-                              ids ||
-                              config.roles
-                                .filter(
-                                  (r) => r.enabled && r.compatible !== false,
-                                )
-                                .map((r) => r.id)
-                            ).filter((id) => id !== m.id),
-                      )
-                    }
-                  />
-                  {m.name}
-                  {!m.enabled && <small>중지됨</small>}
-                </label>
-              ))}
-            </div>
-            <button
-              className="btn small-btn"
-              onClick={() => setSelectedModules(null)}
-            >
-              사용 중인 전체 에이전트 선택
-            </button>
-          </details>
-          <div className="agent-run-layout">
-            <aside className="agent-run-list">
-              <div className="agent-list-title">
-                <span>MISSION HISTORY</span>
-                <button
-                  className="icon-button"
-                  aria-label="진단 이력 새로고침"
-                  onClick={() => void load()}
-                >
-                  <RefreshCw size={13} />
-                </button>
+                                  .map((r) => r.id)
+                              ).filter((id) => id !== m.id),
+                        )
+                      }
+                    />
+                    {ui(m.name)}
+                    {!m.enabled && <small>{ui("중지됨")}</small>}
+                  </label>
+                ))}
               </div>
-              {runs.map((r) => (
-                <button
-                  key={r.id}
-                  className={`agent-run-card ${selected === r.id ? "selected" : ""}`}
-                  onClick={() => setSelected(r.id)}
-                >
-                  <div>
-                    <span>{r.line} LINE</span>
-                    <RunStatus value={r.status} />
-                  </div>
-                  <h3>{r.goal}</h3>
-                  <p>{r.id}</p>
-                  <footer>
-                    <span>{r.mode === "tools" ? "도구 기반" : "LLM 연계"}</span>
-                    <time>{date(r.created_at)}</time>
-                  </footer>
-                </button>
-              ))}
-              {!runs.length && (
-                <div className="agent-no-runs">
-                  <Bot size={30} />
-                  <p>첫 진단을 시작하세요.</p>
+              <button
+                className="btn small-btn"
+                onClick={() => setSelectedModules(null)}
+              >
+                {ui("사용 중인 전체 에이전트 선택")}
+              </button>
+            </details>
+            <div className="agent-run-layout">
+              <aside className="agent-run-list">
+                <div className="agent-list-title">
+                  <span>MISSION HISTORY</span>
+                  <button
+                    className="icon-button"
+                    aria-label={ui("진단 이력 새로고침")}
+                    onClick={() => void load()}
+                  >
+                    <RefreshCw size={13} />
+                  </button>
                 </div>
-              )}
-            </aside>
-            <div className="agent-run-details">
-              {run ? (
-                <>
-                  <section className="panel agent-execution">
-                    <div className="panel-header">
-                      <div>
-                        <h2>
-                          진단 실행
-                          <RunStatus value={run.status} />
-                        </h2>
-                        <p>
-                          {run.id} · {run.line}라인 · 동시 워커 최대{" "}
-                          {run.concurrency}개
-                        </p>
+                {runs.map((r) => (
+                  <button
+                    key={r.id}
+                    className={`agent-run-card ${selected === r.id ? "selected" : ""}`}
+                    onClick={() => setSelected(r.id)}
+                  >
+                    <div>
+                      <span>{ui(r.line)} LINE</span>
+                      <RunStatus value={r.status} />
+                    </div>
+                    <h3>{ui(r.goal)}</h3>
+                    <p>{ui(r.id)}</p>
+                    <footer>
+                      <span>
+                        {ui(r.mode === "tools" ? "도구 기반" : "LLM 연계")}
+                      </span>
+                      <time>{ui(date(r.created_at))}</time>
+                    </footer>
+                  </button>
+                ))}
+                {!runs.length && (
+                  <div className="agent-no-runs">
+                    <Bot size={30} />
+                    <p>{ui("첫 진단을 시작하세요.")}</p>
+                  </div>
+                )}
+              </aside>
+              <div className="agent-run-details">
+                {run ? (
+                  <>
+                    <section className="panel agent-execution">
+                      <div className="panel-header">
+                        <div>
+                          <h2>
+                            {ui("진단 실행")}
+                            <RunStatus value={run.status} />
+                          </h2>
+                          <p>
+                            {ui(run.id)} · {ui(run.line)}
+                            {ui("라인 · 동시 워커 최대")} {ui(run.concurrency)}
+                            {ui("개")}
+                          </p>
+                        </div>
+                        <div className="agent-run-actions">
+                          {["queued", "running"].includes(run.status) && (
+                            <button
+                              className="btn small-btn"
+                              disabled={!write || busy}
+                              onClick={() => control("pause")}
+                            >
+                              <Pause size={13} />
+                              {ui("일시중지")}
+                            </button>
+                          )}
+                          {run.status === "paused" && (
+                            <button
+                              className="btn small-btn"
+                              disabled={!write || busy}
+                              onClick={() => control("resume")}
+                            >
+                              <Play size={13} />
+                              {ui("재개")}
+                            </button>
+                          )}
+                          {["queued", "running", "paused"].includes(
+                            run.status,
+                          ) && (
+                            <button
+                              className="btn small-btn"
+                              disabled={!write || busy}
+                              onClick={() => control("cancel")}
+                            >
+                              <Square size={12} />
+                              {ui("취소")}
+                            </button>
+                          )}
+                          <button
+                            className="btn small-btn"
+                            disabled={!run.report}
+                            onClick={exportReport}
+                          >
+                            <Download size={13} />
+                            {ui("보고서")}
+                          </button>
+                        </div>
                       </div>
-                      <div className="agent-run-actions">
-                        {["queued", "running"].includes(run.status) && (
-                          <button
-                            className="btn small-btn"
-                            disabled={!write || busy}
-                            onClick={() => control("pause")}
-                          >
-                            <Pause size={13} />
-                            일시중지
-                          </button>
-                        )}
-                        {run.status === "paused" && (
-                          <button
-                            className="btn small-btn"
-                            disabled={!write || busy}
-                            onClick={() => control("resume")}
-                          >
-                            <Play size={13} />
-                            재개
-                          </button>
-                        )}
-                        {["queued", "running", "paused"].includes(
-                          run.status,
-                        ) && (
-                          <button
-                            className="btn small-btn"
-                            disabled={!write || busy}
-                            onClick={() => control("cancel")}
-                          >
-                            <Square size={12} />
-                            취소
-                          </button>
-                        )}
+                      <div className="agent-graph-tabs">
                         <button
-                          className="btn small-btn"
-                          disabled={!run.report}
-                          onClick={exportReport}
+                          className={view === "execution" ? "selected" : ""}
+                          onClick={() => setView("execution")}
                         >
-                          <Download size={13} />
-                          보고서
+                          <Workflow size={13} />
+                          {ui("실행 그래프")}
+                        </button>
+                        <button
+                          className={view === "assets" ? "selected" : ""}
+                          onClick={() => setView("assets")}
+                        >
+                          <Layers3 size={13} />
+                          {ui("공유 자산")}
+                        </button>
+                        <button
+                          className={view === "traces" ? "selected" : ""}
+                          onClick={() => setView("traces")}
+                        >
+                          <Activity size={13} />
+                          {ui("도구 기록")}
                         </button>
                       </div>
-                    </div>
-                    <div className="agent-graph-tabs">
-                      <button
-                        className={view === "execution" ? "selected" : ""}
-                        onClick={() => setView("execution")}
-                      >
-                        <Workflow size={13} />
-                        실행 그래프
-                      </button>
-                      <button
-                        className={view === "assets" ? "selected" : ""}
-                        onClick={() => setView("assets")}
-                      >
-                        <Layers3 size={13} />
-                        공유 자산
-                      </button>
-                      <button
-                        className={view === "traces" ? "selected" : ""}
-                        onClick={() => setView("traces")}
-                      >
-                        <Activity size={13} />
-                        도구 기록
-                      </button>
-                    </div>
-                    {view === "execution" ? (
-                      <ExecutionGraph
-                        tasks={run.tasks}
-                        selected={node}
-                        onSelect={setNode}
-                      />
-                    ) : view === "assets" ? (
-                      <div className="agent-asset-graph">
-                        <div className="asset-graph-root">
-                          <FactoryIcon />
-                          {run.line} LINE <small>진단 범위</small>
-                        </div>
-                        <div className="agent-asset-nodes">
-                          {run.knowledge_graph?.nodes
-                            .filter((n) => n.kind !== "line")
-                            .map((n) => (
-                              <div key={n.id}>
-                                <span>{n.kind.toUpperCase()}</span>
-                                <b>{n.id}</b>
-                                <small>{n.label}</small>
-                              </div>
-                            ))}
-                        </div>
-                        <p>
-                          라인 → 설비·작업·패널·카메라. 각 워커의 근거 ID가 이
-                          자산 그래프에 연결됩니다.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="table-wrap">
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>워커 / 도구</th>
-                              <th>소요 시간</th>
-                              <th>실행 결과</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {run.traces?.map((trace, i) => (
-                              <tr key={trace.id + i}>
-                                <td>
-                                  <b>{trace.tool}</b>
-                                  <small className="block muted">
-                                    {trace.agent}
-                                  </small>
-                                </td>
-                                <td>{trace.elapsed_ms.toFixed(2)} ms</td>
-                                <td className="agent-trace-summary">
-                                  {trace.summary}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        {!run.traces?.length && (
-                          <div className="agent-empty">
-                            아직 실행된 도구가 없습니다.
+                      {view === "execution" ? (
+                        <ExecutionGraph
+                          tasks={run.tasks}
+                          selected={node}
+                          onSelect={setNode}
+                        />
+                      ) : view === "assets" ? (
+                        <div className="agent-asset-graph">
+                          <div className="asset-graph-root">
+                            <FactoryIcon />
+                            {ui(run.line)} LINE <small>{ui("진단 범위")}</small>
                           </div>
-                        )}
-                      </div>
-                    )}
-                    <div className="agent-engine-label">
-                      <Bot size={13} />
-                      {run.mode === "tools"
-                        ? "제조 도구 모드 · LLM 호출 없음"
-                        : `Ollama · ${run.model} · 도구 사실과 모델 해석 구분`}
-                      <span>
-                        원시 사고 과정 대신 도구 결과와 근거를 기록합니다.
-                      </span>
-                    </div>
-                  </section>
-                  <section className="panel agent-blackboard">
-                    <div className="panel-header">
-                      <div>
-                        <h2>공유 블랙보드</h2>
-                        <p>
-                          워커가 남긴 사실을 선택해 수치와 근거를 확인하세요.
-                        </p>
-                      </div>
-                      <Database size={17} />
-                    </div>
-                    <div className="agent-fact-tabs">
-                      {run.tasks
-                        .filter((t) => t.id !== "approval")
-                        .map((t) => (
-                          <button
-                            key={t.id}
-                            className={node === t.id ? "selected" : ""}
-                            onClick={() => setNode(t.id)}
-                          >
-                            <i className={t.status} />
-                            {t.id === "planner"
-                              ? "Planner"
-                              : t.id === "main"
-                                ? "Main"
-                                : t.name.replace(" 에이전트", "")}
-                          </button>
-                        ))}
-                    </div>
-                    {fact ? (
-                      <div className="agent-fact-body">
-                        <div className="agent-fact-heading">
-                          <span className="agent-avatar">
-                            <Bot size={22} />
-                          </span>
-                          <div>
-                            <h3>{activeTask?.name}</h3>
-                            <small>
-                              {activeTask?.tool}
-                              {activeTask?.module_revision
-                                ? ` · 구성 v${activeTask.module_revision}`
-                                : ""}
-                            </small>
-                          </div>
-                          <RunStatus
-                            value={activeTask?.status || "completed"}
-                          />
-                        </div>
-                        <p className="agent-fact-summary">{fact.summary}</p>
-                        {fact.metrics && (
-                          <div className="agent-fact-metrics">
-                            {Object.entries(fact.metrics).map(
-                              ([key, value]) => (
-                                <div key={key}>
-                                  <span>{metricNames[key] || key}</span>
-                                  <b>
-                                    {new Intl.NumberFormat("ko-KR", {
-                                      maximumFractionDigits: 2,
-                                    }).format(value)}
-                                  </b>
+                          <div className="agent-asset-nodes">
+                            {run.knowledge_graph?.nodes
+                              .filter((n) => n.kind !== "line")
+                              .map((n) => (
+                                <div key={n.id}>
+                                  <span>{ui(n.kind.toUpperCase())}</span>
+                                  <b>{ui(n.id)}</b>
+                                  <small>{ui(n.label)}</small>
                                 </div>
-                              ),
+                              ))}
+                          </div>
+                          <p>
+                            {ui(
+                              "라인 → 설비·작업·패널·카메라. 각 워커의 근거 ID가 이 자산 그래프에 연결됩니다.",
                             )}
-                          </div>
-                        )}
-                        <ul>
-                          {fact.findings.map((finding, i) => (
-                            <li key={i}>{finding}</li>
-                          ))}
-                        </ul>
-                        {fact.llm && (
-                          <div className="agent-llm-note">
-                            <span>로컬 LLM 해석 · {run.model}</span>
-                            <p>{fact.llm.summary}</p>
-                            <small>
-                              입력 {fact.llm.input_tokens ?? "미보고"} / 출력{" "}
-                              {fact.llm.output_tokens ?? "미보고"} 토큰
-                            </small>
-                          </div>
-                        )}
-                        <div className="agent-evidence">
-                          <span>근거 자산</span>
-                          {fact.evidence.map((id) => (
-                            <span className="code-tag" key={id}>
-                              {id}
-                            </span>
-                          ))}
+                          </p>
                         </div>
+                      ) : (
+                        <div className="table-wrap">
+                          <table>
+                            <thead>
+                              <tr>
+                                <th>{ui("워커 / 도구")}</th>
+                                <th>{ui("소요 시간")}</th>
+                                <th>{ui("실행 결과")}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {run.traces?.map((trace, i) => (
+                                <tr key={trace.id + i}>
+                                  <td>
+                                    <b>{ui(trace.tool)}</b>
+                                    <small className="block muted">
+                                      {ui(trace.agent)}
+                                    </small>
+                                  </td>
+                                  <td>{ui(trace.elapsed_ms.toFixed(2))} ms</td>
+                                  <td className="agent-trace-summary">
+                                    {ui(trace.summary)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                          {!run.traces?.length && (
+                            <div className="agent-empty">
+                              {ui("아직 실행된 도구가 없습니다.")}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <div className="agent-engine-label">
+                        <Bot size={13} />
+                        {ui(
+                          run.mode === "tools"
+                            ? "제조 도구 모드 · LLM 호출 없음"
+                            : `Ollama · ${run.model} · 도구 사실과 모델 해석 구분`,
+                        )}
+                        <span>
+                          {ui(
+                            "원시 사고 과정 대신 도구 결과와 근거를 기록합니다.",
+                          )}
+                        </span>
                       </div>
-                    ) : (
-                      <div className="agent-empty">
-                        이 워커의 실행 결과를 기다리고 있습니다.
-                      </div>
-                    )}
-                  </section>
-                  {run.report && (
-                    <section className="panel agent-final-report">
+                    </section>
+                    <section className="panel agent-blackboard">
                       <div className="panel-header">
-                        <h2>
-                          <FileText size={16} />
-                          Main Agent 진단 보고서
-                        </h2>
-                        <span className="label neutral">근거 기반 요약</span>
+                        <div>
+                          <h2>{ui("공유 블랙보드")}</h2>
+                          <p>
+                            {ui(
+                              "워커가 남긴 사실을 선택해 수치와 근거를 확인하세요.",
+                            )}
+                          </p>
+                        </div>
+                        <Database size={17} />
                       </div>
-                      <p>{run.report.summary}</p>
-                      {run.approvals.length > 0 && (
-                        <div className="agent-approval-cards">
-                          {run.approvals.map((approval) => (
-                            <article key={approval.id}>
-                              <div>
-                                <ShieldCheck size={19} />
-                                <h3>{approval.name}</h3>
-                                <RunStatus
-                                  value={
-                                    approval.status === "approved" ||
-                                    approval.status === "rejected"
-                                      ? "completed"
-                                      : "pending"
-                                  }
-                                />
-                              </div>
-                              <p>{approval.reason}</p>
-                              <span>{approval.impact}</span>
-                              {approval.status === "pending" ? (
-                                <footer>
-                                  <small>
-                                    {admin
-                                      ? "승인 시 예방 점검 작업이 생성됩니다."
-                                      : "관리자 승인이 필요합니다."}
-                                  </small>
-                                  <button
-                                    className="btn small-btn"
-                                    disabled={!admin || busy}
-                                    onClick={async () => {
-                                      setBusy(true);
-                                      try {
-                                        await action(
-                                          `/recommendations/${approval.id}/decision`,
-                                          { decision: "reject" },
-                                          "제안을 반려했습니다.",
-                                        );
-                                      } finally {
-                                        setBusy(false);
-                                      }
-                                    }}
-                                  >
-                                    반려
-                                  </button>
-                                  <button
-                                    className="btn primary small-btn"
-                                    disabled={!admin || busy}
-                                    onClick={async () => {
-                                      setBusy(true);
-                                      try {
-                                        await action(
-                                          `/recommendations/${approval.id}/decision`,
-                                          { decision: "approve" },
-                                          "승인하고 점검 작업을 생성했습니다.",
-                                        );
-                                      } finally {
-                                        setBusy(false);
-                                      }
-                                    }}
-                                  >
-                                    <CheckCheck size={13} />
-                                    승인 및 작업 생성
-                                  </button>
-                                </footer>
-                              ) : (
-                                <footer>
-                                  <small>
-                                    {approval.status === "approved"
-                                      ? "승인 완료"
-                                      : "반려 완료"}
-                                  </small>
-                                </footer>
+                      <div className="agent-fact-tabs">
+                        {run.tasks
+                          .filter((t) => t.id !== "approval")
+                          .map((t) => (
+                            <button
+                              key={t.id}
+                              className={node === t.id ? "selected" : ""}
+                              onClick={() => setNode(t.id)}
+                            >
+                              <i className={t.status} />
+                              {ui(
+                                t.id === "planner"
+                                  ? "Planner"
+                                  : t.id === "main"
+                                    ? "Main"
+                                    : t.name.replace(" 에이전트", ""),
                               )}
-                            </article>
+                            </button>
                           ))}
+                      </div>
+                      {fact ? (
+                        <div className="agent-fact-body">
+                          <div className="agent-fact-heading">
+                            <span className="agent-avatar">
+                              <Bot size={22} />
+                            </span>
+                            <div>
+                              <h3>{ui(activeTask?.name)}</h3>
+                              <small>
+                                {ui(activeTask?.tool)}
+                                {ui(
+                                  activeTask?.module_revision
+                                    ? ` · 구성 v${activeTask.module_revision}`
+                                    : "",
+                                )}
+                              </small>
+                            </div>
+                            <RunStatus
+                              value={activeTask?.status || "completed"}
+                            />
+                          </div>
+                          <p className="agent-fact-summary">
+                            {ui(fact.summary)}
+                          </p>
+                          {fact.metrics && (
+                            <div className="agent-fact-metrics">
+                              {Object.entries(fact.metrics).map(
+                                ([key, value]) => (
+                                  <div key={key}>
+                                    <span>{ui(metricNames[key] || key)}</span>
+                                    <b>
+                                      {ui(
+                                        new Intl.NumberFormat("ko-KR", {
+                                          maximumFractionDigits: 2,
+                                        }).format(value),
+                                      )}
+                                    </b>
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          )}
+                          <ul>
+                            {fact.findings.map((finding, i) => (
+                              <li key={i}>{ui(finding)}</li>
+                            ))}
+                          </ul>
+                          {fact.llm && (
+                            <div className="agent-llm-note">
+                              <span>
+                                {ui("로컬 LLM 해석 ·")}
+                                {ui(run.model)}
+                              </span>
+                              <p>{ui(fact.llm.summary)}</p>
+                              <small>
+                                {ui("입력")}
+                                {ui(fact.llm.input_tokens ?? "미보고")}
+                                {ui("/ 출력")}{" "}
+                                {ui(fact.llm.output_tokens ?? "미보고")}
+                                {ui("토큰")}
+                              </small>
+                            </div>
+                          )}
+                          <div className="agent-evidence">
+                            <span>{ui("근거 자산")}</span>
+                            {fact.evidence.map((id) => (
+                              <span className="code-tag" key={id}>
+                                {ui(id)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="agent-empty">
+                          {ui("이 워커의 실행 결과를 기다리고 있습니다.")}
                         </div>
                       )}
                     </section>
-                  )}
-                  {run.error && <div className="form-error">{run.error}</div>}
-                </>
-              ) : (
-                <div className="panel agent-welcome">
-                  <Workflow size={45} />
-                  <h2>하나의 목표, 연결된 전문성.</h2>
-                  <p>
-                    왼쪽에서 실행을 선택하거나 새로운 라인 진단을 시작하세요.
-                  </p>
-                  <div>
-                    <span>Planner</span>
-                    <ChevronRight size={14} />
-                    <span>기능별 Agents</span>
-                    <ChevronRight size={14} />
-                    <span>Main & Approval</span>
+                    {run.report && (
+                      <section className="panel agent-final-report">
+                        <div className="panel-header">
+                          <h2>
+                            <FileText size={16} />
+                            {ui("Main Agent 진단 보고서")}
+                          </h2>
+                          <span className="label neutral">
+                            {ui("근거 기반 요약")}
+                          </span>
+                        </div>
+                        <p>{ui(run.report.summary)}</p>
+                        {run.approvals.length > 0 && (
+                          <div className="agent-approval-cards">
+                            {run.approvals.map((approval) => (
+                              <article key={approval.id}>
+                                <div>
+                                  <ShieldCheck size={19} />
+                                  <h3>{ui(approval.name)}</h3>
+                                  <RunStatus
+                                    value={
+                                      approval.status === "approved" ||
+                                      approval.status === "rejected"
+                                        ? "completed"
+                                        : "pending"
+                                    }
+                                  />
+                                </div>
+                                <p>{ui(approval.reason)}</p>
+                                <span>{ui(approval.impact)}</span>
+                                {approval.status === "pending" ? (
+                                  <footer>
+                                    <small>
+                                      {ui(
+                                        admin
+                                          ? "승인 시 예방 점검 작업이 생성됩니다."
+                                          : "관리자 승인이 필요합니다.",
+                                      )}
+                                    </small>
+                                    <button
+                                      className="btn small-btn"
+                                      disabled={!admin || busy}
+                                      onClick={async () => {
+                                        setBusy(true);
+                                        try {
+                                          await action(
+                                            `/recommendations/${approval.id}/decision`,
+                                            { decision: "reject" },
+                                            "제안을 반려했습니다.",
+                                          );
+                                        } finally {
+                                          setBusy(false);
+                                        }
+                                      }}
+                                    >
+                                      {ui("반려")}
+                                    </button>
+                                    <button
+                                      className="btn primary small-btn"
+                                      disabled={!admin || busy}
+                                      onClick={async () => {
+                                        setBusy(true);
+                                        try {
+                                          await action(
+                                            `/recommendations/${approval.id}/decision`,
+                                            { decision: "approve" },
+                                            "승인하고 점검 작업을 생성했습니다.",
+                                          );
+                                        } finally {
+                                          setBusy(false);
+                                        }
+                                      }}
+                                    >
+                                      <CheckCheck size={13} />
+                                      {ui("승인 및 작업 생성")}
+                                    </button>
+                                  </footer>
+                                ) : (
+                                  <footer>
+                                    <small>
+                                      {ui(
+                                        approval.status === "approved"
+                                          ? "승인 완료"
+                                          : "반려 완료",
+                                      )}
+                                    </small>
+                                  </footer>
+                                )}
+                              </article>
+                            ))}
+                          </div>
+                        )}
+                      </section>
+                    )}
+                    {run.error && (
+                      <div className="form-error">{ui(run.error)}</div>
+                    )}
+                  </>
+                ) : (
+                  <div className="panel agent-welcome">
+                    <Workflow size={45} />
+                    <h2>{ui("하나의 목표, 연결된 전문성.")}</h2>
+                    <p>
+                      {ui(
+                        "왼쪽에서 실행을 선택하거나 새로운 라인 진단을 시작하세요.",
+                      )}
+                    </p>
+                    <div>
+                      <span>Planner</span>
+                      <ChevronRight size={14} />
+                      <span>{ui("기능별 Agents")}</span>
+                      <ChevronRight size={14} />
+                      <span>Main & Approval</span>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        </>
+          </>
+        ),
       )}
       {settingsOpen && (
         <FieldDialog
-          title="멀티 에이전트 실행 설정"
+          title={ui("멀티 에이전트 실행 설정")}
           onClose={() => setSettingsOpen(false)}
         >
           <form
@@ -815,14 +868,15 @@ export function AgentWorkspace({
             }}
           >
             <label>
-              동시 전문 워커
+              {ui("동시 전문 워커")}
               <select
                 value={concurrency}
                 onChange={(e) => setConcurrency(Number(e.target.value))}
               >
                 {[1, 2, 3, 4].map((n) => (
                   <option key={n} value={n}>
-                    {n}개
+                    {ui(n)}
+                    {ui("개")}
                   </option>
                 ))}
               </select>
@@ -831,23 +885,27 @@ export function AgentWorkspace({
               <Bot size={20} />
               <div>
                 <strong>
-                  {config?.llm_configured
-                    ? `로컬 LLM 설정됨 · ${config.model}`
-                    : "로컬 LLM 미연결"}
+                  {ui(
+                    config?.llm_configured
+                      ? `로컬 LLM 설정됨 · ${config.model}`
+                      : "로컬 LLM 미연결",
+                  )}
                 </strong>
                 <p>
-                  백엔드의 LLM_BASE_URL과 LLM_MODEL로 Ollama를 연결할 수
-                  있습니다. 제공자가 없는 경우 제조 도구 모드를 사용합니다.
+                  {ui(
+                    "백엔드의 LLM_BASE_URL과 LLM_MODEL로 Ollama를 연결할 수 있습니다. 제공자가 없는 경우 제조 도구 모드를 사용합니다.",
+                  )}
                 </p>
               </div>
             </div>
             <p className="field-dialog-description">
-              도구는 데이터 조회·통계·용량 계산으로 제한됩니다. 현장 작업 생성은
-              관리자 승인 후 진행됩니다.
+              {ui(
+                "도구는 데이터 조회·통계·용량 계산으로 제한됩니다. 현장 작업 생성은 관리자 승인 후 진행됩니다.",
+              )}
             </p>
             <button className="btn primary" disabled={busy}>
               <Settings2 size={15} />
-              설정 저장
+              {ui("설정 저장")}
             </button>
           </form>
         </FieldDialog>
@@ -902,69 +960,79 @@ function ExecutionGraph({
           minWidth: Math.max(760, width),
           height: Math.max(300, height),
         }}
-        aria-label="Planner, 데이터 워커, 병렬 전문 워커, Main, 승인 게이트의 실행 그래프"
+        aria-label={ui(
+          "Planner, 데이터 워커, 병렬 전문 워커, Main, 승인 게이트의 실행 그래프",
+        )}
       >
-        {tasks.flatMap((t) =>
-          t.depends.map((dep) => {
-            const from = positions[dep],
-              to = positions[t.id];
-            if (!from || !to) return null;
+        {ui(
+          tasks.flatMap((t) =>
+            t.depends.map((dep) => {
+              const from = positions[dep],
+                to = positions[t.id];
+              if (!from || !to) return null;
+              return (
+                <path
+                  key={dep + "-" + t.id}
+                  d={`M${from[0] + 154} ${from[1] + 29} C${(from[0] + 154 + to[0]) / 2} ${from[1] + 29}, ${(from[0] + 154 + to[0]) / 2} ${to[1] + 29}, ${to[0]} ${to[1] + 29}`}
+                  fill="none"
+                  stroke={t.status === "completed" ? "#bdded1" : "#dce5f2"}
+                  strokeWidth="2"
+                />
+              );
+            }),
+          ),
+        )}
+        {ui(
+          tasks.map((t) => {
+            const [x, y] = positions[t.id] || [15, 10];
             return (
-              <path
-                key={dep + "-" + t.id}
-                d={`M${from[0] + 154} ${from[1] + 29} C${(from[0] + 154 + to[0]) / 2} ${from[1] + 29}, ${(from[0] + 154 + to[0]) / 2} ${to[1] + 29}, ${to[0]} ${to[1] + 29}`}
-                fill="none"
-                stroke={t.status === "completed" ? "#bdded1" : "#dce5f2"}
-                strokeWidth="2"
-              />
+              <g
+                key={t.id}
+                className={`agent-graph-node ${t.status} ${selected === t.id ? "selected" : ""}`}
+                transform={`translate(${x} ${y})`}
+                role="button"
+                tabIndex={0}
+                aria-label={ui(`${t.name} ${labels[t.status] || t.status}`)}
+                onClick={() => onSelect(t.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    onSelect(t.id);
+                  }
+                }}
+              >
+                <rect width="154" height="60" rx="10" />
+                <circle cx="17" cy="21" r="3" />
+                <text x="29" y="25">
+                  {ui(
+                    t.id === "planner"
+                      ? "Planner"
+                      : t.id === "main"
+                        ? "Main Agent"
+                        : t.id === "approval"
+                          ? "승인 게이트"
+                          : t.name.replace(" 에이전트", "").slice(0, 14),
+                  )}
+                </text>
+                <text className="graph-node-status" x="17" y="45">
+                  {ui(labels[t.status] || t.status)}
+                </text>
+                <text
+                  className="graph-node-order"
+                  x="137"
+                  y="45"
+                  textAnchor="end"
+                >
+                  {ui(
+                    t.elapsed_ms !== undefined
+                      ? `${t.elapsed_ms.toFixed(1)} ms`
+                      : "",
+                  )}
+                </text>
+              </g>
             );
           }),
         )}
-        {tasks.map((t) => {
-          const [x, y] = positions[t.id] || [15, 10];
-          return (
-            <g
-              key={t.id}
-              className={`agent-graph-node ${t.status} ${selected === t.id ? "selected" : ""}`}
-              transform={`translate(${x} ${y})`}
-              role="button"
-              tabIndex={0}
-              aria-label={`${t.name} ${labels[t.status] || t.status}`}
-              onClick={() => onSelect(t.id)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  onSelect(t.id);
-                }
-              }}
-            >
-              <rect width="154" height="60" rx="10" />
-              <circle cx="17" cy="21" r="3" />
-              <text x="29" y="25">
-                {t.id === "planner"
-                  ? "Planner"
-                  : t.id === "main"
-                    ? "Main Agent"
-                    : t.id === "approval"
-                      ? "승인 게이트"
-                      : t.name.replace(" 에이전트", "").slice(0, 14)}
-              </text>
-              <text className="graph-node-status" x="17" y="45">
-                {labels[t.status] || t.status}
-              </text>
-              <text
-                className="graph-node-order"
-                x="137"
-                y="45"
-                textAnchor="end"
-              >
-                {t.elapsed_ms !== undefined
-                  ? `${t.elapsed_ms.toFixed(1)} ms`
-                  : ""}
-              </text>
-            </g>
-          );
-        })}
       </svg>
     </div>
   );

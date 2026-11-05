@@ -3545,3 +3545,49 @@ dd {
     font-size: 8px;
   }
 }
+.language-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #6c82a3;
+  flex-shrink: 0;
+}
+.language-selector select {
+  border: 1px solid #e0e7f0;
+  border-radius: 7px;
+  padding: 7px 9px;
+  background: white;
+  color: #4f6789;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.login-form > .language-selector {
+  align-self: flex-end;
+  margin-bottom: 25px;
+}
+.topbar-actions > .language-selector select {
+  max-width: 95px;
+}
+html[lang="en"] .page-heading h1 {
+  letter-spacing: -0.035em;
+}
+html[lang="en"] .side-nav button {
+  font-size: 11px;
+}
+html[lang="en"] .floor-ring span {
+  font-size: 22px;
+}
+html[lang="en"] .floor-agent-grid .agent-widget-card header > span {
+  font-size: 23px;
+}
+@media (max-width: 700px) {
+  .topbar-actions > .language-selector svg {
+    display: none;
+  }
+  .topbar-actions > .language-selector select {
+    padding: 6px;
+    font-size: 10px;
+    max-width: 76px;
+  }
+}

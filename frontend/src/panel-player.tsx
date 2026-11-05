@@ -1,3 +1,6 @@
+import { LanguageSelector } from "./i18n/react";
+import { ui } from "./i18n/locale";
+import { intlLocale } from "./i18n/locale";
 import { AgentWidgetCards } from "./agent-widgets";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -91,10 +94,10 @@ function Ring({ value, label }: { value: number; label: string }) {
     >
       <div>
         <b>
-          {value.toFixed(1)}
+          {ui(value.toFixed(1))}
           <small>%</small>
         </b>
-        <span>{label}</span>
+        <span>{ui(label)}</span>
       </div>
     </div>
   );
@@ -112,10 +115,10 @@ function Stat({
 }) {
   return (
     <div className={`floor-stat ${accent}`}>
-      <span>{label}</span>
+      <span>{ui(label)}</span>
       <strong>
-        {value}
-        <small>{unit}</small>
+        {ui(value)}
+        <small>{ui(unit)}</small>
       </strong>
     </div>
   );
@@ -125,13 +128,17 @@ function FloorChart({ series }: { series: PanelSnapshot["series"] }) {
   return (
     <div className="floor-trend">
       <div>
-        <h3>최종 공정 양품 추이</h3>
-        <span>최근 {series.length}개 수집 구간</span>
+        <h3>{ui("최종 공정 양품 추이")}</h3>
+        <span>
+          {ui("최근")}
+          {ui(series.length)}
+          {ui("개 수집 구간")}
+        </span>
       </div>
       <svg
         viewBox="0 0 900 170"
         role="img"
-        aria-label="라인 최종 공정의 구간별 양품 수량"
+        aria-label={ui("라인 최종 공정의 구간별 양품 수량")}
       >
         {[30, 75, 120, 165].map((y) => (
           <line
@@ -157,8 +164,8 @@ function FloorChart({ series }: { series: PanelSnapshot["series"] }) {
         ))}
       </svg>
       <div className="floor-chart-axis">
-        <span>{series[0] ? time(series[0].time) : "—"}</span>
-        <span>{series.at(-1) ? time(series.at(-1)!.time) : "—"}</span>
+        <span>{ui(series[0] ? time(series[0].time) : "—")}</span>
+        <span>{ui(series.at(-1) ? time(series.at(-1)!.time) : "—")}</span>
       </div>
     </div>
   );
@@ -220,24 +227,24 @@ export function FloorBoard({
         <>
           <div className="floor-stats">
             <Stat
-              label="생산 계획"
+              label={ui("생산 계획")}
               value={order ? num(order.quantity) : "—"}
               unit="ea"
             />
             <Stat
-              label="누적 완제품 실적"
+              label={ui("누적 완제품 실적")}
               value={order ? num(order.completed) : "—"}
               unit="ea"
               accent="green"
             />
             <Stat
-              label="누적 양품률 · 전체 설비"
+              label={ui("누적 양품률 · 전체 설비")}
               value={quality.toFixed(1)}
               unit="%"
               accent="violet"
             />
             <Stat
-              label="가동 / 주의 설비"
+              label={ui("가동 / 주의 설비")}
               value={`${assets.filter((a) => ["running", "warning"].includes(a.status)).length} / ${assets.length}`}
               unit="대"
               accent="amber"
@@ -246,19 +253,21 @@ export function FloorBoard({
           <div className="floor-production-grid">
             <section className="floor-card floor-plan">
               <span className="floor-kicker">CURRENT PRODUCTION</span>
-              <h2>{order?.product || "진행 중인 작업이 없습니다."}</h2>
-              <p>{order?.name || "관리 콘솔에서 작업지시를 확인하세요."}</p>
+              <h2>{ui(order?.product || "진행 중인 작업이 없습니다.")}</h2>
+              <p>{ui(order?.name || "관리 콘솔에서 작업지시를 확인하세요.")}</p>
               <div className="floor-plan-progress">
-                <Ring value={progress} label="계획 달성률" />
+                <Ring value={progress} label={ui("계획 달성률")} />
                 <div>
-                  <span>남은 계획 수량</span>
+                  <span>{ui("남은 계획 수량")}</span>
                   <strong>
-                    {order
-                      ? num(Math.max(0, order.quantity - order.completed))
-                      : "—"}{" "}
+                    {ui(
+                      order
+                        ? num(Math.max(0, order.quantity - order.completed))
+                        : "—",
+                    )}{" "}
                     <small>ea</small>
                   </strong>
-                  <p>{order?.id || "—"}</p>
+                  <p>{ui(order?.id || "—")}</p>
                 </div>
               </div>
             </section>
@@ -270,8 +279,8 @@ export function FloorBoard({
             {assets.map((a) => (
               <div key={a.id} className={a.status === "warning" ? "warn" : ""}>
                 <i />
-                <span>{a.id}</span>
-                <b>{a.status === "warning" ? "주의" : "가동 중"}</b>
+                <span>{ui(a.id)}</span>
+                <b>{ui(a.status === "warning" ? "주의" : "가동 중")}</b>
               </div>
             ))}
           </div>
@@ -282,16 +291,16 @@ export function FloorBoard({
         <AgentWidgetCards results={snapshot.agent_widgets} floor />
       ) : (
         <section className="floor-card">
-          <h2>설치된 에이전트가 없습니다.</h2>
-          <p>패널 스튜디오에서 위젯 에이전트를 선택하세요.</p>
+          <h2>{ui("설치된 에이전트가 없습니다.")}</h2>
+          <p>{ui("패널 스튜디오에서 위젯 에이전트를 선택하세요.")}</p>
         </section>
       );
     if (screen.template === "equipment")
       return (
         <>
           <div className="floor-section-title">
-            <h2>설비별 운전 상태</h2>
-            <span>운영 임계값 · 온도 75°C / 진동 3.5 mm/s</span>
+            <h2>{ui("설비별 운전 상태")}</h2>
+            <span>{ui("운영 임계값 · 온도 75°C / 진동 3.5 mm/s")}</span>
           </div>
           <div className="floor-equipment-grid">
             {assets.map((a) => (
@@ -304,23 +313,23 @@ export function FloorBoard({
                     <Factory size={38} />
                   </span>
                   <span className="floor-status">
-                    {a.status === "warning" ? "주의 필요" : "정상 가동"}
+                    {ui(a.status === "warning" ? "주의 필요" : "정상 가동")}
                   </span>
                 </div>
-                <h2>{a.name}</h2>
-                <span className="floor-kicker">{a.id}</span>
+                <h2>{ui(a.name)}</h2>
+                <span className="floor-kicker">{ui(a.id)}</span>
                 <div className="floor-readings">
                   <span>
-                    온도
+                    {ui("온도")}
                     <strong>
-                      {a.temperature.toFixed(1)}
+                      {ui(a.temperature.toFixed(1))}
                       <small>°C</small>
                     </strong>
                   </span>
                   <span>
-                    진동
+                    {ui("진동")}
                     <strong>
-                      {a.vibration.toFixed(1)}
+                      {ui(a.vibration.toFixed(1))}
                       <small>mm/s</small>
                     </strong>
                   </span>
@@ -330,10 +339,12 @@ export function FloorBoard({
                 </div>
                 <footer>
                   <span>
-                    설정 주기 <b>{a.cycle_time}s</b>
+                    {ui("설정 주기")}
+                    <b>{ui(a.cycle_time)}s</b>
                   </span>
                   <span>
-                    누적 양품 <b>{num(a.produced)}</b>
+                    {ui("누적 양품")}
+                    <b>{ui(num(a.produced))}</b>
                   </span>
                 </footer>
               </section>
@@ -346,37 +357,37 @@ export function FloorBoard({
         <>
           <div className="floor-stats">
             <Stat
-              label="설비 누적 양품"
+              label={ui("설비 누적 양품")}
               value={num(good)}
               unit="ea"
               accent="green"
             />
             <Stat
-              label="설비 누적 불량"
+              label={ui("설비 누적 불량")}
               value={num(bad)}
               unit="ea"
               accent="amber"
             />
             <Stat
-              label="현재 라인 알림"
+              label={ui("현재 라인 알림")}
               value={String(snapshot.alerts.length)}
               unit="건"
             />
           </div>
           <div className="floor-quality-grid">
             <section className="floor-card floor-quality-ring">
-              <Ring value={quality} label="누적 양품률" />
-              <h2>라인의 품질을 한눈에.</h2>
-              <p>전체 설비 처리 수량 기준</p>
+              <Ring value={quality} label={ui("누적 양품률")} />
+              <h2>{ui("라인의 품질을 한눈에.")}</h2>
+              <p>{ui("전체 설비 처리 수량 기준")}</p>
             </section>
             <section className="floor-card floor-quality-bars">
-              <h2>설비별 불량 수량</h2>
+              <h2>{ui("설비별 불량 수량")}</h2>
               {assets.map((a) => (
                 <div key={a.id}>
                   <span>
-                    {a.id}
+                    {ui(a.id)}
                     <b>
-                      {num(a.rejected)} <small>ea</small>
+                      {ui(num(a.rejected))} <small>ea</small>
                     </b>
                   </span>
                   <div>
@@ -388,7 +399,7 @@ export function FloorBoard({
                   </div>
                 </div>
               ))}
-              <p>불량 원인 코드는 아직 연동되지 않았습니다.</p>
+              <p>{ui("불량 원인 코드는 아직 연동되지 않았습니다.")}</p>
             </section>
           </div>
         </>
@@ -399,22 +410,22 @@ export function FloorBoard({
           <section className="floor-card floor-current-order">
             <span className="floor-kicker">WORK INSTRUCTION</span>
             <span className="floor-status">
-              {order?.status === "running" ? "생산 진행 중" : "작업 대기"}
+              {ui(order?.status === "running" ? "생산 진행 중" : "작업 대기")}
             </span>
-            <h2>{order?.product || "진행 작업 없음"}</h2>
-            <p>{order?.name || "작업지시를 등록하세요."}</p>
+            <h2>{ui(order?.product || "진행 작업 없음")}</h2>
+            <p>{ui(order?.name || "작업지시를 등록하세요.")}</p>
             <div className="floor-order-numbers">
               <span>
-                계획 수량
+                {ui("계획 수량")}
                 <strong>
-                  {order ? num(order.quantity) : "—"}
+                  {ui(order ? num(order.quantity) : "—")}
                   <small> ea</small>
                 </strong>
               </span>
               <span>
-                완료 수량
+                {ui("완료 수량")}
                 <strong>
-                  {order ? num(order.completed) : "—"}
+                  {ui(order ? num(order.completed) : "—")}
                   <small> ea</small>
                 </strong>
               </span>
@@ -423,11 +434,14 @@ export function FloorBoard({
               <i style={{ width: `${Math.min(100, progress)}%` }} />
             </div>
             <p>
-              {order?.id || "—"} · 달성률 {progress.toFixed(1)}%
+              {ui(order?.id || "—")}
+              {ui("· 달성률")}
+              {ui(progress.toFixed(1))}%
             </p>
             <button
               className="floor-touch-btn"
               disabled={
+                !onEvent ||
                 preview ||
                 config.mode !== "touch" ||
                 pending ||
@@ -438,11 +452,11 @@ export function FloorBoard({
               }
             >
               <CheckCheck size={25} />
-              {pending ? "기록 중…" : "작업지시 확인"}
+              {ui(pending ? "기록 중…" : "작업지시 확인")}
             </button>
           </section>
           <section className="floor-card floor-instructions">
-            <h2>작업 안내</h2>
+            <h2>{ui("작업 안내")}</h2>
             {(
               screen.message ||
               "현재 작업지시와 품번을 확인하세요.\n현장에 승인된 작업서를 확인하세요.\n검사 결과와 생산 실적을 기록하세요."
@@ -451,13 +465,13 @@ export function FloorBoard({
               .filter(Boolean)
               .map((message, i) => (
                 <div key={i}>
-                  <span>{String(i + 1).padStart(2, "0")}</span>
-                  <p>{message}</p>
+                  <span>{ui(String(i + 1).padStart(2, "0"))}</span>
+                  <p>{ui(message)}</p>
                 </div>
               ))}
             <footer>
               <ShieldCheck size={24} />
-              패널의 확인 기록은 장비 운전 명령이 아닙니다.
+              {ui("패널의 확인 기록은 장비 운전 명령이 아닙니다.")}
             </footer>
           </section>
         </div>
@@ -466,8 +480,8 @@ export function FloorBoard({
       return (
         <>
           <div className="floor-section-title">
-            <h2>필요한 지원을 선택하세요.</h2>
-            <span>요청은 현장 이력과 감사로그에 기록됩니다.</span>
+            <h2>{ui("필요한 지원을 선택하세요.")}</h2>
+            <span>{ui("요청은 현장 이력과 감사로그에 기록됩니다.")}</span>
           </div>
           <div className="floor-andon-actions">
             {[
@@ -492,36 +506,40 @@ export function FloorBoard({
             ].map((item) => (
               <button
                 key={item.reason}
-                disabled={preview || config.mode !== "touch" || pending}
+                disabled={
+                  preview || !onEvent || config.mode !== "touch" || pending
+                }
                 onClick={() =>
                   send({ action: "support.request", reason: item.reason })
                 }
               >
                 <item.icon size={58} />
-                <b>{item.label}</b>
-                <span>{item.text}</span>
+                <b>{ui(item.label)}</b>
+                <span>{ui(item.text)}</span>
                 <ChevronRight size={25} />
               </button>
             ))}
           </div>
           <section className="floor-card floor-request-history">
-            <h2>최근 라인 입력</h2>
+            <h2>{ui("최근 라인 입력")}</h2>
             {snapshot.events.length ? (
               snapshot.events.slice(0, 4).map((e) => (
                 <div key={e.id}>
-                  <span className="floor-status">접수</span>
+                  <span className="floor-status">{ui("접수")}</span>
                   <b>
-                    {e.name}
-                    {e.reason
-                      ? ` · ${{ equipment: "설비", material: "자재", quality: "품질" }[e.reason as "equipment" | "material" | "quality"]}`
-                      : ""}
+                    {ui(e.name)}
+                    {ui(
+                      e.reason
+                        ? ` · ${{ equipment: "설비", material: "자재", quality: "품질" }[e.reason as "equipment" | "material" | "quality"]}`
+                        : "",
+                    )}
                   </b>
-                  <span>{e.panel_id}</span>
-                  <time>{time(e.created_at)}</time>
+                  <span>{ui(e.panel_id)}</span>
+                  <time>{ui(time(e.created_at))}</time>
                 </div>
               ))
             ) : (
-              <p>등록된 현장 요청이 없습니다.</p>
+              <p>{ui("등록된 현장 요청이 없습니다.")}</p>
             )}
           </section>
         </>
@@ -530,11 +548,12 @@ export function FloorBoard({
       return (
         <>
           <div className="floor-section-title">
-            <h2>공용 AMR 운용 현황</h2>
+            <h2>{ui("공용 AMR 운용 현황")}</h2>
             <span>
-              {config.line}라인 운반 작업{" "}
-              {snapshot.jobs.filter((j) => j.status === "running").length}건
-              진행
+              {ui(config.line)}
+              {ui("라인 운반 작업")}{" "}
+              {ui(snapshot.jobs.filter((j) => j.status === "running").length)}
+              {ui("건 진행")}
             </span>
           </div>
           <div className="floor-robot-grid">
@@ -543,39 +562,46 @@ export function FloorBoard({
                 <div>
                   <Truck size={75} />
                   <span className="floor-status">
-                    {r.status === "busy" ? "작업 중" : "대기"}
+                    {ui(r.status === "busy" ? "작업 중" : "대기")}
                   </span>
                 </div>
-                <h2>{r.name}</h2>
-                <p>현재 위치 · {r.location}</p>
+                <h2>{ui(r.name)}</h2>
+                <p>
+                  {ui("현재 위치 ·")}
+                  {ui(r.location)}
+                </p>
                 <strong>
-                  {r.battery}
+                  {ui(r.battery)}
                   <small>%</small>
                 </strong>
                 <div className="floor-big-progress">
                   <i style={{ width: `${r.battery}%` }} />
                 </div>
                 <footer>
-                  누적 완료 작업 <b>{r.jobs}회</b>
+                  {ui("누적 완료 작업")}
+                  <b>
+                    {ui(r.jobs)}
+                    {ui("회")}
+                  </b>
                 </footer>
               </section>
             ))}
           </div>
           <section className="floor-card floor-request-history">
-            <h2>현재 라인 운반 작업</h2>
+            <h2>{ui("현재 라인 운반 작업")}</h2>
             {snapshot.jobs.length ? (
               snapshot.jobs.slice(0, 3).map((j) => (
                 <div key={j.id}>
                   <span className="floor-status">
-                    {j.status === "running" ? "진행" : "완료"}
+                    {ui(j.status === "running" ? "진행" : "완료")}
                   </span>
-                  <b>{j.robot_id}</b>
-                  <span>{j.destination}</span>
-                  <time>{time(j.created_at)}</time>
+                  <b>{ui(j.robot_id)}</b>
+                  <span>{ui(j.destination)}</span>
+                  <time>{ui(time(j.created_at))}</time>
                 </div>
               ))
             ) : (
-              <p>이 라인에 배정된 운반 작업이 없습니다.</p>
+              <p>{ui("이 라인에 배정된 운반 작업이 없습니다.")}</p>
             )}
           </section>
         </>
@@ -587,18 +613,20 @@ export function FloorBoard({
             cameras={snapshot.cameras}
             layout={config.camera_widget.layout}
             interactive={!preview}
-            title={`${config.line}라인 CCTV`}
+            title={ui(`${config.line}라인 CCTV`)}
           />
         </div>
       );
     return (
       <section className="floor-notice">
         <span className="floor-kicker">NOTICE TO THE FLOOR</span>
-        <h2>{screen.title}</h2>
-        <p>{screen.message || "현장 공지 내용을 패널 설정에서 입력하세요."}</p>
+        <h2>{ui(screen.title)}</h2>
+        <p>
+          {ui(screen.message || "현장 공지 내용을 패널 설정에서 입력하세요.")}
+        </p>
         <div>
           <Factory size={25} />
-          {config.location}
+          {ui(config.location)}
         </div>
       </section>
     );
@@ -621,27 +649,31 @@ export function FloorBoard({
         </div>
         <div>
           <span className="floor-kicker">
-            {config.line} LINE ·{" "}
+            {ui(config.line)} LINE ·{" "}
             {config.mode === "tv" ? "PRODUCTION BOARD" : "OPERATOR PANEL"}
           </span>
-          <h1>{screen.title}</h1>
+          <h1>{ui(screen.title)}</h1>
         </div>
         <div className="floor-clock">
           <strong>
-            {new Date(snapshot.server_time).toLocaleTimeString("ko-KR", {
-              hour12: false,
-            })}
+            {ui(
+              new Date(snapshot.server_time).toLocaleTimeString(intlLocale(), {
+                hour12: false,
+              }),
+            )}
           </strong>
           <span>
-            {preview
-              ? "미리보기 · 입력 저장 안 함"
-              : offline
-                ? "연결 지연 · 마지막 수신 화면"
-                : stale
-                  ? "수집 지연 · 마지막 데이터 확인 필요"
-                  : snapshot.source === "published"
-                    ? "게시 화면 · 연결됨"
-                    : "PREVIEW"}
+            {ui(
+              preview
+                ? "미리보기 · 입력 저장 안 함"
+                : offline
+                  ? "연결 지연 · 마지막 수신 화면"
+                  : stale
+                    ? "수집 지연 · 마지막 데이터 확인 필요"
+                    : snapshot.source === "published"
+                      ? "게시 화면 · 연결됨"
+                      : "PREVIEW",
+            )}
           </span>
         </div>
       </header>
@@ -649,7 +681,7 @@ export function FloorBoard({
         className={`floor-workspace ${cameras ? "with-cameras camera-" + config.camera_widget.position : ""}`}
       >
         <main className={`floor-content template-${screen.template}`}>
-          {view()}
+          {ui(view())}
         </main>
         {cameras && (
           <aside className="floor-camera-widget">
@@ -657,33 +689,35 @@ export function FloorBoard({
               cameras={snapshot.cameras}
               layout={config.camera_widget.layout}
               interactive={!preview}
-              title={`${config.line}라인 CCTV`}
+              title={ui(`${config.line}라인 CCTV`)}
             />
           </aside>
         )}
       </div>
       {feedback && (
         <div className="floor-feedback" role="status">
-          {feedback}
+          {ui(feedback)}
         </div>
       )}
       <footer className="floor-footer">
         <span>
           <i />
-          {config.name}
-          <small>{config.location}</small>
+          {ui(config.name)}
+          <small>{ui(config.location)}</small>
         </span>
         <span>
-          {screen.message &&
-          screen.template !== "notice" &&
-          screen.template !== "work-order"
-            ? screen.message
-            : "데이터를 연결하고, 현장의 실행을 바꿉니다."}
+          {ui(
+            screen.message &&
+              screen.template !== "notice" &&
+              screen.template !== "work-order"
+              ? screen.message
+              : "데이터를 연결하고, 현장의 실행을 바꿉니다.",
+          )}
         </span>
         <b>
-          {TEMPLATES.find((t) => t.id === screen.template)?.name} ·{" "}
-          {config.screens.findIndex((s) => s.id === screen.id) + 1}/
-          {config.screens.length}
+          {ui(TEMPLATES.find((t) => t.id === screen.template)?.name)} ·{" "}
+          {ui(config.screens.findIndex((s) => s.id === screen.id) + 1)}/
+          {ui(config.screens.length)}
         </b>
       </footer>
     </div>
@@ -695,14 +729,17 @@ export function panelRoute() {
   return {
     id: decodeURIComponent(match[1]),
     key: new URLSearchParams(match[2] || "").get("key") || undefined,
+    monitor: new URLSearchParams(match[2] || "").get("view") === "monitor",
   };
 }
 export function PanelPlayer({
   id,
   initialKey,
+  readOnly = false,
 }: {
   id: string;
   initialKey?: string;
+  readOnly?: boolean;
 }) {
   const [snapshot, setSnapshot] = useState<PanelSnapshot | null>(null),
     [error, setError] = useState(""),
@@ -718,11 +755,13 @@ export function PanelPlayer({
       history.replaceState(
         null,
         "",
-        `${location.pathname}${location.search}#panel/${encodeURIComponent(id)}`,
+        `${location.pathname}${location.search}#panel/${encodeURIComponent(id)}${readOnly ? "?view=monitor" : ""}`,
       );
       return initialKey;
     }
-    return sessionStorage.getItem(`forge-panel-${id}`) || undefined;
+    return readOnly
+      ? undefined
+      : sessionStorage.getItem(`forge-panel-${id}`) || undefined;
   });
   useEffect(() => {
     let alive = true,
@@ -743,16 +782,17 @@ export function PanelPlayer({
         setSnapshot(data);
         setError("");
         interval = data.config.refresh_interval * 1000;
-        await api(
-          `/panels/${id}/heartbeat`,
-          {
-            screen_id:
-              data.config.screens[active.current]?.id ||
-              data.config.screens[0].id,
-            revision: data.revision,
-          },
-          deviceKey,
-        );
+        if (!readOnly)
+          await api(
+            `/panels/${id}/heartbeat`,
+            {
+              screen_id:
+                data.config.screens[active.current]?.id ||
+                data.config.screens[0].id,
+              revision: data.revision,
+            },
+            deviceKey,
+          );
       } catch (e) {
         if (alive) setError((e as Error).message);
       } finally {
@@ -764,7 +804,7 @@ export function PanelPlayer({
       alive = false;
       clearTimeout(timer);
     };
-  }, [id, deviceKey, retry]);
+  }, [id, deviceKey, retry, readOnly]);
   const screen = snapshot?.config.screens[index] || snapshot?.config.screens[0];
   useEffect(() => {
     if (
@@ -789,18 +829,24 @@ export function PanelPlayer({
   return (
     <div className="panel-standalone">
       <div className="panel-player-toolbar">
-        <a href="#panels">
+        <a href={readOnly ? "#panel-view" : "#panels"}>
           <ArrowLeft size={15} />
-          패널 관리
+          {ui(readOnly ? "현장 패널 뷰" : "패널 관리")}
         </a>
         <span>
           <Monitor size={15} />
-          {snapshot?.config.name || id}
-          <small>{snapshot ? `게시 v${snapshot.revision}` : "연결 중"}</small>
+          {ui(snapshot?.config.name || id)}
+          <small>
+            {ui(snapshot ? `게시 v${snapshot.revision}` : "연결 중")}{" "}
+            {readOnly && (
+              <b className="monitor-mode-badge">{ui("조회 전용")}</b>
+            )}
+          </small>
         </span>
         <div>
+          <LanguageSelector />
           <button
-            title="전체 화면"
+            title={ui("전체 화면")}
             onClick={() => {
               document.documentElement
                 .requestFullscreen?.()
@@ -812,13 +858,13 @@ export function PanelPlayer({
             <Maximize2 size={16} />
           </button>
           <button
-            aria-label={paused ? "자동 전환 재개" : "자동 전환 일시정지"}
+            aria-label={ui(paused ? "자동 전환 재개" : "자동 전환 일시정지")}
             onClick={() => setPaused((v) => !v)}
           >
             {paused ? <Play size={16} /> : <Pause size={16} />}
           </button>
           <button
-            aria-label="이전 화면"
+            aria-label={ui("이전 화면")}
             disabled={!snapshot}
             onClick={() =>
               setIndex(
@@ -831,7 +877,7 @@ export function PanelPlayer({
             <ArrowLeft size={16} />
           </button>
           <button
-            aria-label="다음 화면"
+            aria-label={ui("다음 화면")}
             disabled={!snapshot}
             onClick={() =>
               setIndex((i) => (i + 1) % snapshot!.config.screens.length)
@@ -843,8 +889,10 @@ export function PanelPlayer({
       </div>
       {error && (
         <div className="panel-runtime-error" role="alert">
-          {error}
-          <button onClick={() => setRetry((v) => v + 1)}>다시 연결</button>
+          {ui(error)}
+          <button onClick={() => setRetry((v) => v + 1)}>
+            {ui("다시 연결")}
+          </button>
         </div>
       )}
       {snapshot ? (
@@ -854,20 +902,28 @@ export function PanelPlayer({
             index={index}
             offline={!!error}
             fill
-            onEvent={(body) => api(`/panels/${id}/events`, body, deviceKey)}
+            onEvent={
+              readOnly
+                ? undefined
+                : (body) => api(`/panels/${id}/events`, body, deviceKey)
+            }
           />
         </div>
       ) : (
         <div className="panel-waiting">
           <Monitor size={48} />
           <h1>
-            {error
-              ? "패널 연결을 확인하세요."
-              : "게시된 패널 화면을 불러오는 중…"}
+            {ui(
+              error
+                ? "패널 연결을 확인하세요."
+                : "게시된 패널 화면을 불러오는 중…",
+            )}
           </h1>
-          <p>관리 콘솔에서 설정을 게시한 뒤 패널 연결 주소로 접속하세요.</p>
+          <p>
+            {ui("관리 콘솔에서 설정을 게시한 뒤 패널 연결 주소로 접속하세요.")}
+          </p>
           <a className="btn" href="#panels">
-            관리 콘솔로 이동
+            {ui("관리 콘솔로 이동")}
           </a>
         </div>
       )}
@@ -879,7 +935,7 @@ export function PanelPlayer({
               className={index === i ? "selected" : ""}
               onClick={() => setIndex(i)}
             >
-              {s.title}
+              {ui(s.title)}
             </button>
           ))}
         </div>

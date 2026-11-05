@@ -1,3 +1,7 @@
+import { ui } from "./i18n/locale";
+import { LanguageSelector, useLocale } from "./i18n/react";
+import { syncDocumentLocale } from "./i18n/locale";
+import { PanelViewerPage } from "./panel-viewer";
 import { IntegrationsPage } from "./integrations/page";
 import { SupplyPage } from "./supply/page";
 import { DashboardAgentWidgets } from "./agent-widgets";
@@ -60,6 +64,7 @@ import { PanelPlayer, panelRoute } from "./panel-player";
 import "./styles.css";
 
 type Page =
+  | "panel-view"
   | "supply"
   | "integrations"
   | "panels"
@@ -168,6 +173,13 @@ const nav: {
     group: "SHOPFLOOR EXPERIENCE",
   },
   {
+    id: "panel-view",
+    label: "현장 패널 뷰",
+    en: "Panel Viewer",
+    icon: Monitor,
+    group: "SHOPFLOOR EXPERIENCE",
+  },
+  {
     id: "cctv",
     label: "라인 CCTV",
     en: "Line CCTV",
@@ -212,7 +224,7 @@ const statusLabel: Record<string, string> = {
 const Status = ({ value }: { value: string }) => (
   <span className={`status status-${value}`}>
     <i />
-    {statusLabel[value] || value}
+    {ui(statusLabel[value] || value)}
   </span>
 );
 const Empty = ({
@@ -224,8 +236,8 @@ const Empty = ({
 }) => (
   <div className="empty">
     <Box size={28} />
-    <strong>{title}</strong>
-    <p>{description}</p>
+    <strong>{ui(title)}</strong>
+    <p>{ui(description)}</p>
   </div>
 );
 const SectionTitle = ({
@@ -241,11 +253,11 @@ const SectionTitle = ({
 }) => (
   <div className="page-heading">
     <div>
-      <div className="eyebrow">{eyebrow}</div>
-      <h1>{title}</h1>
-      <p>{description}</p>
+      <div className="eyebrow">{ui(eyebrow)}</div>
+      <h1>{ui(title)}</h1>
+      <p>{ui(description)}</p>
     </div>
-    {action}
+    {ui(action)}
   </div>
 );
 function Chart({ series }: { series: Overview["series"] }) {
@@ -256,8 +268,8 @@ function Chart({ series }: { series: Overview["series"] }) {
   if (!series.length)
     return (
       <Empty
-        title="수집된 데이터가 없습니다"
-        description="엣지 커넥트에서 데이터를 수집하세요."
+        title={ui("수집된 데이터가 없습니다")}
+        description={ui("엣지 커넥트에서 데이터를 수집하세요.")}
       />
     );
   const max = Math.max(...series.map((s) => s.good), 1) * 1.2;
@@ -271,18 +283,20 @@ function Chart({ series }: { series: Overview["series"] }) {
       <div className="chart-top">
         <span>
           <i className="legend blue" />
-          이벤트 구간별 양품 수
+          {ui("이벤트 구간별 양품 수")}
         </span>
         <strong>
-          {hover !== null
-            ? `${time(series[hover].time)} · ${num(series[hover].good)} ea`
-            : "최근 24개 수집 구간"}
+          {ui(
+            hover !== null
+              ? `${time(series[hover].time)} · ${num(series[hover].good)} ea`
+              : "최근 24개 수집 구간",
+          )}
         </strong>
       </div>
       <svg
         viewBox={`0 0 ${width} ${height}`}
         role="img"
-        aria-label="최근 수집 구간별 설비 양품 수 추이"
+        aria-label={ui("최근 수집 구간별 설비 양품 수 추이")}
       >
         <defs>
           <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
@@ -349,9 +363,9 @@ function Chart({ series }: { series: Overview["series"] }) {
         ))}
       </svg>
       <div className="axis">
-        <span>{time(series[0].time)}</span>
-        <span>{time(series[Math.floor(series.length / 2)].time)}</span>
-        <span>{time(series[series.length - 1].time)}</span>
+        <span>{ui(time(series[0].time))}</span>
+        <span>{ui(time(series[Math.floor(series.length / 2)].time))}</span>
+        <span>{ui(time(series[series.length - 1].time))}</span>
       </div>
     </div>
   );
@@ -382,7 +396,9 @@ function FactoryMap({
       <svg
         viewBox="0 0 680 420"
         role="img"
-        aria-label="FORGE 라면 스마트팩토리 8개 설비 배치도. 설비를 선택하면 상태가 표시됩니다."
+        aria-label={ui(
+          "FORGE 라면 스마트팩토리 8개 설비 배치도. 설비를 선택하면 상태가 표시됩니다.",
+        )}
       >
         <defs>
           <pattern
@@ -446,7 +462,7 @@ function FactoryMap({
           fill="#8091a7"
           letterSpacing="2"
         >
-          A LINE · {lineLabel("A")}
+          A LINE · {ui(lineLabel("A"))}
         </text>
         <text
           x="62"
@@ -456,7 +472,7 @@ function FactoryMap({
           fill="#8091a7"
           letterSpacing="2"
         >
-          B LINE · {lineLabel("B")}
+          B LINE · {ui(lineLabel("B"))}
         </text>
         <g transform="translate(300 202)">
           <rect width="28" height="25" rx="7" fill="#3b65ed" />
@@ -464,127 +480,136 @@ function FactoryMap({
           <circle cx="7" cy="24" r="3" fill="#344761" />
           <circle cx="22" cy="24" r="3" fill="#344761" />
           <text x="39" y="17" fontSize="10" fill="#71839e">
-            AMR 물류 동선
+            {ui("AMR 물류 동선")}
           </text>
         </g>
-        {assets.map((a) => {
-          const [x, y] = positions[a.id] || [128, 126];
-          const warn = a.status === "warning";
-          const chosen = selected === a.id;
-          return (
-            <g
-              key={a.id}
-              role="button"
-              tabIndex={0}
-              aria-label={`${a.name} ${statusLabel[a.status]}`}
-              onClick={() => onSelect(a)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onSelect(a);
-                }
-              }}
-              className="machine"
-              transform={`translate(${x} ${y})`}
-            >
-              <rect
-                x="-46"
-                y="-34"
-                width="95"
-                height="82"
-                rx="9"
-                fill={chosen ? "#dce6ff" : warn ? "#fff1d9" : "#e2e9f1"}
-                stroke={chosen ? "#406bea" : warn ? "#e6ad48" : "#d5dfe9"}
-                strokeWidth={chosen ? "2" : "1"}
-              />
-              <g filter="url(#shadow)">
-                <path
-                  d="M-33 -12 L-16 -24 L32 -24 L32 22 L17 33 L-33 33Z"
-                  fill="#c3cfdc"
-                />
-                <path d="M-33 -12 H17 V33 H-33Z" fill="#f9fbfe" />
-                <path d="M17 -12 L32 -24 V22 L17 33Z" fill="#afbdcf" />
-                <path d="M-33 -12 L-16 -24 H32 L17 -12Z" fill="#e4ebf3" />
-                <rect
-                  x="-25"
-                  y="-4"
-                  width="29"
-                  height="24"
-                  rx="2"
-                  fill={a.kind === "QC" ? "#95b4d1" : "#476184"}
-                />
-                <rect
-                  x="-22"
-                  y="-1"
-                  width="23"
-                  height="18"
-                  rx="1"
-                  fill="#2b405c"
-                />
-                <path
-                  d="M-20 13 L-14 5 L-9 10 L-3 2"
-                  stroke="#88afd7"
-                  strokeWidth="1.2"
-                  fill="none"
-                />
-                <rect x="8" y="0" width="5" height="8" rx="1" fill="#92a7c4" />
-                <circle
-                  cx="10"
-                  cy="14"
-                  r="2"
-                  fill={warn ? "#edaf35" : "#29b591"}
-                />
-                <rect
-                  x="-25"
-                  y="24"
-                  width="30"
-                  height="3"
-                  rx="1"
-                  fill="#d6e0eb"
-                />
-                <rect
-                  x="-1"
-                  y="-37"
-                  width="4"
-                  height="13"
-                  rx="1"
-                  fill="#9babc0"
-                />
-                <circle
-                  cx="1"
-                  cy="-38"
-                  r="4"
-                  fill={warn ? "#f2b343" : "#38b998"}
-                  className={warn ? "warning-light" : ""}
-                />
-              </g>
-              <rect
-                x="-37"
-                y="52"
-                width="78"
-                height="21"
-                rx="5"
-                fill={warn ? "#fff6e6" : "white"}
-                stroke={warn ? "#f3dba7" : "#e0e6ef"}
-              />
-              <circle
-                cx="-25"
-                cy="62"
-                r="2.5"
-                fill={warn ? "#e3a630" : "#2aaf8c"}
-              />
-              <text
-                x="-17"
-                y="65.5"
-                fill="#4b5d74"
-                fontSize="9.5"
-                fontWeight="600"
+        {ui(
+          assets.map((a) => {
+            const [x, y] = positions[a.id] || [128, 126];
+            const warn = a.status === "warning";
+            const chosen = selected === a.id;
+            return (
+              <g
+                key={a.id}
+                role="button"
+                tabIndex={0}
+                aria-label={ui(`${a.name} ${statusLabel[a.status]}`)}
+                onClick={() => onSelect(a)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelect(a);
+                  }
+                }}
+                className="machine"
+                transform={`translate(${x} ${y})`}
               >
-                {a.id}
-              </text>
-            </g>
-          );
-        })}
+                <rect
+                  x="-46"
+                  y="-34"
+                  width="95"
+                  height="82"
+                  rx="9"
+                  fill={chosen ? "#dce6ff" : warn ? "#fff1d9" : "#e2e9f1"}
+                  stroke={chosen ? "#406bea" : warn ? "#e6ad48" : "#d5dfe9"}
+                  strokeWidth={chosen ? "2" : "1"}
+                />
+                <g filter="url(#shadow)">
+                  <path
+                    d="M-33 -12 L-16 -24 L32 -24 L32 22 L17 33 L-33 33Z"
+                    fill="#c3cfdc"
+                  />
+                  <path d="M-33 -12 H17 V33 H-33Z" fill="#f9fbfe" />
+                  <path d="M17 -12 L32 -24 V22 L17 33Z" fill="#afbdcf" />
+                  <path d="M-33 -12 L-16 -24 H32 L17 -12Z" fill="#e4ebf3" />
+                  <rect
+                    x="-25"
+                    y="-4"
+                    width="29"
+                    height="24"
+                    rx="2"
+                    fill={a.kind === "QC" ? "#95b4d1" : "#476184"}
+                  />
+                  <rect
+                    x="-22"
+                    y="-1"
+                    width="23"
+                    height="18"
+                    rx="1"
+                    fill="#2b405c"
+                  />
+                  <path
+                    d="M-20 13 L-14 5 L-9 10 L-3 2"
+                    stroke="#88afd7"
+                    strokeWidth="1.2"
+                    fill="none"
+                  />
+                  <rect
+                    x="8"
+                    y="0"
+                    width="5"
+                    height="8"
+                    rx="1"
+                    fill="#92a7c4"
+                  />
+                  <circle
+                    cx="10"
+                    cy="14"
+                    r="2"
+                    fill={warn ? "#edaf35" : "#29b591"}
+                  />
+                  <rect
+                    x="-25"
+                    y="24"
+                    width="30"
+                    height="3"
+                    rx="1"
+                    fill="#d6e0eb"
+                  />
+                  <rect
+                    x="-1"
+                    y="-37"
+                    width="4"
+                    height="13"
+                    rx="1"
+                    fill="#9babc0"
+                  />
+                  <circle
+                    cx="1"
+                    cy="-38"
+                    r="4"
+                    fill={warn ? "#f2b343" : "#38b998"}
+                    className={warn ? "warning-light" : ""}
+                  />
+                </g>
+                <rect
+                  x="-37"
+                  y="52"
+                  width="78"
+                  height="21"
+                  rx="5"
+                  fill={warn ? "#fff6e6" : "white"}
+                  stroke={warn ? "#f3dba7" : "#e0e6ef"}
+                />
+                <circle
+                  cx="-25"
+                  cy="62"
+                  r="2.5"
+                  fill={warn ? "#e3a630" : "#2aaf8c"}
+                />
+                <text
+                  x="-17"
+                  y="65.5"
+                  fill="#4b5d74"
+                  fontSize="9.5"
+                  fontWeight="600"
+                >
+                  {ui(a.id)}
+                </text>
+              </g>
+            );
+          }),
+        )}
         <g transform="translate(565 349)">
           <path d="M13 0 L20 20 L13 16 L6 20Z" fill="#90a2b9" />
           <text x="10" y="32" fontSize="9" fill="#90a2b9">
@@ -676,14 +701,14 @@ function Login({
         <div className="login-copy">
           <span className="eyebrow">THE CONNECTED FACTORY</span>
           <h1>
-            데이터에서 실행까지.
+            {ui("데이터에서 실행까지.")}
             <br />
-            제조의 다음을 연결하다.
+            {ui("제조의 다음을 연결하다.")}
           </h1>
           <p>
-            현장과 디지털, 인사이트와 실행.
+            {ui("현장과 디지털, 인사이트와 실행.")}
             <br />
-            제조 전주기를 하나로 연결하는 AX 운영 플랫폼.
+            {ui("제조 전주기를 하나로 연결하는 AX 운영 플랫폼.")}
           </p>
           <div className="login-flow">
             CONNECT <ArrowRight size={16} /> SIMULATE <ArrowRight size={16} />{" "}
@@ -701,23 +726,32 @@ function Login({
         </span>
       </div>
       <div className="login-form">
+        <LanguageSelector />
         <span className="subtle-label">
           {mode === "register"
             ? "CREATE YOUR WORKSPACE ACCOUNT"
             : "WORKSPACE LOGIN"}
         </span>
         <h2>
-          {mode === "register"
-            ? "제조 AX, 직접 체험해 보세요."
-            : "워크스페이스에 오신 것을 환영합니다."}
+          {ui(
+            mode === "register"
+              ? "제조 AX, 직접 체험해 보세요."
+              : "워크스페이스에 오신 것을 환영합니다.",
+          )}
         </h2>
         <p>
-          {mode === "register"
-            ? "계정을 만들면 바로 가상 제조라인으로 입장합니다."
-            : "관리자 또는 직접 만든 체험 계정으로 로그인하세요."}
+          {ui(
+            mode === "register"
+              ? "계정을 만들면 바로 가상 제조라인으로 입장합니다."
+              : "관리자 또는 직접 만든 체험 계정으로 로그인하세요.",
+          )}
         </p>
         {registrationEnabled && (
-          <div className="auth-tabs" role="tablist" aria-label="계정 시작 방식">
+          <div
+            className="auth-tabs"
+            role="tablist"
+            aria-label={ui("계정 시작 방식")}
+          >
             <button
               type="button"
               role="tab"
@@ -725,7 +759,7 @@ function Login({
               disabled={loading}
               onClick={() => changeMode("login")}
             >
-              로그인
+              {ui("로그인")}
             </button>
             <button
               type="button"
@@ -734,31 +768,33 @@ function Login({
               disabled={loading}
               onClick={() => changeMode("register")}
             >
-              체험 계정 만들기
+              {ui("체험 계정 만들기")}
             </button>
           </div>
         )}
         <form
           onSubmit={submit}
-          aria-label={mode === "register" ? "체험 계정 가입" : "계정 로그인"}
+          aria-label={ui(
+            mode === "register" ? "체험 계정 가입" : "계정 로그인",
+          )}
         >
           <fieldset disabled={loading} className="auth-fields">
             {mode === "register" && (
               <label>
-                이름
+                {ui("이름")}
                 <input
                   autoComplete="name"
                   required
                   minLength={2}
                   maxLength={60}
                   value={name}
-                  placeholder="표시할 이름을 입력하세요"
+                  placeholder={ui("표시할 이름을 입력하세요")}
                   onChange={(e) => setName(e.target.value)}
                 />
               </label>
             )}
             <label>
-              이메일
+              {ui("이메일")}
               <input
                 type="email"
                 required
@@ -770,7 +806,7 @@ function Login({
               />
             </label>
             <label>
-              비밀번호
+              {ui("비밀번호")}
               <div className="password-input">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -780,19 +816,19 @@ function Login({
                   }
                   minLength={mode === "register" ? 8 : 1}
                   maxLength={mode === "register" ? 128 : 256}
-                  placeholder={
+                  placeholder={ui(
                     mode === "register"
                       ? "영문·숫자를 포함해 8자 이상"
-                      : "비밀번호 입력"
-                  }
+                      : "비밀번호 입력",
+                  )}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                   type="button"
-                  aria-label={
-                    showPassword ? "비밀번호 숨기기" : "비밀번호 표시"
-                  }
+                  aria-label={ui(
+                    showPassword ? "비밀번호 숨기기" : "비밀번호 표시",
+                  )}
                   aria-pressed={showPassword}
                   onClick={() => setShowPassword((v) => !v)}
                 >
@@ -800,18 +836,18 @@ function Login({
                 </button>
               </div>
               {mode === "register" && (
-                <small className="password-hint">{PASSWORD_HINT}</small>
+                <small className="password-hint">{ui(PASSWORD_HINT)}</small>
               )}
             </label>
             {mode === "register" && (
               <label>
-                비밀번호 확인
+                {ui("비밀번호 확인")}
                 <input
                   type={showPassword ? "text" : "password"}
                   required
                   autoComplete="new-password"
                   maxLength={128}
-                  placeholder="비밀번호를 한 번 더 입력하세요"
+                  placeholder={ui("비밀번호를 한 번 더 입력하세요")}
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                 />
@@ -819,17 +855,19 @@ function Login({
             )}
             {error && (
               <div className="form-error" role="alert">
-                {error}
+                {ui(error)}
               </div>
             )}
             <button className="btn primary wide" disabled={loading}>
-              {loading
-                ? mode === "register"
-                  ? "가입 및 입장 중…"
-                  : "로그인 중…"
-                : mode === "register"
-                  ? "체험 계정 만들고 시작하기"
-                  : "워크스페이스 로그인"}
+              {ui(
+                loading
+                  ? mode === "register"
+                    ? "가입 및 입장 중…"
+                    : "로그인 중…"
+                  : mode === "register"
+                    ? "체험 계정 만들고 시작하기"
+                    : "워크스페이스 로그인",
+              )}
               <ArrowRight size={16} />
             </button>
           </fieldset>
@@ -838,17 +876,19 @@ function Login({
           <div className="registration-note">
             <ShieldCheck size={17} />
             <div>
-              <b>일반 사용자 · 체험 운영자</b>
+              <b>{ui("일반 사용자 · 체험 운영자")}</b>
               <p>
-                데이터 수집, 시뮬레이션, 모델 학습, 생산·가상 로봇 작업을 체험할
-                수 있습니다. 승인·모델 배포는 관리자에게 요청하세요.
+                {ui(
+                  "데이터 수집, 시뮬레이션, 모델 학습, 생산·가상 로봇 작업을 체험할 수 있습니다. 승인·모델 배포는 관리자에게 요청하세요.",
+                )}
               </p>
             </div>
           </div>
         ) : (
           <div className="demo-login">
             <span>
-              관리자 계정: <b>{ADMIN_EMAIL}</b>
+              {ui("관리자 계정:")}
+              <b>{ui(ADMIN_EMAIL)}</b>
             </span>
             <button
               type="button"
@@ -857,19 +897,21 @@ function Login({
                 setError("");
               }}
             >
-              관리자 이메일 입력
+              {ui("관리자 이메일 입력")}
               <ArrowUpRight size={14} />
             </button>
           </div>
         )}
         <p className="auth-storage-note">
-          {STATIC_DEMO
-            ? "브라우저 체험 모드 · 가입 계정은 이 브라우저에만 저장됩니다. 다른 기기에서는 별도로 가입하세요."
-            : "서버 연결 모드 · 가입 계정은 워크스페이스 데이터베이스에 저장됩니다."}
+          {ui(
+            STATIC_DEMO
+              ? "브라우저 체험 모드 · 가입 계정은 이 브라우저에만 저장됩니다. 다른 기기에서는 별도로 가입하세요."
+              : "서버 연결 모드 · 가입 계정은 워크스페이스 데이터베이스에 저장됩니다.",
+          )}
         </p>
         <div className="secure-note">
           <ShieldCheck size={15} />
-          비밀번호 해시 저장 · 역할별 권한 · 8시간 세션
+          {ui("비밀번호 해시 저장 · 역할별 권한 · 8시간 세션")}
         </div>
       </div>
     </div>
@@ -986,7 +1028,7 @@ function App() {
         <span className="brand-mark">
           <Layers3 />
         </span>
-        <p>워크스페이스 연결 중…</p>
+        <p>{ui("워크스페이스 연결 중…")}</p>
       </div>
     );
   if (!user)
@@ -1005,7 +1047,7 @@ function App() {
         />
         {notice && (
           <div className={`toast ${notice.error ? "error" : ""}`} role="status">
-            {notice.message}
+            {ui(notice.message)}
           </div>
         )}
       </>
@@ -1014,7 +1056,7 @@ function App() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <a className="brand" href="#overview" aria-label="FORGE AX 홈">
+        <a className="brand" href="#overview" aria-label={ui("FORGE AX 홈")}>
           <span className="brand-mark">
             <Layers3 size={23} />
           </span>
@@ -1027,7 +1069,7 @@ function App() {
             <Factory size={16} />
           </span>
           <div>
-            <b>{industry.config.plant_name}</b>
+            <b>{ui(industry.config.plant_name)}</b>
             <small>Manufacturing workspace</small>
           </div>
           <span className="workspace-dot" />
@@ -1036,18 +1078,18 @@ function App() {
           {nav.map((item, i) => (
             <React.Fragment key={item.id}>
               {(!i || nav[i - 1].group !== item.group) && (
-                <div className="nav-group">{item.group}</div>
+                <div className="nav-group">{ui(item.group)}</div>
               )}
               <button
-                title={item.label}
-                aria-label={item.label}
+                title={ui(item.label)}
+                aria-label={ui(item.label)}
                 className={`nav-item ${page === item.id ? "active" : ""}`}
                 onClick={() => go(item.id)}
               >
                 <item.icon size={17} />
-                <span>{item.label}</span>
+                <span>{ui(item.label)}</span>
                 {item.id === "agent" && !!overview?.kpis.pending && (
-                  <small>{overview.kpis.pending}</small>
+                  <small>{ui(overview.kpis.pending)}</small>
                 )}
                 {page === item.id && <span className="active-dot" />}
               </button>
@@ -1058,11 +1100,13 @@ function App() {
           <div className="platform-state">
             <i />
             <span>
-              {STATIC_DEMO
-                ? "브라우저 체험 모드"
-                : error
-                  ? "서버 연결 확인 필요"
-                  : "플랫폼 정상 운영"}
+              {ui(
+                STATIC_DEMO
+                  ? "브라우저 체험 모드"
+                  : error
+                    ? "서버 연결 확인 필요"
+                    : "플랫폼 정상 운영",
+              )}
             </span>
             <small>v0.1</small>
           </div>
@@ -1078,17 +1122,19 @@ function App() {
               setUser(null);
               setOverview(null);
             }}
-            title="로그아웃"
+            title={ui("로그아웃")}
           >
-            <span className="avatar">{user.name.slice(0, 1)}</span>
+            <span className="avatar">{ui(user.name.slice(0, 1))}</span>
             <span>
-              <b>{user.name}</b>
+              <b>{ui(user.name)}</b>
               <small>
-                {user.role === "admin"
-                  ? "워크스페이스 관리자"
-                  : user.role === "operator"
-                    ? "현장 운영자"
-                    : "조회 사용자"}
+                {ui(
+                  user.role === "admin"
+                    ? "워크스페이스 관리자"
+                    : user.role === "operator"
+                      ? "현장 운영자"
+                      : "조회 사용자",
+                )}
               </small>
             </span>
             <LogOut size={16} />
@@ -1098,41 +1144,42 @@ function App() {
       <div className="main-shell">
         <header className="topbar">
           <div className="breadcrumb">
-            <span>워크스페이스</span>
+            <span>{ui("워크스페이스")}</span>
             <ChevronRight size={13} />
-            <b>{current.label}</b>
+            <b>{ui(current.label)}</b>
           </div>
           <div className="topbar-actions">
+            <LanguageSelector />
             <div className="global-search" ref={searchRef}>
               <Search size={15} />
               <input
-                aria-label="메뉴 및 설비 검색"
+                aria-label={ui("메뉴 및 설비 검색")}
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);
                   setSearchOpen(true);
                 }}
                 onFocus={() => setSearchOpen(true)}
-                placeholder="메뉴, 설비 검색"
+                placeholder={ui("메뉴, 설비 검색")}
               />
               {searchOpen && (
                 <div className="search-results">
                   {nav
                     .filter((n) =>
-                      (n.label + " " + n.en)
+                      (ui(n.label) + " " + n.label + " " + n.en)
                         .toLowerCase()
                         .includes(query.toLowerCase()),
                     )
                     .map((n) => (
                       <button key={n.id} onClick={() => go(n.id)}>
                         <n.icon size={15} />
-                        {n.label}
-                        <span>{n.en}</span>
+                        {ui(n.label)}
+                        <span>{ui(n.en)}</span>
                       </button>
                     ))}
                   {overview?.assets
                     .filter((a) =>
-                      (a.id + a.name)
+                      (a.id + a.name + ui(a.name))
                         .toLowerCase()
                         .includes(query.toLowerCase()),
                     )
@@ -1145,8 +1192,8 @@ function App() {
                         }}
                       >
                         <Factory size={15} />
-                        {a.id}
-                        <span>{a.name}</span>
+                        {ui(a.id)}
+                        <span>{ui(a.name)}</span>
                       </button>
                     ))}
                 </div>
@@ -1155,56 +1202,62 @@ function App() {
             <span className="header-divider" />
             <button
               className="icon-button"
-              aria-label="사용 안내"
+              aria-label={ui("사용 안내")}
               onClick={() => setModal("help")}
             >
               <CircleHelp size={19} />
             </button>
             <button
               className="icon-button notification-button"
-              aria-label="미확인 알림 보기"
+              aria-label={ui("미확인 알림 보기")}
               onClick={() => go("agent")}
             >
               <Bell size={19} />
               {!!overview?.alerts.length && <i />}
             </button>
-            <span className="mini-avatar">{user.name.slice(0, 1)}</span>
+            <span className="mini-avatar">{ui(user.name.slice(0, 1))}</span>
           </div>
         </header>
         <main>
           {error && (
             <div className="connection-error" role="alert">
-              데이터 갱신 실패: {error}
-              <button onClick={refresh}>다시 연결</button>
+              {ui("데이터 갱신 실패:")}
+              {ui(error)}
+              <button onClick={refresh}>{ui("다시 연결")}</button>
             </div>
           )}
           {!overview ? (
             <div className="loading-state">
               <RefreshCw className="spin" />
-              제조 데이터 불러오는 중…
+              {ui("제조 데이터 불러오는 중…")}
             </div>
           ) : (
             <>
               <div className="context-bar">
                 <span>
                   <Factory size={14} />
-                  {industry.config.name} 1공장 <ChevronRight size={11} /> 전체
-                  라인
+                  {ui(industry.config.name)}
+                  {ui("1공장")}
+                  <ChevronRight size={11} />
+                  {ui("전체 라인")}
                 </span>
                 <div>
                   {overview.demo && (
                     <span className="demo-pill">
-                      {STATIC_DEMO
-                        ? "브라우저 체험 · 로컬 저장"
-                        : "가상 제조라인 · DEMO"}
+                      {ui(
+                        STATIC_DEMO
+                          ? "브라우저 체험 · 로컬 저장"
+                          : "가상 제조라인 · DEMO",
+                      )}
                     </span>
                   )}
                   <span className="live-label">
                     <i />
-                    6초마다 갱신
+                    {ui("6초마다 갱신")}
                   </span>
                   <span className="update-time">
-                    {time(overview.server_time)} 기준
+                    {ui(time(overview.server_time))}
+                    {ui("기준")}
                   </span>
                 </div>
               </div>
@@ -1218,6 +1271,8 @@ function App() {
                 <IntegrationsPage admin={admin} />
               ) : page === "supply" ? (
                 <SupplyPage admin={admin} write={write} />
+              ) : page === "panel-view" ? (
+                <PanelViewerPage />
               ) : page === "panels" ? (
                 <PanelsPage write={write} admin={admin} />
               ) : page === "cctv" ? (
@@ -1301,11 +1356,13 @@ function App() {
               <footer className="main-footer">
                 <span>
                   FORGE AX <i />
-                  {STATIC_DEMO
-                    ? "공개 데모 · 실제 서버·설비와 연결되지 않습니다."
-                    : "제조의 모든 연결, 더 나은 실행."}
+                  {ui(
+                    STATIC_DEMO
+                      ? "공개 데모 · 실제 서버·설비와 연결되지 않습니다."
+                      : "제조의 모든 연결, 더 나은 실행.",
+                  )}
                 </span>
-                <span>데이터 → 가상화 → 판단 → 실행</span>
+                <span>{ui("데이터 → 가상화 → 판단 → 실행")}</span>
               </footer>
             </>
           )}
@@ -1314,39 +1371,41 @@ function App() {
       {notice && (
         <div className={`toast ${notice.error ? "error" : ""}`} role="status">
           {notice.error ? <X size={18} /> : <Check size={18} />}
-          <span>{notice.message}</span>
-          <button aria-label="알림 닫기" onClick={() => setNotice(null)}>
+          <span>{ui(notice.message)}</span>
+          <button aria-label={ui("알림 닫기")} onClick={() => setNotice(null)}>
             <X size={15} />
           </button>
         </div>
       )}
       {modal && (
         <Modal
-          title={
+          title={ui(
             modal === "connector"
               ? "새 커넥터 구성"
               : modal === "order"
                 ? "새 생산 작업지시"
-                : "FORGE AX 사용 안내"
-          }
+                : "FORGE AX 사용 안내",
+          )}
           onClose={() => setModal(null)}
         >
           {modal === "help" ? (
             <div className="help-content">
               <p>
-                가상 제조라인에서 데이터 수집부터 운영 의사결정까지 경험할 수
-                있습니다.
+                {ui(
+                  "가상 제조라인에서 데이터 수집부터 운영 의사결정까지 경험할 수 있습니다.",
+                )}
               </p>
               <ol>
-                <li>엣지 커넥트에서 샘플 데이터를 수집합니다.</li>
-                <li>시뮬레이터에서 공정 조건을 비교합니다.</li>
-                <li>AI 모델 허브에서 통계 모델을 학습·배포합니다.</li>
-                <li>AX 에이전트에서 점검 제안을 승인합니다.</li>
-                <li>로봇 허브에서 가상 운반 작업을 실행합니다.</li>
+                <li>{ui("엣지 커넥트에서 샘플 데이터를 수집합니다.")}</li>
+                <li>{ui("시뮬레이터에서 공정 조건을 비교합니다.")}</li>
+                <li>{ui("AI 모델 허브에서 통계 모델을 학습·배포합니다.")}</li>
+                <li>{ui("AX 에이전트에서 점검 제안을 승인합니다.")}</li>
+                <li>{ui("로봇 허브에서 가상 운반 작업을 실행합니다.")}</li>
               </ol>
               <div className="info-banner">
-                OPC-UA·MQTT 어댑터, 실장비 제어, LLM 에이전트 및 로봇 학습은
-                후속 연동 범위입니다.
+                {ui(
+                  "OPC-UA·MQTT 어댑터, 실장비 제어, LLM 에이전트 및 로봇 학습은 후속 연동 범위입니다.",
+                )}
               </div>
             </div>
           ) : (
@@ -1394,7 +1453,7 @@ function useResources(category: string, revision: number) {
 function LoadError({ message }: { message: string }) {
   return message ? (
     <div className="form-error" role="alert">
-      {message}
+      {ui(message)}
     </div>
   ) : null;
 }
@@ -1413,19 +1472,21 @@ function OverviewPage({
     <>
       <SectionTitle
         eyebrow="OPERATIONS OVERVIEW"
-        title="공장의 오늘을 한눈에."
-        description="현장의 데이터와 인사이트를 연결해, 더 나은 운영을 만듭니다."
+        title={ui("제조 운영 현황")}
+        description={ui(
+          "생산·품질·설비 상태와 주요 운영 이슈를 통합 모니터링합니다.",
+        )}
         action={
           <button className="btn" onClick={refresh}>
             <RefreshCw size={15} />
-            새로고침
+            {ui("새로고침")}
           </button>
         }
       />
       <div className="metric-grid">
         <Metric
           icon={Gauge}
-          title="설비 운영 지수"
+          title={ui("설비 운영 지수")}
           value={k.equipment_health.toFixed(1)}
           unit="%"
           note="가동 설비 비율 × 누적 양품률"
@@ -1433,7 +1494,7 @@ function OverviewPage({
         />
         <Metric
           icon={Boxes}
-          title="설비 누적 양품"
+          title={ui("설비 누적 양품")}
           value={num(k.produced)}
           unit="ea"
           note="전체 설비 처리 수량 합계"
@@ -1441,7 +1502,7 @@ function OverviewPage({
         />
         <Metric
           icon={ShieldCheck}
-          title="누적 양품률"
+          title={ui("누적 양품률")}
           value={k.quality.toFixed(1)}
           unit="%"
           note={`불량 ${num(k.rejected)} ea · 전체 설비 기준`}
@@ -1449,7 +1510,7 @@ function OverviewPage({
         />
         <Metric
           icon={Activity}
-          title="운영 중인 설비"
+          title={ui("운영 중인 설비")}
           value={`${k.running}`}
           unit={`/ ${k.total_assets}`}
           note={`주의 설비 ${data.assets.filter((a) => a.status === "warning").length}대 · 가동 설비에 포함`}
@@ -1464,13 +1525,16 @@ function OverviewPage({
                 <span className="tiny-icon">
                   <Layers3 size={16} />
                 </span>
-                디지털 팩토리<span className="label neutral">2D TWIN</span>
+                {ui("설비 운영 맵")}
+                <span className="label neutral">2D TWIN</span>
               </h2>
-              <p>현장 상태와 연결된 설비 디지털 맵</p>
+              <p>
+                {ui("라인별 설비 배치와 가동 상태를 실시간으로 확인합니다.")}
+              </p>
             </div>
             <button
               className="icon-button"
-              title="디지털 트윈 열기"
+              title={ui("디지털 트윈 열기")}
               onClick={() => go("twin")}
             >
               <Maximize2 size={16} />
@@ -1479,11 +1543,11 @@ function OverviewPage({
           <div className="map-toolbar">
             <span>
               <i className="legend teal" />
-              정상 가동
+              {ui("정상 가동")}
             </span>
             <span>
               <i className="legend amber" />
-              주의
+              {ui("주의")}
             </span>
             <span className="map-location">1F · PRODUCTION FLOOR</span>
           </div>
@@ -1496,18 +1560,22 @@ function OverviewPage({
             <span>
               {selected ? (
                 <>
-                  <b>{selected.id}</b> 온도 {selected.temperature.toFixed(1)}°C
-                  · 진동 {selected.vibration.toFixed(1)} mm/s
+                  <b>{ui(selected.id)}</b>
+                  {ui("온도")}
+                  {ui(selected.temperature.toFixed(1))}
+                  {ui("°C · 진동")}
+                  {ui(selected.vibration.toFixed(1))} mm/s
                 </>
               ) : (
                 <>
                   <span className="live-dot" />
-                  설비를 선택해 상세 상태를 확인하세요.
+                  {ui("설비를 선택해 상세 상태를 확인하세요.")}
                 </>
               )}
             </span>
             <button className="text-button" onClick={() => go("twin")}>
-              상세 관제 <ArrowRight size={13} />
+              {ui("상세 관제")}
+              <ArrowRight size={13} />
             </button>
           </div>
         </section>
@@ -1518,17 +1586,19 @@ function OverviewPage({
                 <span className="ai-icon">
                   <Sparkles size={16} />
                 </span>
-                AX 인사이트
+                {ui("운영 진단 및 조치")}
               </h2>
-              <p>데이터에서 찾은 운영 개선 기회</p>
+              <p>
+                {ui("이상 징후와 개선 제안을 근거 데이터와 함께 검토합니다.")}
+              </p>
             </div>
             <span className="label blue-label">RULE ENGINE</span>
           </div>
           <div className="insight-summary">
-            <span>지금 확인할 인사이트</span>
+            <span>{ui("지금 확인할 인사이트")}</span>
             <strong>
-              {k.pending}
-              <small>건의 승인 대기</small>
+              {ui(k.pending)}
+              <small>{ui("건의 승인 대기")}</small>
             </strong>
             <div className="insight-progress">
               <i style={{ width: `${Math.min(k.pending * 25, 100)}%` }} />
@@ -1537,30 +1607,30 @@ function OverviewPage({
           {data.alerts.length ? (
             <div className="insight-item">
               <div className="insight-item-top">
-                <span className="warning-tag">설비 이상 감지</span>
-                <span>운영 임계값</span>
+                <span className="warning-tag">{ui("설비 이상 감지")}</span>
+                <span>{ui("운영 임계값")}</span>
               </div>
-              <h3>{data.alerts[0].name}</h3>
-              <p>{data.alerts[0].message}</p>
+              <h3>{ui(data.alerts[0].name)}</h3>
+              <p>{ui(data.alerts[0].message)}</p>
               <div className="recommendation-mini">
                 <Zap size={15} />
-                <span>예방 점검 작업 생성 권장</span>
+                <span>{ui("예방 점검 작업 생성 권장")}</span>
               </div>
               <button className="btn primary wide" onClick={() => go("agent")}>
-                제안 검토하기
+                {ui("제안 검토하기")}
                 <ArrowRight size={15} />
               </button>
             </div>
           ) : (
             <div className="all-clear">
               <ShieldCheck size={34} />
-              <h3>확인할 알림이 없습니다.</h3>
-              <p>엣지 데이터의 임계값을 감시하고 있습니다.</p>
+              <h3>{ui("확인할 알림이 없습니다.")}</h3>
+              <p>{ui("엣지 데이터의 임계값을 감시하고 있습니다.")}</p>
             </div>
           )}
           <div className="insight-foot">
             <ShieldCheck size={13} />
-            작업 생성은 담당자 승인 후 진행됩니다.
+            {ui("작업 생성은 담당자 승인 후 진행됩니다.")}
           </div>
         </section>
       </div>
@@ -1568,8 +1638,8 @@ function OverviewPage({
         <section className="panel production-panel">
           <div className="panel-header">
             <div>
-              <h2>생산 데이터 추이</h2>
-              <p>최근 수집 이벤트에 기록된 설비 양품 수량</p>
+              <h2>{ui("생산 실적 추이")}</h2>
+              <p>{ui("수집 구간별 양품 생산량과 실적 변화를 확인합니다.")}</p>
             </div>
             <span className="label neutral">LIVE DATA</span>
           </div>
@@ -1578,44 +1648,49 @@ function OverviewPage({
         <section className="panel line-panel">
           <div className="panel-header">
             <div>
-              <h2>라인별 운영 현황</h2>
-              <p>설비 상태 및 처리 수량</p>
+              <h2>{ui("라인 성과 요약")}</h2>
+              <p>{ui("라인별 생산량, 가동 설비 및 이상 상태를 비교합니다.")}</p>
             </div>
             <button className="text-button" onClick={() => go("orders")}>
-              생산 관리
+              {ui("생산 관리")}
               <ChevronRight size={14} />
             </button>
           </div>
-          {["A", "B"].map((line) => {
-            const assets = data.assets.filter((a) => a.line === line);
-            const warn = assets.filter((a) => a.status === "warning").length;
-            return (
-              <div className="line-row" key={line}>
-                <span className={`line-symbol ${line === "B" ? "teal" : ""}`}>
-                  {line}
-                </span>
-                <div className="line-detail">
-                  <strong>{lineLabel(line)}</strong>
-                  <small>
-                    {assets.length}개 설비 · {lineLabel(line)}
-                  </small>
-                </div>
-                <div className="line-count">
-                  <strong>
-                    {num(assets.reduce((s, a) => s + a.produced, 0))}
-                    <small> ea</small>
-                  </strong>
-                  <span className={warn ? "text-amber" : "text-teal"}>
-                    {warn ? `${warn}대 주의` : "정상 가동"}
+          {ui(
+            ["A", "B"].map((line) => {
+              const assets = data.assets.filter((a) => a.line === line);
+              const warn = assets.filter((a) => a.status === "warning").length;
+              return (
+                <div className="line-row" key={line}>
+                  <span className={`line-symbol ${line === "B" ? "teal" : ""}`}>
+                    {ui(line)}
                   </span>
+                  <div className="line-detail">
+                    <strong>{ui(lineLabel(line))}</strong>
+                    <small>
+                      {ui(assets.length)}
+                      {ui("개 설비 ·")}
+                      {ui(lineLabel(line))}
+                    </small>
+                  </div>
+                  <div className="line-count">
+                    <strong>
+                      {ui(num(assets.reduce((s, a) => s + a.produced, 0)))}
+                      <small> ea</small>
+                    </strong>
+                    <span className={warn ? "text-amber" : "text-teal"}>
+                      {ui(warn ? `${warn}대 주의` : "정상 가동")}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            }),
+          )}
           <button className="connection-note" onClick={() => go("edge")}>
             <Network size={17} />
             <span>
-              <b>{num(k.events)}</b>개 이벤트 수집 완료
+              <b>{ui(num(k.events))}</b>
+              {ui("개 이벤트 수집 완료")}
             </span>
             <ArrowUpRight size={15} />
           </button>
@@ -1624,7 +1699,7 @@ function OverviewPage({
       <div className="journey">
         <div>
           <GitBranch size={18} />
-          <b>하나로 이어지는 제조 전주기</b>
+          <b>{ui("하나로 이어지는 제조 전주기")}</b>
         </div>
         {[
           { p: "edge" as Page, n: "데이터 연결" },
@@ -1635,8 +1710,8 @@ function OverviewPage({
         ].map((s, i) => (
           <React.Fragment key={s.p}>
             <button onClick={() => go(s.p)}>
-              <span>0{i + 1}</span>
-              {s.n}
+              <span>0{ui(i + 1)}</span>
+              {ui(s.n)}
             </button>
             {i < 4 && <ChevronRight size={13} />}
           </React.Fragment>
@@ -1663,18 +1738,18 @@ function Metric({
   return (
     <div className={`metric ${accent}`}>
       <div className="metric-top">
-        <span>{title}</span>
+        <span>{ui(title)}</span>
         <span className="metric-icon">
           <Icon size={17} />
         </span>
       </div>
       <div className="metric-value">
-        {value}
-        <span>{unit}</span>
+        {ui(value)}
+        <span>{ui(unit)}</span>
       </div>
       <div className="metric-note">
         <i />
-        {note}
+        {ui(note)}
       </div>
     </div>
   );
@@ -1688,18 +1763,20 @@ function TwinPage({ data, query }: { data: Overview; query: string }) {
     <>
       <SectionTitle
         eyebrow="DIGITAL TWIN"
-        title="현장과 연결된 디지털 팩토리"
-        description="공간 위에서 설비를 선택하고, 현재 상태와 운전 데이터를 확인하세요."
+        title={ui("현장과 연결된 설비 운영 맵")}
+        description={ui(
+          "공간 위에서 설비를 선택하고, 현재 상태와 운전 데이터를 확인하세요.",
+        )}
         action={
           <span className="label neutral">
-            2D 설비 트윈 · 물리 시뮬레이션 미포함
+            {ui("2D 설비 트윈 · 물리 시뮬레이션 미포함")}
           </span>
         }
       />
       <div className="twin-layout">
         <section className="panel">
           <div className="panel-header">
-            <h2>라면 1공장 · 생산동 1F</h2>
+            <h2>{ui("라면 1공장 · 생산동 1F")}</h2>
             <span className="live-label">
               <i />
               LIVE
@@ -1714,13 +1791,13 @@ function TwinPage({ data, query }: { data: Overview; query: string }) {
           <div className="map-key">
             <span>
               <i className="legend teal" />
-              정상 가동
+              {ui("정상 가동")}
             </span>
             <span>
               <i className="legend amber" />
-              주의 설비
+              {ui("주의 설비")}
             </span>
-            <span>설비 상태는 수집 이벤트로 갱신됩니다.</span>
+            <span>{ui("설비 상태는 수집 이벤트로 갱신됩니다.")}</span>
           </div>
         </section>
         {a && (
@@ -1729,15 +1806,15 @@ function TwinPage({ data, query }: { data: Overview; query: string }) {
               <Factory size={30} />
             </div>
             <span className="subtle-label">ASSET DETAILS</span>
-            <h2>{a.name}</h2>
+            <h2>{ui(a.name)}</h2>
             <div className="asset-id">
-              {a.id}
+              {ui(a.id)}
               <Status value={a.status} />
             </div>
             <div className="asset-reading">
-              <span>현재 온도</span>
+              <span>{ui("현재 온도")}</span>
               <strong className={a.temperature > 75 ? "text-amber" : ""}>
-                {a.temperature.toFixed(1)}
+                {ui(a.temperature.toFixed(1))}
                 <small>°C</small>
               </strong>
               <div className="reading-bar">
@@ -1746,12 +1823,12 @@ function TwinPage({ data, query }: { data: Overview; query: string }) {
                   style={{ width: `${Math.min(a.temperature, 100)}%` }}
                 />
               </div>
-              <small>운영 임계값 75°C</small>
+              <small>{ui("운영 임계값 75°C")}</small>
             </div>
             <div className="asset-reading">
-              <span>진동 속도</span>
+              <span>{ui("진동 속도")}</span>
               <strong>
-                {a.vibration.toFixed(2)}
+                {ui(a.vibration.toFixed(2))}
                 <small>mm/s</small>
               </strong>
               <div className="reading-bar">
@@ -1761,24 +1838,27 @@ function TwinPage({ data, query }: { data: Overview; query: string }) {
                   }}
                 />
               </div>
-              <small>운영 임계값 3.5 mm/s</small>
+              <small>{ui("운영 임계값 3.5 mm/s")}</small>
             </div>
             <dl>
               <div>
-                <dt>생산 라인</dt>
-                <dd>{a.line} 라인</dd>
+                <dt>{ui("생산 라인")}</dt>
+                <dd>
+                  {ui(a.line)}
+                  {ui("라인")}
+                </dd>
               </div>
               <div>
-                <dt>설정 주기</dt>
-                <dd>{a.cycle_time}s</dd>
+                <dt>{ui("설정 주기")}</dt>
+                <dd>{ui(a.cycle_time)}s</dd>
               </div>
               <div>
-                <dt>누적 양품</dt>
-                <dd>{num(a.produced)} ea</dd>
+                <dt>{ui("누적 양품")}</dt>
+                <dd>{ui(num(a.produced))} ea</dd>
               </div>
               <div>
-                <dt>마지막 수집</dt>
-                <dd>{date(a.updated_at)}</dd>
+                <dt>{ui("마지막 수집")}</dt>
+                <dd>{ui(date(a.updated_at))}</dd>
               </div>
             </dl>
           </section>
@@ -1811,12 +1891,14 @@ function EdgePage({
     <>
       <SectionTitle
         eyebrow="EDGE CONNECT"
-        title="현장의 데이터를 연결하세요."
-        description="수집 게이트웨이와 기업 시스템의 연결 설정을 관리합니다."
+        title={ui("현장의 데이터를 연결하세요.")}
+        description={ui(
+          "수집 게이트웨이와 기업 시스템의 연결 설정을 관리합니다.",
+        )}
         action={
           <button className="btn primary" disabled={!admin} onClick={open}>
             <Plus size={16} />
-            커넥터 추가
+            {ui("커넥터 추가")}
           </button>
         }
       />
@@ -1824,7 +1906,7 @@ function EdgePage({
       <div className="three-metrics">
         <Metric
           icon={Radio}
-          title="연결된 커넥터"
+          title={ui("연결된 커넥터")}
           value={String(rows.filter((r) => r.status === "connected").length)}
           unit="개"
           note="REST 데모 게이트웨이"
@@ -1832,7 +1914,7 @@ function EdgePage({
         />
         <Metric
           icon={Database}
-          title="누적 수집 이벤트"
+          title={ui("누적 수집 이벤트")}
           value={num(events)}
           unit="건"
           note="source + event_id로 중복 방지"
@@ -1840,7 +1922,7 @@ function EdgePage({
         />
         <Metric
           icon={ShieldCheck}
-          title="수집 데이터 검증"
+          title={ui("수집 데이터 검증")}
           value="ON"
           unit=""
           note="온도·진동·시간·설비 ID 검증"
@@ -1850,8 +1932,8 @@ function EdgePage({
       <section className="panel">
         <div className="panel-header">
           <div>
-            <h2>커넥터 목록</h2>
-            <p>설정 저장과 실제 연결 상태를 구분하여 표시합니다.</p>
+            <h2>{ui("커넥터 목록")}</h2>
+            <p>{ui("설정 저장과 실제 연결 상태를 구분하여 표시합니다.")}</p>
           </div>
           {demo && (
             <button
@@ -1866,7 +1948,7 @@ function EdgePage({
               }
             >
               <RefreshCw size={15} />
-              샘플 데이터 수집
+              {ui("샘플 데이터 수집")}
             </button>
           )}
         </div>
@@ -1874,11 +1956,11 @@ function EdgePage({
           <table>
             <thead>
               <tr>
-                <th>커넥터</th>
-                <th>프로토콜</th>
-                <th>엔드포인트</th>
-                <th>상태</th>
-                <th>최근 수집</th>
+                <th>{ui("커넥터")}</th>
+                <th>{ui("프로토콜")}</th>
+                <th>{ui("엔드포인트")}</th>
+                <th>{ui("상태")}</th>
+                <th>{ui("최근 수집")}</th>
               </tr>
             </thead>
             <tbody>
@@ -1888,19 +1970,19 @@ function EdgePage({
                     <div className="table-name">
                       <Radio size={17} />
                       <span>
-                        <b>{r.name}</b>
-                        <small>{r.id}</small>
+                        <b>{ui(r.name)}</b>
+                        <small>{ui(r.id)}</small>
                       </span>
                     </div>
                   </td>
                   <td>
-                    <span className="code-tag">{r.protocol}</span>
+                    <span className="code-tag">{ui(r.protocol)}</span>
                   </td>
-                  <td className="mono small">{r.endpoint}</td>
+                  <td className="mono small">{ui(r.endpoint)}</td>
                   <td>
                     <Status value={r.status} />
                   </td>
-                  <td>{r.last_seen ? date(r.last_seen) : "—"}</td>
+                  <td>{ui(r.last_seen ? date(r.last_seen) : "—")}</td>
                 </tr>
               ))}
             </tbody>
@@ -1910,10 +1992,11 @@ function EdgePage({
       <div className="info-banner">
         <Network size={18} />
         <div>
-          <strong>연동 인터페이스</strong>
+          <strong>{ui("연동 인터페이스")}</strong>
           <p>
-            REST 수집 API가 동작합니다. MQTT·OPC-UA·Modbus는 구성 정보를
-            저장하며, 현장별 드라이버는 별도 구현 범위입니다.
+            {ui(
+              "REST 수집 API가 동작합니다. MQTT·OPC-UA·Modbus는 구성 정보를 저장하며, 현장별 드라이버는 별도 구현 범위입니다.",
+            )}
           </p>
           <code>POST /api/telemetry/batch</code>
         </div>
@@ -1947,62 +2030,65 @@ function DataPage({
     <>
       <SectionTitle
         eyebrow="DATA HUB"
-        title="신뢰할 수 있는 제조 데이터"
-        description="표준화된 설비 이벤트를 탐색하고 분석용 데이터를 내려받으세요."
+        title={ui("신뢰할 수 있는 제조 데이터")}
+        description={ui(
+          "표준화된 설비 이벤트를 탐색하고 분석용 데이터를 내려받으세요.",
+        )}
         action={
           <button
             className="btn"
             onClick={() => file("/telemetry/export", "forge-telemetry.csv")}
           >
             <ArrowDownToLine size={16} />
-            CSV 내보내기
+            {ui("CSV 내보내기")}
           </button>
         }
       />
       <div className="data-pipeline">
         <div>
           <Radio />
-          <b>수집</b>
+          <b>{ui("수집")}</b>
           <span>REST Gateway</span>
         </div>
         <ArrowRight />
         <div>
           <ShieldCheck />
-          <b>검증 · 중복 제거</b>
+          <b>{ui("검증 · 중복 제거")}</b>
           <span>Typed schema + Event ID</span>
         </div>
         <ArrowRight />
         <div>
           <Database />
-          <b>통합 저장</b>
-          <span>관계형 데이터베이스</span>
+          <b>{ui("통합 저장")}</b>
+          <span>{ui("관계형 데이터베이스")}</span>
         </div>
         <ArrowRight />
         <div>
           <GitBranch />
-          <b>설비 맥락 연결</b>
-          <span>공장 → 라인 → 설비</span>
+          <b>{ui("설비 맥락 연결")}</b>
+          <span>{ui("공장 → 라인 → 설비")}</span>
         </div>
       </div>
       <section className="panel">
         <div className="panel-header">
           <div>
             <h2>
-              설비 이벤트 탐색기
-              <span className="label neutral">최근 100건</span>
+              {ui("설비 이벤트 탐색기")}
+              <span className="label neutral">{ui("최근 100건")}</span>
             </h2>
             <p>
-              {num(data.kpis.events)}개 누적 이벤트 · 지연 이벤트는 이력에 보존
+              {ui(num(data.kpis.events))}
+              {ui("개 누적 이벤트 · 지연 이벤트는 이력에 보존")}
             </p>
           </div>
           <select
-            aria-label="이벤트 설비 필터"
+            aria-label={ui("이벤트 설비 필터")}
             value={asset}
             onChange={(e) => setAsset(e.target.value)}
           >
-            <option value="">전체 설비</option>
+            <option value="">{ui("전체 설비")}</option>
             {data.assets.map((a) => (
-              <option key={a.id}>{a.id}</option>
+              <option key={a.id}>{ui(a.id)}</option>
             ))}
           </select>
         </div>
@@ -2011,30 +2097,31 @@ function DataPage({
           <table>
             <thead>
               <tr>
-                <th>수집 시각</th>
-                <th>설비 ID</th>
-                <th>소스</th>
-                <th>온도</th>
-                <th>진동</th>
-                <th>양품 / 불량</th>
+                <th>{ui("수집 시각")}</th>
+                <th>{ui("설비 ID")}</th>
+                <th>{ui("소스")}</th>
+                <th>{ui("온도")}</th>
+                <th>{ui("진동")}</th>
+                <th>{ui("양품 / 불량")}</th>
               </tr>
             </thead>
             <tbody>
               {events.map((e) => (
                 <tr key={e.id}>
-                  <td className="mono small">{date(e.timestamp)}</td>
+                  <td className="mono small">{ui(date(e.timestamp))}</td>
                   <td>
-                    <span className="asset-link">{e.asset_id}</span>
+                    <span className="asset-link">{ui(e.asset_id)}</span>
                   </td>
                   <td>
-                    <span className="code-tag">{e.source}</span>
+                    <span className="code-tag">{ui(e.source)}</span>
                   </td>
                   <td className={e.temperature > 75 ? "text-amber" : ""}>
-                    {e.temperature.toFixed(1)} °C
+                    {ui(e.temperature.toFixed(1))} °C
                   </td>
-                  <td>{e.vibration.toFixed(2)} mm/s</td>
+                  <td>{ui(e.vibration.toFixed(2))} mm/s</td>
                   <td>
-                    {e.good} <span className="muted">/ {e.rejected}</span>
+                    {ui(e.good)}{" "}
+                    <span className="muted">/ {ui(e.rejected)}</span>
                   </td>
                 </tr>
               ))}
@@ -2042,8 +2129,10 @@ function DataPage({
           </table>
           {!events.length && (
             <Empty
-              title="표시할 이벤트가 없습니다"
-              description="설비 필터를 변경하거나 엣지에서 데이터를 수집하세요."
+              title={ui("표시할 이벤트가 없습니다")}
+              description={ui(
+                "설비 필터를 변경하거나 엣지에서 데이터를 수집하세요.",
+              )}
             />
           )}
         </div>
@@ -2074,56 +2163,61 @@ function SimulatorPage({
     <>
       <SectionTitle
         eyebrow="PROCESS SIMULATOR"
-        title="실행 전에, 더 나은 선택을 검증하세요."
-        description="라인의 병목 주기와 운영 조건으로 생산량 변화를 비교합니다."
-        action={<span className="label neutral">결정론적 용량 모델 v1</span>}
+        title={ui("실행 전에, 더 나은 선택을 검증하세요.")}
+        description={ui(
+          "라인의 병목 주기와 운영 조건으로 생산량 변화를 비교합니다.",
+        )}
+        action={
+          <span className="label neutral">{ui("결정론적 용량 모델 v1")}</span>
+        }
       />
       <div className="simulation-layout">
         <section className="panel simulation-controls">
           <div className="panel-header">
             <div>
-              <h2>What-if 시나리오</h2>
-              <p>변수를 바꾸고 운영 결과를 비교하세요.</p>
+              <h2>{ui("What-if 시나리오")}</h2>
+              <p>{ui("변수를 바꾸고 운영 결과를 비교하세요.")}</p>
             </div>
             <Workflow size={20} />
           </div>
           <div className="form-body">
             <label>
-              생산 라인
+              {ui("생산 라인")}
               <select value={line} onChange={(e) => setLine(e.target.value)}>
-                <option value="A">{lineLabel("A")}</option>
-                <option value="B">{lineLabel("B")}</option>
+                <option value="A">{ui(lineLabel("A"))}</option>
+                <option value="B">{ui(lineLabel("B"))}</option>
               </select>
             </label>
             <label>
-              가동 시간
+              {ui("가동 시간")}
               <select
                 value={hours}
                 onChange={(e) => setHours(Number(e.target.value))}
               >
                 {[4, 8, 12, 24].map((v) => (
                   <option key={v} value={v}>
-                    {v}시간
+                    {ui(v)}
+                    {ui("시간")}
                   </option>
                 ))}
               </select>
             </label>
             <Range
-              label="병목 주기 단축"
+              label={ui("병목 주기 단축")}
               value={reduction}
               onChange={setReduction}
               max={40}
               unit="%"
             />
             <Range
-              label="예상 비가동 비율"
+              label={ui("예상 비가동 비율")}
               value={downtime}
               onChange={setDowntime}
               max={40}
               unit="%"
             />
             <Range
-              label="예상 불량률"
+              label={ui("예상 불량률")}
               value={defect}
               onChange={setDefect}
               max={20}
@@ -2150,18 +2244,20 @@ function SimulatorPage({
               }}
             >
               <Play size={15} />
-              {busy ? "계산 중…" : "시나리오 실행"}
+              {ui(busy ? "계산 중…" : "시나리오 실행")}
             </button>
           </div>
         </section>
         <section className="panel simulation-result">
           <div className="panel-header">
             <div>
-              <h2>시나리오 비교 결과</h2>
+              <h2>{ui("시나리오 비교 결과")}</h2>
               <p>
-                {r
-                  ? `${r.name} · ${r.hours}시간 기준`
-                  : "시나리오를 실행하면 결과가 표시됩니다."}
+                {ui(
+                  r
+                    ? `${r.name} · ${r.hours}시간 기준`
+                    : "시나리오를 실행하면 결과가 표시됩니다.",
+                )}
               </p>
             </div>
             {r && <Status value="completed" />}
@@ -2169,14 +2265,16 @@ function SimulatorPage({
           {r ? (
             <>
               <div className="result-hero">
-                <span>기준 대비 예상 생산량 변화</span>
+                <span>{ui("기준 대비 예상 생산량 변화")}</span>
                 <strong className={r.improvement < 0 ? "text-amber" : ""}>
                   {r.improvement > 0 ? "+" : ""}
-                  {r.improvement}
+                  {ui(r.improvement)}
                   <small>%</small>
                 </strong>
                 <p>
-                  병목 설비 <b>{r.bottleneck}</b> · 시뮬레이션 추정치
+                  {ui("병목 설비")}
+                  <b>{ui(r.bottleneck)}</b>
+                  {ui("· 시뮬레이션 추정치")}
                 </p>
               </div>
               <div className="comparison-bars">
@@ -2194,9 +2292,9 @@ function SimulatorPage({
                 ].map((b) => (
                   <div key={b.title}>
                     <div>
-                      <span>{b.title}</span>
+                      <span>{ui(b.title)}</span>
                       <b>
-                        {num(b.value)} <small>ea</small>
+                        {ui(num(b.value))} <small>ea</small>
                       </b>
                     </div>
                     <div className="compare-track">
@@ -2212,46 +2310,54 @@ function SimulatorPage({
               </div>
               <div className="result-details">
                 <span>
-                  병목 주기
+                  {ui("병목 주기")}
                   <b>
-                    {r.baseline_cycle}s → {r.optimized_cycle}s
+                    {ui(r.baseline_cycle)}s → {ui(r.optimized_cycle)}s
                   </b>
                 </span>
                 <span>
-                  실행 라인<b>{r.line} LINE</b>
+                  {ui("실행 라인")}
+                  <b>{ui(r.line)} LINE</b>
                 </span>
                 <span>
-                  검증 모델<b>Capacity v1</b>
+                  {ui("검증 모델")}
+                  <b>Capacity v1</b>
                 </span>
               </div>
               <div className="model-note">
-                {r.assumptions}. 실제 현장 성능을 보장하지 않습니다.
+                {ui(r.assumptions)}
+                {ui(". 실제 현장 성능을 보장하지 않습니다.")}
               </div>
             </>
           ) : (
             <Empty
-              title="첫 번째 시나리오를 실행하세요"
-              description="현재 조건과 변경 조건을 비교해 개선 가능성을 살펴보세요."
+              title={ui("첫 번째 시나리오를 실행하세요")}
+              description={ui(
+                "현재 조건과 변경 조건을 비교해 개선 가능성을 살펴보세요.",
+              )}
             />
           )}
         </section>
       </div>
       <section className="panel">
         <div className="panel-header">
-          <h2>실험 이력</h2>
-          <span className="label neutral">{rows.length}개 실험</span>
+          <h2>{ui("실험 이력")}</h2>
+          <span className="label neutral">
+            {ui(rows.length)}
+            {ui("개 실험")}
+          </span>
         </div>
         <LoadError message={error} />
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>시나리오</th>
-                <th>라인</th>
-                <th>기준 생산량</th>
-                <th>변경 생산량</th>
-                <th>변화율</th>
-                <th>실행 시각</th>
+                <th>{ui("시나리오")}</th>
+                <th>{ui("라인")}</th>
+                <th>{ui("기준 생산량")}</th>
+                <th>{ui("변경 생산량")}</th>
+                <th>{ui("변화율")}</th>
+                <th>{ui("실행 시각")}</th>
               </tr>
             </thead>
             <tbody>
@@ -2262,26 +2368,28 @@ function SimulatorPage({
                   onClick={() => setResult(s)}
                 >
                   <td>
-                    <b>{s.name}</b>
+                    <b>{ui(s.name)}</b>
                   </td>
-                  <td>{s.line}</td>
-                  <td>{num(s.baseline)} ea</td>
-                  <td>{num(s.optimized)} ea</td>
+                  <td>{ui(s.line)}</td>
+                  <td>{ui(num(s.baseline))} ea</td>
+                  <td>{ui(num(s.optimized))} ea</td>
                   <td
                     className={s.improvement >= 0 ? "text-teal" : "text-amber"}
                   >
                     {s.improvement > 0 ? "+" : ""}
-                    {s.improvement}%
+                    {ui(s.improvement)}%
                   </td>
-                  <td>{date(s.created_at)}</td>
+                  <td>{ui(date(s.created_at))}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           {!rows.length && (
             <Empty
-              title="아직 실행한 실험이 없습니다"
-              description="실험 결과는 서버에 저장되어 다음 세션에서도 확인할 수 있습니다."
+              title={ui("아직 실행한 실험이 없습니다")}
+              description={ui(
+                "실험 결과는 서버에 저장되어 다음 세션에서도 확인할 수 있습니다.",
+              )}
             />
           )}
         </div>
@@ -2307,10 +2415,10 @@ function Range({
   return (
     <label className="range-label">
       <span>
-        {label}
+        {ui(label)}
         <b>
-          {value}
-          <small>{unit}</small>
+          {ui(value)}
+          <small>{ui(unit)}</small>
         </b>
       </span>
       <input
@@ -2322,10 +2430,10 @@ function Range({
         onChange={(e) => onChange(Number(e.target.value))}
       />
       <span className="range-ticks">
-        <small>0{unit}</small>
+        <small>0{ui(unit)}</small>
         <small>
-          {max}
-          {unit}
+          {ui(max)}
+          {ui(unit)}
         </small>
       </span>
     </label>
@@ -2356,39 +2464,41 @@ function AIPage({
     <>
       <SectionTitle
         eyebrow="AI MODEL HUB"
-        title="현장 데이터를 운영 인텔리전스로."
-        description="설비별 통계 모델을 학습하고, 배포한 모델로 현재 이상 여부를 확인합니다."
+        title={ui("현장 데이터를 운영 인텔리전스로.")}
+        description={ui(
+          "설비별 통계 모델을 학습하고, 배포한 모델로 현재 이상 여부를 확인합니다.",
+        )}
       />
       <div className="info-banner">
         <Cpu size={19} />
         <div>
-          <strong>Gaussian z-score 이상감지</strong>
+          <strong>{ui("Gaussian z-score 이상감지")}</strong>
           <p>
-            최근 최대 500개 이벤트를 시간순으로 80:20 분할합니다. 학습
-            평균·표준편차 대비 3σ 초과를 이상으로 판정합니다. 라벨 기반 정확도
-            또는 고장 예측 모델이 아닙니다.
+            {ui(
+              "최근 최대 500개 이벤트를 시간순으로 80:20 분할합니다. 학습 평균·표준편차 대비 3σ 초과를 이상으로 판정합니다. 라벨 기반 정확도 또는 고장 예측 모델이 아닙니다.",
+            )}
           </p>
         </div>
       </div>
       <section className="panel training-panel">
         <div>
           <span className="subtle-label">NEW EXPERIMENT</span>
-          <h2>새 이상감지 모델 학습</h2>
-          <p>최소 20개 이벤트가 필요합니다.</p>
+          <h2>{ui("새 이상감지 모델 학습")}</h2>
+          <p>{ui("최소 20개 이벤트가 필요합니다.")}</p>
         </div>
         <label>
-          대상 설비
+          {ui("대상 설비")}
           <select value={asset} onChange={(e) => setAsset(e.target.value)}>
             {data.assets.map((a) => (
-              <option key={a.id}>{a.id}</option>
+              <option key={a.id}>{ui(a.id)}</option>
             ))}
           </select>
         </label>
         <label>
-          분석 지표
+          {ui("분석 지표")}
           <select value={metric} onChange={(e) => setMetric(e.target.value)}>
-            <option value="temperature">온도 (°C)</option>
-            <option value="vibration">진동 (mm/s)</option>
+            <option value="temperature">{ui("온도 (°C)")}</option>
+            <option value="vibration">{ui("진동 (mm/s)")}</option>
           </select>
         </label>
         <button
@@ -2407,7 +2517,7 @@ function AIPage({
           }
         >
           <Play size={15} />
-          모델 학습
+          {ui("모델 학습")}
         </button>
       </section>
       <LoadError message={error} />
@@ -2420,33 +2530,36 @@ function AIPage({
               </span>
               <Status value={m.status} />
             </div>
-            <h2>{m.name}</h2>
+            <h2>{ui(m.name)}</h2>
             <p>
-              {m.algorithm} · {m.version}
+              {ui(m.algorithm)} · {ui(m.version)}
             </p>
             <dl>
               <div>
-                <dt>학습 / 검증 데이터</dt>
+                <dt>{ui("학습 / 검증 데이터")}</dt>
                 <dd>
-                  {m.train_samples} / {m.holdout_samples}건
+                  {ui(m.train_samples)} / {ui(m.holdout_samples)}
+                  {ui("건")}
                 </dd>
               </div>
               <div>
-                <dt>학습 평균 / 표준편차</dt>
+                <dt>{ui("학습 평균 / 표준편차")}</dt>
                 <dd>
-                  {m.mean.toFixed(2)} / {m.std.toFixed(2)}
+                  {ui(m.mean.toFixed(2))} / {ui(m.std.toFixed(2))}
                 </dd>
               </div>
               <div>
-                <dt>검증 구간 이상 비율</dt>
-                <dd>{m.holdout_anomaly_rate}%</dd>
+                <dt>{ui("검증 구간 이상 비율")}</dt>
+                <dd>{ui(m.holdout_anomaly_rate)}%</dd>
               </div>
               <div>
-                <dt>데이터 출처</dt>
+                <dt>{ui("데이터 출처")}</dt>
                 <dd>
-                  {m.data_source === "synthetic"
-                    ? "가상 설비 데이터"
-                    : "수집 이벤트"}
+                  {ui(
+                    m.data_source === "synthetic"
+                      ? "가상 설비 데이터"
+                      : "수집 이벤트",
+                  )}
                 </dd>
               </div>
             </dl>
@@ -2454,9 +2567,13 @@ function AIPage({
               <div
                 className={`inference-result ${inferences[m.id].anomaly ? "anomaly" : ""}`}
               >
-                <b>{inferences[m.id].anomaly ? "이상 감지" : "정상 범위"}</b>
+                <b>
+                  {ui(inferences[m.id].anomaly ? "이상 감지" : "정상 범위")}
+                </b>
                 <span>
-                  현재값 {inferences[m.id].value} · z={inferences[m.id].z_score}
+                  {ui("현재값")}
+                  {ui(inferences[m.id].value)} · z=
+                  {ui(inferences[m.id].z_score)}
                 </span>
               </div>
             )}
@@ -2474,7 +2591,7 @@ function AIPage({
                   }
                 >
                   <Zap size={15} />
-                  모델 배포
+                  {ui("모델 배포")}
                 </button>
               ) : m.status === "deployed" ? (
                 <button
@@ -2491,10 +2608,12 @@ function AIPage({
                   }}
                 >
                   <Activity size={15} />
-                  현재 데이터 추론
+                  {ui("현재 데이터 추론")}
                 </button>
               ) : (
-                <span className="muted small">새 버전 배포로 보관된 모델</span>
+                <span className="muted small">
+                  {ui("새 버전 배포로 보관된 모델")}
+                </span>
               )}
             </div>
           </section>
@@ -2503,8 +2622,8 @@ function AIPage({
       {!rows.length && (
         <section className="panel">
           <Empty
-            title="운영을 이해하는 첫 모델을 만들어보세요."
-            description="설비와 지표를 선택하고 모델 학습을 시작하세요."
+            title={ui("운영을 이해하는 첫 모델을 만들어보세요.")}
+            description={ui("설비와 지표를 선택하고 모델 학습을 시작하세요.")}
           />
         </section>
       )}
@@ -2531,8 +2650,10 @@ function AgentPage({
     <>
       <SectionTitle
         eyebrow="AGENTIC OPERATIONS"
-        title="인사이트를 안전한 실행으로."
-        description="규칙 엔진이 제안하고, 담당자가 검토한 뒤 점검 작업을 생성합니다."
+        title={ui("인사이트를 안전한 실행으로.")}
+        description={ui(
+          "규칙 엔진이 제안하고, 담당자가 검토한 뒤 점검 작업을 생성합니다.",
+        )}
         action={
           <span className="label blue-label">
             <ShieldCheck size={13} />
@@ -2544,32 +2665,32 @@ function AgentPage({
         <div>
           <span>01</span>
           <div>
-            <b>현장 이벤트 감지</b>
-            <small>온도·진동 임계값 분석</small>
+            <b>{ui("현장 이벤트 감지")}</b>
+            <small>{ui("온도·진동 임계값 분석")}</small>
           </div>
         </div>
         <ArrowRight />
         <div>
           <span>02</span>
           <div>
-            <b>규칙 기반 작업 제안</b>
-            <small>근거와 실행 내용 명시</small>
+            <b>{ui("규칙 기반 작업 제안")}</b>
+            <small>{ui("근거와 실행 내용 명시")}</small>
           </div>
         </div>
         <ArrowRight />
         <div>
           <span>03</span>
           <div>
-            <b>관리자 승인</b>
-            <small>권한 검사 · 이중 처리 방지</small>
+            <b>{ui("관리자 승인")}</b>
+            <small>{ui("권한 검사 · 이중 처리 방지")}</small>
           </div>
         </div>
         <ArrowRight />
         <div>
           <span>04</span>
           <div>
-            <b>점검 작업 생성</b>
-            <small>감사로그에 처리 이력 저장</small>
+            <b>{ui("점검 작업 생성")}</b>
+            <small>{ui("감사로그에 처리 이력 저장")}</small>
           </div>
         </div>
       </div>
@@ -2577,10 +2698,10 @@ function AgentPage({
       <div className="agent-layout">
         <section>
           <div className="section-inline">
-            <h2>운영 제안</h2>
+            <h2>{ui("운영 제안")}</h2>
             <span className="label neutral">
-              {rec.rows.filter((r) => r.status === "pending").length}개 승인
-              대기
+              {ui(rec.rows.filter((r) => r.status === "pending").length)}
+              {ui("개 승인 대기")}
             </span>
           </div>
           {rec.rows.map((r) => (
@@ -2591,26 +2712,31 @@ function AgentPage({
                 </span>
                 <Status value={r.status} />
               </div>
-              <h2>{r.name}</h2>
-              <p>{r.reason}</p>
+              <h2>{ui(r.name)}</h2>
+              <p>{ui(r.reason)}</p>
               <div className="rec-evidence">
                 <span>
-                  판단 엔진<b>{r.engine}</b>
+                  {ui("판단 엔진")}
+                  <b>{ui(r.engine)}</b>
                 </span>
                 <span>
-                  대상 설비<b>{r.asset_id}</b>
+                  {ui("대상 설비")}
+                  <b>{ui(r.asset_id)}</b>
                 </span>
                 <span>
-                  실행 내용<b>{r.impact}</b>
+                  {ui("실행 내용")}
+                  <b>{ui(r.impact)}</b>
                 </span>
               </div>
               {r.status === "pending" ? (
                 <div className="rec-actions">
                   <span>
                     <ShieldCheck size={14} />
-                    {admin
-                      ? "승인 시 점검 작업이 생성됩니다."
-                      : "관리자만 승인할 수 있습니다."}
+                    {ui(
+                      admin
+                        ? "승인 시 점검 작업이 생성됩니다."
+                        : "관리자만 승인할 수 있습니다.",
+                    )}
                   </span>
                   <button
                     className="btn"
@@ -2623,7 +2749,7 @@ function AgentPage({
                       )
                     }
                   >
-                    반려
+                    {ui("반려")}
                   </button>
                   <button
                     className="btn primary"
@@ -2637,14 +2763,14 @@ function AgentPage({
                     }
                   >
                     <CheckCheck size={15} />
-                    승인 및 작업 생성
+                    {ui("승인 및 작업 생성")}
                   </button>
                 </div>
               ) : (
                 <div className="decided-note">
                   <Check size={14} />
-                  {r.decided_by} · {r.decided_at && date(r.decided_at)}
-                  {r.task_id && ` · ${r.task_id}`}
+                  {ui(r.decided_by)} · {ui(r.decided_at && date(r.decided_at))}
+                  {ui(r.task_id && ` · ${r.task_id}`)}
                 </div>
               )}
             </article>
@@ -2652,48 +2778,55 @@ function AgentPage({
           {!rec.rows.length && (
             <section className="panel">
               <Empty
-                title="검토할 제안이 없습니다"
-                description="설비에서 이상 이벤트가 발생하면 규칙 기반 제안이 생성됩니다."
+                title={ui("검토할 제안이 없습니다")}
+                description={ui(
+                  "설비에서 이상 이벤트가 발생하면 규칙 기반 제안이 생성됩니다.",
+                )}
               />
             </section>
           )}
           <section className="panel">
             <div className="panel-header">
-              <h2>예방 점검 작업</h2>
-              <span className="label neutral">{maintenance.rows.length}건</span>
+              <h2>{ui("예방 점검 작업")}</h2>
+              <span className="label neutral">
+                {ui(maintenance.rows.length)}
+                {ui("건")}
+              </span>
             </div>
             {maintenance.rows.length ? (
               maintenance.rows.map((t) => (
                 <div className="maintenance-row" key={t.id}>
                   <ShieldCheck size={18} />
                   <div>
-                    <b>{t.name}</b>
-                    <small>{t.id}</small>
+                    <b>{ui(t.name)}</b>
+                    <small>{ui(t.id)}</small>
                   </div>
                   <Status value={t.status} />
                 </div>
               ))
             ) : (
               <Empty
-                title="등록된 점검 작업이 없습니다"
-                description="운영 제안을 승인하면 이곳에 작업이 생성됩니다."
+                title={ui("등록된 점검 작업이 없습니다")}
+                description={ui(
+                  "운영 제안을 승인하면 이곳에 작업이 생성됩니다.",
+                )}
               />
             )}
           </section>
         </section>
         <section className="panel alert-list">
           <div className="panel-header">
-            <h2>이벤트 알림</h2>
+            <h2>{ui("이벤트 알림")}</h2>
             <Bell size={17} />
           </div>
           {alerts.rows.map((a) => (
             <div className="alert-item" key={a.id}>
               <div>
-                <span className="warning-tag">{a.asset_id}</span>
-                <small>{date(a.created_at)}</small>
+                <span className="warning-tag">{ui(a.asset_id)}</span>
+                <small>{ui(date(a.created_at))}</small>
               </div>
-              <h3>{a.name}</h3>
-              <p>{a.message}</p>
+              <h3>{ui(a.name)}</h3>
+              <p>{ui(a.message)}</p>
               {a.status === "open" ? (
                 <button
                   className="text-button"
@@ -2707,7 +2840,7 @@ function AgentPage({
                   }
                 >
                   <Check size={14} />
-                  알림 확인
+                  {ui("알림 확인")}
                 </button>
               ) : (
                 <Status value={a.status} />
@@ -2719,8 +2852,9 @@ function AgentPage({
       <div className="info-banner">
         <Sparkles size={18} />
         <p>
-          MVP는 설명 가능한 규칙 엔진으로 동작합니다. LLM·MCP 에이전트와 설비
-          자동 제어는 연결되어 있지 않습니다.
+          {ui(
+            "MVP는 설명 가능한 규칙 엔진으로 동작합니다. LLM·MCP 에이전트와 설비 자동 제어는 연결되어 있지 않습니다.",
+          )}
         </p>
       </div>
     </>
@@ -2747,8 +2881,10 @@ function RobotPage({
     <>
       <SectionTitle
         eyebrow="ROBOT ORCHESTRATION"
-        title="물류의 흐름까지, 하나의 운영으로."
-        description="가상 AMR에 운반 작업을 배정하고 작업 상태를 관리합니다."
+        title={ui("물류의 흐름까지, 하나의 운영으로.")}
+        description={ui(
+          "가상 AMR에 운반 작업을 배정하고 작업 상태를 관리합니다.",
+        )}
         action={<span className="label neutral">VIRTUAL ROBOTS ONLY</span>}
       />
       <LoadError message={robots.error || jobs.error} />
@@ -2761,11 +2897,12 @@ function RobotPage({
               </span>
               <Status value={r.status} />
             </div>
-            <h2>{r.name}</h2>
-            <p>Virtual AMR · {r.location}</p>
+            <h2>{ui(r.name)}</h2>
+            <p>Virtual AMR · {ui(r.location)}</p>
             <div className="battery">
               <span>
-                배터리<b>{r.battery}%</b>
+                {ui("배터리")}
+                <b>{ui(r.battery)}%</b>
               </span>
               <div>
                 <i style={{ width: `${r.battery}%` }} />
@@ -2773,10 +2910,15 @@ function RobotPage({
             </div>
             <div className="robot-stats">
               <span>
-                누적 완료 작업 <b>{r.jobs}회</b>
+                {ui("누적 완료 작업")}
+                <b>
+                  {ui(r.jobs)}
+                  {ui("회")}
+                </b>
               </span>
               <span>
-                제어 모드 <b>가상 실행</b>
+                {ui("제어 모드")}
+                <b>{ui("가상 실행")}</b>
               </span>
             </div>
           </section>
@@ -2785,24 +2927,24 @@ function RobotPage({
       <section className="panel dispatch-form">
         <div>
           <span className="subtle-label">NEW TRANSPORT TASK</span>
-          <h2>운반 작업 배정</h2>
+          <h2>{ui("운반 작업 배정")}</h2>
         </div>
         <label>
-          대상 로봇
+          {ui("대상 로봇")}
           <select value={robot} onChange={(e) => setRobot(e.target.value)}>
             {robots.rows.map((r) => (
-              <option key={r.id}>{r.name}</option>
+              <option key={r.id}>{ui(r.name)}</option>
             ))}
           </select>
         </label>
         <label>
-          목적지
+          {ui("목적지")}
           <select
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
           >
             {["자재 창고", "제면 A라인", "스프 B라인", "출하 구역"].map((d) => (
-              <option key={d}>{d}</option>
+              <option key={d}>{ui(d)}</option>
             ))}
           </select>
         </label>
@@ -2818,34 +2960,39 @@ function RobotPage({
           }
         >
           <Play size={15} />
-          가상 작업 실행
+          {ui("가상 작업 실행")}
         </button>
       </section>
       <section className="panel">
         <div className="panel-header">
-          <h2>운반 작업 이력</h2>
-          <span className="label neutral">{jobs.rows.length}건</span>
+          <h2>{ui("운반 작업 이력")}</h2>
+          <span className="label neutral">
+            {ui(jobs.rows.length)}
+            {ui("건")}
+          </span>
         </div>
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>작업</th>
-                <th>로봇</th>
-                <th>목적지</th>
-                <th>상태</th>
-                <th>작업 관리</th>
+                <th>{ui("작업")}</th>
+                <th>{ui("로봇")}</th>
+                <th>{ui("목적지")}</th>
+                <th>{ui("상태")}</th>
+                <th>{ui("작업 관리")}</th>
               </tr>
             </thead>
             <tbody>
               {jobs.rows.map((j) => (
                 <tr key={j.id}>
                   <td>
-                    <b>{j.id}</b>
-                    <small className="block muted">{date(j.created_at)}</small>
+                    <b>{ui(j.id)}</b>
+                    <small className="block muted">
+                      {ui(date(j.created_at))}
+                    </small>
                   </td>
-                  <td>{j.robot_id}</td>
-                  <td>{j.destination}</td>
+                  <td>{ui(j.robot_id)}</td>
+                  <td>{ui(j.destination)}</td>
                   <td>
                     <Status value={j.status} />
                   </td>
@@ -2863,10 +3010,10 @@ function RobotPage({
                         }
                       >
                         <Check size={13} />
-                        가상 완료 처리
+                        {ui("가상 완료 처리")}
                       </button>
                     ) : (
-                      <span className="text-teal small">작업 완료</span>
+                      <span className="text-teal small">{ui("작업 완료")}</span>
                     )}
                   </td>
                 </tr>
@@ -2875,8 +3022,10 @@ function RobotPage({
           </table>
           {!jobs.rows.length && (
             <Empty
-              title="아직 배정된 운반 작업이 없습니다"
-              description="대기 중인 로봇을 선택해 가상 작업을 실행하세요."
+              title={ui("아직 배정된 운반 작업이 없습니다")}
+              description={ui(
+                "대기 중인 로봇을 선택해 가상 작업을 실행하세요.",
+              )}
             />
           )}
         </div>
@@ -2907,17 +3056,20 @@ function PhysicalPage({
     <>
       <SectionTitle
         eyebrow="PHYSICAL AI LAB"
-        title="가상 실험을 학습의 재료로."
-        description="시나리오 조건을 기반으로 합성 운전 데이터를 생성하고 내려받습니다."
+        title={ui("가상 실험을 학습의 재료로.")}
+        description={ui(
+          "시나리오 조건을 기반으로 합성 운전 데이터를 생성하고 내려받습니다.",
+        )}
         action={<span className="label neutral">PARAMETRIC DATA SANDBOX</span>}
       />
       <div className="info-banner">
         <FlaskConical size={20} />
         <div>
-          <strong>Physical AI 확장을 위한 데이터 준비 단계</strong>
+          <strong>{ui("Physical AI 확장을 위한 데이터 준비 단계")}</strong>
           <p>
-            주기·온도·진동의 합성 표 데이터를 생성합니다. 물리 엔진, 카메라
-            이미지, 강화학습, 로봇 정책 학습은 MVP에 포함되지 않습니다.
+            {ui(
+              "주기·온도·진동의 합성 표 데이터를 생성합니다. 물리 엔진, 카메라 이미지, 강화학습, 로봇 정책 학습은 MVP에 포함되지 않습니다.",
+            )}
           </p>
         </div>
       </div>
@@ -2925,26 +3077,26 @@ function PhysicalPage({
       <section className="panel dataset-form">
         <div>
           <span className="subtle-label">SYNTHETIC DATA GENERATION</span>
-          <h2>합성 운전 데이터 생성</h2>
-          <p>실행한 시뮬레이션 결과를 선택하세요.</p>
+          <h2>{ui("합성 운전 데이터 생성")}</h2>
+          <p>{ui("실행한 시뮬레이션 결과를 선택하세요.")}</p>
         </div>
         {simulations.rows.length ? (
           <>
             <label>
-              기반 시나리오
+              {ui("기반 시나리오")}
               <select
                 value={sim || simulations.rows[0]?.id}
                 onChange={(e) => setSim(e.target.value)}
               >
                 {simulations.rows.map((s) => (
                   <option value={s.id} key={s.id}>
-                    {s.name}
+                    {ui(s.name)}
                   </option>
                 ))}
               </select>
             </label>
             <label>
-              샘플 수
+              {ui("샘플 수")}
               <input
                 type="number"
                 min="10"
@@ -2965,44 +3117,48 @@ function PhysicalPage({
               }
             >
               <Plus size={15} />
-              데이터 생성
+              {ui("데이터 생성")}
             </button>
           </>
         ) : (
           <button className="btn" onClick={() => go("simulator")}>
-            시뮬레이션 먼저 실행하기
+            {ui("시뮬레이션 먼저 실행하기")}
             <ArrowRight size={15} />
           </button>
         )}
       </section>
       <section className="panel">
         <div className="panel-header">
-          <h2>데이터셋 레지스트리</h2>
+          <h2>{ui("데이터셋 레지스트리")}</h2>
           <span className="label neutral">
-            {datasets.rows.length}개 데이터셋
+            {ui(datasets.rows.length)}
+            {ui("개 데이터셋")}
           </span>
         </div>
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>데이터셋</th>
-                <th>샘플 수</th>
-                <th>생성 방식</th>
-                <th>상태</th>
-                <th>내려받기</th>
+                <th>{ui("데이터셋")}</th>
+                <th>{ui("샘플 수")}</th>
+                <th>{ui("생성 방식")}</th>
+                <th>{ui("상태")}</th>
+                <th>{ui("내려받기")}</th>
               </tr>
             </thead>
             <tbody>
               {datasets.rows.map((d) => (
                 <tr key={d.id}>
                   <td>
-                    <b>{d.name}</b>
-                    <small className="block muted">{d.id}</small>
+                    <b>{ui(d.name)}</b>
+                    <small className="block muted">{ui(d.id)}</small>
                   </td>
-                  <td>{num(d.samples)}건</td>
                   <td>
-                    <span className="code-tag">파라미터 합성</span>
+                    {ui(num(d.samples))}
+                    {ui("건")}
+                  </td>
+                  <td>
+                    <span className="code-tag">{ui("파라미터 합성")}</span>
                   </td>
                   <td>
                     <Status value={d.status} />
@@ -3024,8 +3180,10 @@ function PhysicalPage({
           </table>
           {!datasets.rows.length && (
             <Empty
-              title="가상 실험을 데이터로 연결해보세요."
-              description="생성한 데이터셋은 서버에 기록되며 CSV로 내려받을 수 있습니다."
+              title={ui("가상 실험을 데이터로 연결해보세요.")}
+              description={ui(
+                "생성한 데이터셋은 서버에 기록되며 CSV로 내려받을 수 있습니다.",
+              )}
             />
           )}
         </div>
@@ -3051,19 +3209,21 @@ function OrdersPage({
     <>
       <SectionTitle
         eyebrow="MANUFACTURING EXECUTION"
-        title="계획에서 생산 실적까지."
-        description="라인별 작업지시와 최종 공정에서 집계한 양품 실적을 관리합니다."
+        title={ui("계획에서 생산 실적까지.")}
+        description={ui(
+          "라인별 작업지시와 최종 공정에서 집계한 양품 실적을 관리합니다.",
+        )}
         action={
           <button className="btn primary" disabled={!write} onClick={open}>
             <Plus size={16} />
-            작업지시 생성
+            {ui("작업지시 생성")}
           </button>
         }
       />
       <LoadError message={error} />
       <div className="three-metrics">
         <Metric
-          title="전체 작업지시"
+          title={ui("전체 작업지시")}
           icon={Boxes}
           value={String(rows.length)}
           unit="건"
@@ -3071,7 +3231,7 @@ function OrdersPage({
           accent="blue"
         />
         <Metric
-          title="현재 진행 중"
+          title={ui("현재 진행 중")}
           icon={Play}
           value={String(rows.filter((r) => r.status === "running").length)}
           unit="건"
@@ -3079,7 +3239,7 @@ function OrdersPage({
           accent="teal"
         />
         <Metric
-          title="누적 생산 실적"
+          title={ui("누적 생산 실적")}
           icon={CheckCheck}
           value={num(rows.reduce((s, r) => s + r.completed, 0))}
           unit="ea"
@@ -3089,31 +3249,31 @@ function OrdersPage({
       </div>
       <section className="panel">
         <div className="panel-header">
-          <h2>생산 작업지시</h2>
+          <h2>{ui("생산 작업지시")}</h2>
           <span className="label neutral">MES CORE</span>
         </div>
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>작업지시 / 제품</th>
-                <th>라인</th>
-                <th>상태</th>
-                <th>생산 진척</th>
-                <th>실행</th>
+                <th>{ui("작업지시 / 제품")}</th>
+                <th>{ui("라인")}</th>
+                <th>{ui("상태")}</th>
+                <th>{ui("생산 진척")}</th>
+                <th>{ui("실행")}</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((o) => (
                 <tr key={o.id}>
                   <td>
-                    <b>{o.name}</b>
+                    <b>{ui(o.name)}</b>
                     <small className="block muted">
-                      {o.id} · {o.product}
+                      {ui(o.id)} · {ui(o.product)}
                     </small>
                   </td>
                   <td>
-                    <span className="line-tag">{o.line}</span>
+                    <span className="line-tag">{ui(o.line)}</span>
                   </td>
                   <td>
                     <Status value={o.status} />
@@ -3121,8 +3281,11 @@ function OrdersPage({
                   <td>
                     <div className="order-progress">
                       <span>
-                        {num(o.completed)} <small>/ {num(o.quantity)} ea</small>
-                        <b>{((o.completed / o.quantity) * 100).toFixed(1)}%</b>
+                        {ui(num(o.completed))}{" "}
+                        <small>/ {ui(num(o.quantity))} ea</small>
+                        <b>
+                          {ui(((o.completed / o.quantity) * 100).toFixed(1))}%
+                        </b>
                       </span>
                       <div>
                         <i
@@ -3147,11 +3310,11 @@ function OrdersPage({
                         }
                       >
                         <Play size={13} />
-                        시작
+                        {ui("시작")}
                       </button>
                     ) : (
                       <span className="muted small">
-                        {o.status === "running" ? "실적 자동 집계" : "완료"}
+                        {ui(o.status === "running" ? "실적 자동 집계" : "완료")}
                       </span>
                     )}
                   </td>
@@ -3164,8 +3327,9 @@ function OrdersPage({
       <div className="info-banner">
         <Boxes size={18} />
         <p>
-          최종 공정 이벤트만 완제품 실적에 반영합니다. 동일 라인의 작업 중복
-          시작을 차단하며, ERP·BOM·재고·LOT 추적은 후속 확장 범위입니다.
+          {ui(
+            "최종 공정 이벤트를 완제품 실적에 반영하고 동일 라인의 중복 작업 시작을 방지합니다. 자재·LOT·BOM은 공정·재고·창고 화면에서 관리합니다.",
+          )}
         </p>
       </div>
     </>
@@ -3196,41 +3360,49 @@ function SettingsPage({
     <>
       <SectionTitle
         eyebrow="PLATFORM ADMINISTRATION"
-        title="신뢰할 수 있는 운영의 기반"
-        description="현재 사용자 권한과 주요 작업의 감사 이력을 확인합니다."
+        title={ui("신뢰할 수 있는 운영의 기반")}
+        description={ui(
+          "현재 사용자 권한과 주요 작업의 감사 이력을 확인합니다.",
+        )}
       />
       <div className="admin-cards">
         <section className="panel">
           <ShieldCheck size={26} />
-          <h2>역할 기반 접근 제어</h2>
+          <h2>{ui("역할 기반 접근 제어")}</h2>
           <p>
-            현재 사용자 <b>{user.email}</b>
+            {ui("현재 사용자")}
+            <b>{ui(user.email)}</b>
           </p>
           <div className="role-list">
             <span>
-              <b>관리자</b>연결 설정 · 모델 배포 · 제안 승인 · 감사 조회
+              <b>{ui("관리자")}</b>
+              {ui("연결 설정 · 모델 배포 · 제안 승인 · 감사 조회")}
             </span>
             <span>
-              <b>운영자</b>데이터 수집 · 실험 · 학습 · 생산 / 가상 로봇 작업
+              <b>{ui("운영자")}</b>
+              {ui("데이터 수집 · 실험 · 학습 · 생산 / 가상 로봇 작업")}
             </span>
             <span>
-              <b>조회자</b>현황 · 데이터 · 결과 조회 및 CSV 내려받기
+              <b>{ui("조회자")}</b>
+              {ui("현황 · 데이터 · 결과 조회 및 CSV 내려받기")}
             </span>
           </div>
         </section>
         <section className="panel">
           <Database size={26} />
-          <h2>기업형 확장 아키텍처</h2>
+          <h2>{ui("기업형 확장 아키텍처")}</h2>
           <p>React / TypeScript + FastAPI / SQLAlchemy</p>
           <div className="role-list">
             <span>
-              <b>핵심</b>PostgreSQL · Nginx · 세션 인증 · Alembic
+              <b>{ui("핵심")}</b>
+              {ui("PostgreSQL · Nginx · 세션 인증 · Alembic")}
             </span>
             <span>
-              <b>선택 인프라</b>Redis · MQTT Broker · S3 호환 객체 저장소
+              <b>{ui("선택 인프라")}</b>
+              {ui("Redis · MQTT Broker · S3 호환 객체 저장소")}
             </span>
             <span>
-              <b>운영</b>OpenAPI · Health check · Prometheus metrics
+              <b>{ui("운영")}</b>OpenAPI · Health check · Prometheus metrics
             </span>
           </div>
         </section>
@@ -3240,14 +3412,19 @@ function SettingsPage({
           <div className="panel-header">
             <div>
               <h2>
-                사용자 계정
-                <span className="label neutral">{members.length}명</span>
+                {ui("사용자 계정")}
+                <span className="label neutral">
+                  {ui(members.length)}
+                  {ui("명")}
+                </span>
               </h2>
               <p>
-                {STATIC_DEMO
-                  ? "현재 브라우저에 등록된 체험 계정"
-                  : "이 워크스페이스에 등록된 계정"}{" "}
-                · 직접 가입한 사용자는 체험 운영자 권한입니다.
+                {ui(
+                  STATIC_DEMO
+                    ? "현재 브라우저에 등록된 체험 계정"
+                    : "이 워크스페이스에 등록된 계정",
+                )}{" "}
+                {ui("· 직접 가입한 사용자는 체험 운영자 권한입니다.")}
               </p>
             </div>
           </div>
@@ -3255,25 +3432,27 @@ function SettingsPage({
             <table>
               <thead>
                 <tr>
-                  <th>이름</th>
-                  <th>이메일</th>
-                  <th>권한</th>
+                  <th>{ui("이름")}</th>
+                  <th>{ui("이메일")}</th>
+                  <th>{ui("권한")}</th>
                 </tr>
               </thead>
               <tbody>
                 {members.map((member) => (
                   <tr key={member.email}>
                     <td>
-                      <b>{member.name}</b>
+                      <b>{ui(member.name)}</b>
                     </td>
-                    <td>{member.email}</td>
+                    <td>{ui(member.email)}</td>
                     <td>
                       <span className="code-tag">
-                        {member.role === "admin"
-                          ? "관리자"
-                          : member.role === "operator"
-                            ? "일반 사용자 · 체험 운영자"
-                            : "조회 사용자"}
+                        {ui(
+                          member.role === "admin"
+                            ? "관리자"
+                            : member.role === "operator"
+                              ? "일반 사용자 · 체험 운영자"
+                              : "조회 사용자",
+                        )}
                       </span>
                     </td>
                   </tr>
@@ -3285,35 +3464,37 @@ function SettingsPage({
       )}
       <section className="panel">
         <div className="panel-header">
-          <h2>감사로그</h2>
-          <span className="label neutral">최근 200개 작업</span>
+          <h2>{ui("감사로그")}</h2>
+          <span className="label neutral">{ui("최근 200개 작업")}</span>
         </div>
         <LoadError message={error} />
         {!admin ? (
           <Empty
-            title="관리자 권한이 필요합니다"
-            description="감사로그는 워크스페이스 관리자만 조회할 수 있습니다."
+            title={ui("관리자 권한이 필요합니다")}
+            description={ui(
+              "감사로그는 워크스페이스 관리자만 조회할 수 있습니다.",
+            )}
           />
         ) : (
           <div className="table-wrap max-height">
             <table>
               <thead>
                 <tr>
-                  <th>시각</th>
-                  <th>수행자</th>
-                  <th>작업</th>
-                  <th>대상</th>
+                  <th>{ui("시각")}</th>
+                  <th>{ui("수행자")}</th>
+                  <th>{ui("작업")}</th>
+                  <th>{ui("대상")}</th>
                 </tr>
               </thead>
               <tbody>
                 {logs.map((l) => (
                   <tr key={l.id}>
-                    <td className="mono small">{date(l.created_at)}</td>
-                    <td>{l.actor}</td>
+                    <td className="mono small">{ui(date(l.created_at))}</td>
+                    <td>{ui(l.actor)}</td>
                     <td>
-                      <span className="code-tag">{l.action}</span>
+                      <span className="code-tag">{ui(l.action)}</span>
                     </td>
-                    <td className="mono small">{l.target}</td>
+                    <td className="mono small">{ui(l.target)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -3372,17 +3553,21 @@ function Modal({
         className="modal"
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-label={ui(title)}
         tabIndex={-1}
         ref={ref}
       >
         <div className="modal-header">
-          <h2>{title}</h2>
-          <button className="icon-button" aria-label="닫기" onClick={onClose}>
+          <h2>{ui(title)}</h2>
+          <button
+            className="icon-button"
+            aria-label={ui("닫기")}
+            onClick={onClose}
+          >
             <X size={20} />
           </button>
         </div>
-        {children}
+        {ui(children)}
       </div>
     </div>
   );
@@ -3411,66 +3596,67 @@ function CreateForm({
       }}
     >
       <label>
-        {type === "order" ? "작업지시명" : "커넥터 이름"}
+        {ui(type === "order" ? "작업지시명" : "커넥터 이름")}
         <input
           name="name"
           required
           minLength={2}
           maxLength={80}
-          placeholder={
+          placeholder={ui(
             type === "order"
               ? "예: 모터 하우징 추가 생산"
-              : "예: 제면 A라인 게이트웨이"
-          }
+              : "예: 제면 A라인 게이트웨이",
+          )}
         />
       </label>
       {type === "connector" ? (
         <>
           <label>
-            프로토콜
+            {ui("프로토콜")}
             <select name="protocol">
               {["REST", "MQTT", "OPC-UA", "Modbus"].map((p) => (
-                <option key={p}>{p}</option>
+                <option key={p}>{ui(p)}</option>
               ))}
             </select>
           </label>
           <label>
-            엔드포인트
+            {ui("엔드포인트")}
             <input
               name="endpoint"
               required
               minLength={3}
               maxLength={200}
-              placeholder="예: opc.tcp://gateway:4840"
+              placeholder={ui("예: opc.tcp://gateway:4840")}
             />
           </label>
           <div className="info-banner small">
-            구성 정보만 저장됩니다. 프로토콜 어댑터를 별도로 연결해야 실제
-            데이터가 수집됩니다.
+            {ui(
+              "구성 정보만 저장됩니다. 프로토콜 어댑터를 별도로 연결해야 실제 데이터가 수집됩니다.",
+            )}
           </div>
         </>
       ) : (
         <>
           <label>
-            제품명
+            {ui("제품명")}
             <input
               name="product"
               required
               minLength={2}
               maxLength={100}
-              placeholder="예: 순한맛 봉지라면 120g"
+              placeholder={ui("예: 순한맛 봉지라면 120g")}
             />
           </label>
           <div className="form-row">
             <label>
-              생산 라인
+              {ui("생산 라인")}
               <select name="line">
                 <option>A</option>
                 <option>B</option>
               </select>
             </label>
             <label>
-              계획 수량
+              {ui("계획 수량")}
               <input
                 name="quantity"
                 type="number"
@@ -3485,13 +3671,15 @@ function CreateForm({
       )}
       <button className="btn primary wide" disabled={busy}>
         <Plus size={16} />
-        {busy ? "저장 중…" : "생성하기"}
+        {ui(busy ? "저장 중…" : "생성하기")}
       </button>
     </form>
   );
 }
 
-function ExperienceRoot() {
+export function ExperienceRoot() {
+  useLocale();
+  useEffect(syncDocumentLocale, []);
   const [route, setRoute] = useState(panelRoute);
   useEffect(() => {
     const change = () => setRoute(panelRoute());
@@ -3499,13 +3687,19 @@ function ExperienceRoot() {
     return () => window.removeEventListener("hashchange", change);
   }, []);
   return route ? (
-    <PanelPlayer key={route.id} id={route.id} initialKey={route.key} />
+    <PanelPlayer
+      key={`${route.id}:${route.monitor ? "monitor" : "device"}`}
+      id={route.id}
+      initialKey={route.key}
+      readOnly={route.monitor}
+    />
   ) : (
     <App />
   );
 }
-createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <ExperienceRoot />
-  </React.StrictMode>,
-);
+if (!import.meta.env.SSR)
+  createRoot(document.getElementById("root")!).render(
+    <React.StrictMode>
+      <ExperienceRoot />
+    </React.StrictMode>,
+  );

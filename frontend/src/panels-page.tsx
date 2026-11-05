@@ -1,3 +1,4 @@
+import { ui } from "./i18n/locale";
 import { lineLabel } from "./industry-context";
 import { AgentWidgetPicker } from "./agent-widgets";
 import type { AgentModule } from "./agent-modules/contracts";
@@ -217,9 +218,11 @@ export function PanelsPage({
       <div className="page-heading">
         <div>
           <div className="eyebrow">SHOPFLOOR EXPERIENCE STUDIO</div>
-          <h1>현장의 화면을 설계하세요.</h1>
+          <h1>{ui("현장의 화면을 설계하세요.")}</h1>
           <p>
-            라인마다 필요한 정보를, 필요한 패널에. 구성부터 현장 미리보기까지.
+            {ui(
+              "라인마다 필요한 정보를, 필요한 패널에. 구성부터 현장 미리보기까지.",
+            )}
           </p>
         </div>
         <button
@@ -228,7 +231,7 @@ export function PanelsPage({
           onClick={() => setModal("new")}
         >
           <Plus size={16} />
-          패널 등록
+          {ui("패널 등록")}
         </button>
       </div>
       <div className="panel-studio-summary">
@@ -236,39 +239,43 @@ export function PanelsPage({
           <span className="studio-summary-icon">
             <Monitor size={19} />
           </span>
-          <b>{rows.length}</b>
-          <span>등록 패널</span>
+          <b>{ui(rows.length)}</b>
+          <span>{ui("등록 패널")}</span>
         </div>
         <div>
           <i className="studio-dot green" />
-          <b>{rows.filter((p) => p.connection === "online").length}</b>
-          <span>최근 응답</span>
+          <b>{ui(rows.filter((p) => p.connection === "online").length)}</b>
+          <span>{ui("최근 응답")}</span>
         </div>
         <div>
           <i className="studio-dot blue" />
-          <b>{rows.filter((p) => p.published).length}</b>
-          <span>게시된 패널</span>
+          <b>{ui(rows.filter((p) => p.published).length)}</b>
+          <span>{ui("게시된 패널")}</span>
         </div>
         <div>
           <i className="studio-dot amber" />
           <b>
-            {rows.filter((p) => p.revision !== p.published_revision).length}
+            {ui(rows.filter((p) => p.revision !== p.published_revision).length)}
           </b>
-          <span>게시 대기 초안</span>
+          <span>{ui("게시 대기 초안")}</span>
         </div>
       </div>
       {error && (
         <div className="form-error" role="alert">
-          {error}
+          {ui(error)}
         </div>
       )}
       {message && (
         <div className="field-success" role="status">
           <Check size={16} />
-          {message}
+          {ui(message)}
         </div>
       )}
       <div className="field-toolbar">
+        <a className="btn" href="#panel-view">
+          <Monitor size={15} />
+          {ui("현장 패널 뷰 열기")}
+        </a>
         <div className="segmented">
           {[
             ["all", "전체 라인"],
@@ -280,14 +287,14 @@ export function PanelsPage({
               className={line === id ? "selected" : ""}
               onClick={() => setLine(id)}
             >
-              {label}
+              {ui(label)}
             </button>
           ))}
         </div>
         <div>
           <button className="btn small-btn" onClick={() => void load()}>
             <RefreshCw size={13} />
-            동기화
+            {ui("동기화")}
           </button>
           <button
             className="btn small-btn"
@@ -295,7 +302,9 @@ export function PanelsPage({
             onClick={() => setModal("bulk")}
           >
             <Layers3 size={14} />
-            선택 {checked.length}개에 분배
+            {ui("선택")}
+            {ui(checked.length)}
+            {ui("개에 분배")}
           </button>
           <button
             className="btn small-btn"
@@ -309,7 +318,7 @@ export function PanelsPage({
             }
           >
             <CheckCheck size={14} />
-            선택 패널 게시
+            {ui("선택 패널 게시")}
           </button>
         </div>
       </div>
@@ -317,7 +326,7 @@ export function PanelsPage({
         <aside className="studio-panel-list">
           <div className="studio-list-heading">
             <span>LINE PANELS</span>
-            <small>체크하여 일괄 분배</small>
+            <small>{ui("체크하여 일괄 분배")}</small>
           </div>
           {rows
             .filter((p) => line === "all" || p.draft.line === line)
@@ -328,7 +337,7 @@ export function PanelsPage({
               >
                 <input
                   type="checkbox"
-                  aria-label={`${p.draft.name} 분배 대상으로 선택`}
+                  aria-label={ui(`${p.draft.name} 분배 대상으로 선택`)}
                   checked={checked.includes(p.id)}
                   onChange={(e) =>
                     setChecked((ids) =>
@@ -361,23 +370,28 @@ export function PanelsPage({
                     </span>
                     <span className={`studio-connection ${p.connection}`}>
                       <i />
-                      {p.connection === "online"
-                        ? "응답 있음"
-                        : p.connection === "offline"
-                          ? "응답 지연"
-                          : "연결 대기"}
+                      {ui(
+                        p.connection === "online"
+                          ? "응답 있음"
+                          : p.connection === "offline"
+                            ? "응답 지연"
+                            : "연결 대기",
+                      )}
                     </span>
                   </div>
-                  <h3>{p.draft.name}</h3>
-                  <p>{p.draft.location}</p>
+                  <h3>{ui(p.draft.name)}</h3>
+                  <p>{ui(p.draft.location)}</p>
                   <footer>
                     <span>
-                      {p.draft.resolution} · {p.draft.screens.length}개 화면
+                      {ui(p.draft.resolution)} · {ui(p.draft.screens.length)}
+                      {ui("개 화면")}
                     </span>
                     <b>
-                      {p.revision === p.published_revision
-                        ? `게시 v${p.published_revision}`
-                        : "초안 변경"}
+                      {ui(
+                        p.revision === p.published_revision
+                          ? `게시 v${p.published_revision}`
+                          : "초안 변경",
+                      )}
                     </b>
                   </footer>
                 </button>
@@ -392,12 +406,14 @@ export function PanelsPage({
                   <div>
                     <h2>
                       <span className="studio-dot blue" />
-                      현장 패널 미리보기
+                      {ui("현장 패널 미리보기")}
                     </h2>
                     <p>
-                      {previewSource === "draft"
-                        ? "저장 전 편집 내용도 미리 볼 수 있습니다."
-                        : "현장에서 표시되는 게시 버전입니다."}
+                      {ui(
+                        previewSource === "draft"
+                          ? "저장 전 편집 내용도 미리 볼 수 있습니다."
+                          : "현장에서 표시되는 게시 버전입니다.",
+                      )}
                     </p>
                   </div>
                   <div className="studio-preview-actions">
@@ -406,7 +422,7 @@ export function PanelsPage({
                         className={previewSource === "draft" ? "selected" : ""}
                         onClick={() => setPreviewSource("draft")}
                       >
-                        초안
+                        {ui("초안")}
                       </button>
                       <button
                         className={
@@ -415,12 +431,13 @@ export function PanelsPage({
                         disabled={!current.published}
                         onClick={() => setPreviewSource("published")}
                       >
-                        게시 v{current.published_revision}
+                        {ui("게시 v")}
+                        {ui(current.published_revision)}
                       </button>
                     </div>
                     <button
                       className="icon-button"
-                      aria-label="패널 미리보기 최대화"
+                      aria-label={ui("패널 미리보기 최대화")}
                       disabled={!snapshot}
                       onClick={() => setModal("preview")}
                     >
@@ -435,9 +452,11 @@ export function PanelsPage({
                     <div className="studio-preview-empty">
                       <Monitor size={33} />
                       <p>
-                        {modal === "preview"
-                          ? "확대 미리보기 표시 중"
-                          : previewError || "미리보기 준비 중…"}
+                        {ui(
+                          modal === "preview"
+                            ? "확대 미리보기 표시 중"
+                            : previewError || "미리보기 준비 중…",
+                        )}
                       </p>
                     </div>
                   )}
@@ -445,7 +464,7 @@ export function PanelsPage({
                 <div className="studio-preview-footer">
                   <div>
                     <button
-                      aria-label="이전 미리보기 화면"
+                      aria-label={ui("이전 미리보기 화면")}
                       onClick={() =>
                         setIndex(
                           (i) =>
@@ -457,13 +476,13 @@ export function PanelsPage({
                       <ArrowLeft size={14} />
                     </button>
                     <span>
-                      {previewConfig?.screens[index]?.title || "—"}{" "}
+                      {ui(previewConfig?.screens[index]?.title || "—")}{" "}
                       <small>
-                        {index + 1}/{previewConfig?.screens.length || 0}
+                        {ui(index + 1)}/{ui(previewConfig?.screens.length || 0)}
                       </small>
                     </span>
                     <button
-                      aria-label="다음 미리보기 화면"
+                      aria-label={ui("다음 미리보기 화면")}
                       onClick={() =>
                         setIndex(
                           (i) => (i + 1) % (previewConfig?.screens.length || 1),
@@ -474,19 +493,21 @@ export function PanelsPage({
                     </button>
                   </div>
                   <span>
-                    {previewConfig?.resolution} ·{" "}
-                    {previewConfig?.theme === "dark" ? "다크" : "라이트"} · 입력
-                    저장 안 함
+                    {ui(previewConfig?.resolution)} ·{" "}
+                    {ui(previewConfig?.theme === "dark" ? "다크" : "라이트")}
+                    {ui("· 입력 저장 안 함")}
                   </span>
                 </div>
               </section>
               <section className="panel studio-settings">
                 <div className="panel-header">
                   <div>
-                    <h2>패널 구성</h2>
+                    <h2>{ui("패널 구성")}</h2>
                     <p>
-                      {current.id} · 초안 v{current.revision}{" "}
-                      {dirty ? "· 저장되지 않은 변경" : ""}
+                      {ui(current.id)}
+                      {ui("· 초안 v")}
+                      {ui(current.revision)}{" "}
+                      {ui(dirty ? "· 저장되지 않은 변경" : "")}
                     </p>
                   </div>
                   <div>
@@ -499,7 +520,7 @@ export function PanelsPage({
                       }}
                     >
                       <RotateCcw size={13} />
-                      변경 취소
+                      {ui("변경 취소")}
                     </button>
                     <button
                       className="btn small-btn"
@@ -507,7 +528,7 @@ export function PanelsPage({
                       onClick={save}
                     >
                       <Save size={13} />
-                      초안 저장
+                      {ui("초안 저장")}
                     </button>
                     <button
                       className="btn primary small-btn"
@@ -526,13 +547,13 @@ export function PanelsPage({
                       }
                     >
                       <CheckCheck size={14} />
-                      게시
+                      {ui("게시")}
                     </button>
                   </div>
                 </div>
                 <div className="studio-settings-grid">
                   <label>
-                    패널 이름
+                    {ui("패널 이름")}
                     <input
                       disabled={!write}
                       value={draft.name}
@@ -541,7 +562,7 @@ export function PanelsPage({
                     />
                   </label>
                   <label>
-                    설치 위치
+                    {ui("설치 위치")}
                     <input
                       disabled={!write}
                       value={draft.location}
@@ -550,7 +571,7 @@ export function PanelsPage({
                     />
                   </label>
                   <label>
-                    생산 라인
+                    {ui("생산 라인")}
                     <select
                       disabled={!write}
                       value={draft.line}
@@ -565,12 +586,12 @@ export function PanelsPage({
                         })
                       }
                     >
-                      <option value="A">{lineLabel("A")}</option>
-                      <option value="B">{lineLabel("B")}</option>
+                      <option value="A">{ui(lineLabel("A"))}</option>
+                      <option value="B">{ui(lineLabel("B"))}</option>
                     </select>
                   </label>
                   <label>
-                    패널 유형
+                    {ui("패널 유형")}
                     <select
                       disabled={!write}
                       value={draft.mode}
@@ -578,12 +599,12 @@ export function PanelsPage({
                         patch({ mode: e.target.value as PanelConfig["mode"] })
                       }
                     >
-                      <option value="tv">TV / 전광판</option>
-                      <option value="touch">현장 터치 패널</option>
+                      <option value="tv">{ui("TV / 전광판")}</option>
+                      <option value="touch">{ui("현장 터치 패널")}</option>
                     </select>
                   </label>
                   <label>
-                    해상도 / 방향
+                    {ui("해상도 / 방향")}
                     <select
                       disabled={!write}
                       value={draft.resolution}
@@ -597,15 +618,15 @@ export function PanelsPage({
                       {["1920x1080", "1366x768", "1280x800", "1080x1920"].map(
                         (r) => (
                           <option key={r} value={r}>
-                            {r}
-                            {r === "1080x1920" ? " · 세로" : ""}
+                            {ui(r)}
+                            {ui(r === "1080x1920" ? " · 세로" : "")}
                           </option>
                         ),
                       )}
                     </select>
                   </label>
                   <label>
-                    화면 테마
+                    {ui("화면 테마")}
                     <select
                       disabled={!write}
                       value={draft.theme}
@@ -613,12 +634,14 @@ export function PanelsPage({
                         patch({ theme: e.target.value as "dark" | "light" })
                       }
                     >
-                      <option value="dark">다크 · 현장 전광판</option>
-                      <option value="light">라이트 · 작업자 패널</option>
+                      <option value="dark">{ui("다크 · 현장 전광판")}</option>
+                      <option value="light">
+                        {ui("라이트 · 작업자 패널")}
+                      </option>
                     </select>
                   </label>
                   <label>
-                    데이터 갱신 (초)
+                    {ui("데이터 갱신 (초)")}
                     <input
                       disabled={!write}
                       type="number"
@@ -639,7 +662,7 @@ export function PanelsPage({
                         patch({ rotation_enabled: e.target.checked })
                       }
                     />
-                    화면 자동 순환
+                    {ui("화면 자동 순환")}
                   </label>
                 </div>
               </section>
@@ -647,14 +670,15 @@ export function PanelsPage({
                 <div className="panel-header">
                   <div>
                     <h2>
-                      화면 플레이리스트
+                      {ui("화면 플레이리스트")}
                       <span className="label neutral">
-                        {draft.screens.length}/12
+                        {ui(draft.screens.length)}/12
                       </span>
                     </h2>
                     <p>
-                      위아래 버튼으로 표시 순서를 조정하세요. 화면별 노출 시간을
-                      설정할 수 있습니다.
+                      {ui(
+                        "위아래 버튼으로 표시 순서를 조정하세요. 화면별 노출 시간을 설정할 수 있습니다.",
+                      )}
                     </p>
                   </div>
                 </div>
@@ -666,7 +690,7 @@ export function PanelsPage({
                     >
                       <button
                         className="screen-number"
-                        title={`${screen.title} 미리보기`}
+                        title={ui(`${screen.title} 미리보기`)}
                         onClick={() => {
                           setPreviewSource("draft");
                           setIndex(i);
@@ -676,27 +700,29 @@ export function PanelsPage({
                             ?.color,
                         }}
                       >
-                        {String(i + 1).padStart(2, "0")}
+                        {ui(String(i + 1).padStart(2, "0"))}
                       </button>
                       <div className="screen-details">
                         <span>
-                          {
+                          {ui(
                             TEMPLATES.find((t) => t.id === screen.template)
-                              ?.name
-                          }
+                              ?.name,
+                          )}
                         </span>
                         <input
-                          aria-label={`화면 ${i + 1} 제목`}
+                          aria-label={ui(`화면 ${i + 1} 제목`)}
                           disabled={!write}
                           maxLength={60}
                           value={screen.title}
                           onChange={(e) =>
-                            changeScreen(screen.id, { title: e.target.value })
+                            changeScreen(screen.id, {
+                              title: e.target.value,
+                            })
                           }
                         />
                         {["notice", "work-order"].includes(screen.template) && (
                           <textarea
-                            aria-label={`화면 ${i + 1} 내용`}
+                            aria-label={ui(`화면 ${i + 1} 내용`)}
                             disabled={!write}
                             maxLength={1000}
                             value={screen.message}
@@ -705,17 +731,17 @@ export function PanelsPage({
                                 message: e.target.value,
                               })
                             }
-                            placeholder={
+                            placeholder={ui(
                               screen.template === "notice"
                                 ? "현장 공지 내용을 입력하세요."
-                                : "작업 안내를 줄바꿈으로 입력하세요."
-                            }
+                                : "작업 안내를 줄바꿈으로 입력하세요.",
+                            )}
                           />
                         )}
                       </div>
                       <label className="screen-duration">
                         <input
-                          aria-label={`화면 ${i + 1} 노출 시간`}
+                          aria-label={ui(`화면 ${i + 1} 노출 시간`)}
                           disabled={!write}
                           type="number"
                           min={10}
@@ -727,11 +753,11 @@ export function PanelsPage({
                             })
                           }
                         />
-                        <small>초</small>
+                        <small>{ui("초")}</small>
                       </label>
                       <div className="screen-reorder">
                         <button
-                          aria-label={`화면 ${i + 1} 위로 이동`}
+                          aria-label={ui(`화면 ${i + 1} 위로 이동`)}
                           disabled={!write || i === 0}
                           onClick={() => {
                             const next = [...draft.screens];
@@ -743,7 +769,7 @@ export function PanelsPage({
                           <ArrowUp size={13} />
                         </button>
                         <button
-                          aria-label={`화면 ${i + 1} 아래로 이동`}
+                          aria-label={ui(`화면 ${i + 1} 아래로 이동`)}
                           disabled={!write || i === draft.screens.length - 1}
                           onClick={() => {
                             const next = [...draft.screens];
@@ -757,7 +783,7 @@ export function PanelsPage({
                       </div>
                       <button
                         className="icon-button"
-                        aria-label={`화면 ${i + 1} 삭제`}
+                        aria-label={ui(`화면 ${i + 1} 삭제`)}
                         disabled={!write || draft.screens.length <= 1}
                         onClick={() =>
                           patchScreens(
@@ -793,8 +819,8 @@ export function PanelsPage({
                         <Plus size={14} />
                       </span>
                       <div>
-                        <b>{template.name}</b>
-                        <small>{template.description}</small>
+                        <b>{ui(template.name)}</b>
+                        <small>{ui(template.description)}</small>
                       </div>
                     </button>
                   ))}
@@ -803,10 +829,11 @@ export function PanelsPage({
               <section className="panel">
                 <div className="panel-header">
                   <div>
-                    <h2>설치할 에이전트 위젯</h2>
+                    <h2>{ui("설치할 에이전트 위젯")}</h2>
                     <p>
-                      최대 4개 선택 후 공용 에이전트 현황 화면을 재생 목록에
-                      추가하세요.
+                      {ui(
+                        "최대 4개 선택 후 공용 에이전트 현황 화면을 재생 목록에 추가하세요.",
+                      )}
                     </p>
                   </div>
                 </div>
@@ -824,10 +851,12 @@ export function PanelsPage({
                   <div>
                     <h2>
                       <Video size={16} />
-                      패널 CCTV 위젯
+                      {ui("패널 CCTV 위젯")}
                     </h2>
                     <p>
-                      같은 라인의 카메라를 화면 옆 또는 아래에 함께 표시합니다.
+                      {ui(
+                        "같은 라인의 카메라를 화면 옆 또는 아래에 함께 표시합니다.",
+                      )}
                     </p>
                   </div>
                   <label className="check-row">
@@ -844,13 +873,13 @@ export function PanelsPage({
                         })
                       }
                     />
-                    위젯 사용
+                    {ui("위젯 사용")}
                   </label>
                 </div>
                 <div className="studio-camera-body">
                   <div>
                     <label>
-                      위젯 위치
+                      {ui("위젯 위치")}
                       <select
                         disabled={!write}
                         value={draft.camera_widget.position}
@@ -863,12 +892,12 @@ export function PanelsPage({
                           })
                         }
                       >
-                        <option value="right">오른쪽</option>
-                        <option value="bottom">아래</option>
+                        <option value="right">{ui("오른쪽")}</option>
+                        <option value="bottom">{ui("아래")}</option>
                       </select>
                     </label>
                     <label>
-                      기본 보기
+                      {ui("기본 보기")}
                       <select
                         disabled={!write}
                         value={draft.camera_widget.layout}
@@ -881,8 +910,8 @@ export function PanelsPage({
                           })
                         }
                       >
-                        <option value="grid">멀티뷰</option>
-                        <option value="single">단일 보기</option>
+                        <option value="grid">{ui("멀티뷰")}</option>
+                        <option value="single">{ui("단일 보기")}</option>
                       </select>
                     </label>
                   </div>
@@ -908,11 +937,13 @@ export function PanelsPage({
                 <div>
                   <Radio size={23} />
                   <span>
-                    <h2>현장 패널 연결</h2>
+                    <h2>{ui("현장 패널 연결")}</h2>
                     <p>
-                      {current.last_seen
-                        ? `최근 응답 ${date(current.last_seen)} · 수신 v${current.runtime_revision || "—"}`
-                        : "실행 화면의 응답을 받으면 연결 상태가 표시됩니다."}
+                      {ui(
+                        current.last_seen
+                          ? `최근 응답 ${date(current.last_seen)} · 수신 v${current.runtime_revision || "—"}`
+                          : "실행 화면의 응답을 받으면 연결 상태가 표시됩니다.",
+                      )}
                     </p>
                   </span>
                 </div>
@@ -926,7 +957,7 @@ export function PanelsPage({
                     }}
                   >
                     <ExternalLink size={14} />
-                    게시 화면 열기
+                    {ui("게시 화면 열기")}
                   </a>
                   <button
                     className="btn primary"
@@ -934,30 +965,34 @@ export function PanelsPage({
                     onClick={provision}
                   >
                     <Radio size={14} />
-                    연결 주소 발급
+                    {ui("연결 주소 발급")}
                   </button>
                 </div>
               </section>
               {snapshot && snapshot.events.length > 0 && (
                 <section className="panel">
                   <div className="panel-header">
-                    <h2>최근 {draft.line}라인 현장 입력</h2>
+                    <h2>
+                      {ui("최근")}
+                      {ui(draft.line)}
+                      {ui("라인 현장 입력")}
+                    </h2>
                   </div>
                   <div className="table-wrap">
                     <table>
                       <thead>
                         <tr>
-                          <th>작업</th>
-                          <th>패널</th>
-                          <th>시각</th>
+                          <th>{ui("작업")}</th>
+                          <th>{ui("패널")}</th>
+                          <th>{ui("시각")}</th>
                         </tr>
                       </thead>
                       <tbody>
                         {snapshot.events.map((e) => (
                           <tr key={e.id}>
-                            <td>{e.name}</td>
-                            <td>{e.panel_id}</td>
-                            <td>{date(e.created_at)}</td>
+                            <td>{ui(e.name)}</td>
+                            <td>{ui(e.panel_id)}</td>
+                            <td>{ui(date(e.created_at))}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -969,13 +1004,16 @@ export function PanelsPage({
           ) : (
             <div className="panel empty">
               <Monitor size={35} />
-              <strong>패널을 선택하거나 새로 등록하세요.</strong>
+              <strong>{ui("패널을 선택하거나 새로 등록하세요.")}</strong>
             </div>
           )}
         </div>
       </div>
       {modal === "new" && (
-        <FieldDialog title="현장 패널 등록" onClose={() => setModal(null)}>
+        <FieldDialog
+          title={ui("현장 패널 등록")}
+          onClose={() => setModal(null)}
+        >
           <NewPanel
             busy={busy}
             onSubmit={async (config) => {
@@ -994,14 +1032,16 @@ export function PanelsPage({
       )}
       {modal === "bulk" && draft && (
         <FieldDialog
-          title="선택 패널에 화면 분배"
+          title={ui("선택 패널에 화면 분배")}
           onClose={() => setModal(null)}
         >
           <div className="form-body">
             <p className="field-dialog-description">
-              선택한 {targets.length}개 패널에 현재 플레이리스트·테마·전환·갱신
-              주기를 초안으로 분배합니다. 각 패널의 라인·위치·해상도·카메라
-              선택은 유지합니다.
+              {ui("선택한")}
+              {ui(targets.length)}
+              {ui(
+                "개 패널에 현재 플레이리스트·테마·전환·갱신 주기를 초안으로 분배합니다. 각 패널의 라인·위치·해상도·카메라 선택은 유지합니다.",
+              )}
             </p>
             <div className="bulk-targets">
               {rows
@@ -1009,16 +1049,19 @@ export function PanelsPage({
                 .map((p) => (
                   <span key={p.id}>
                     <Monitor size={14} />
-                    {p.draft.name}
-                    <small>{p.draft.line} LINE</small>
+                    {ui(p.draft.name)}
+                    <small>{ui(p.draft.line)} LINE</small>
                   </span>
                 ))}
             </div>
             <div className="bulk-playlist">
               {draft.screens.map((s, i) => (
                 <span key={s.id}>
-                  {i + 1}. {s.title}
-                  <small>{s.duration}초</small>
+                  {ui(i + 1)}. {ui(s.title)}
+                  <small>
+                    {ui(s.duration)}
+                    {ui("초")}
+                  </small>
                 </span>
               ))}
             </div>
@@ -1042,14 +1085,14 @@ export function PanelsPage({
               }}
             >
               <Layers3 size={15} />
-              초안 분배 실행
+              {ui("초안 분배 실행")}
             </button>
           </div>
         </FieldDialog>
       )}
       {modal === "preview" && snapshot && (
         <FieldDialog
-          title="현장 화면 미리보기 · 입력 저장 안 함"
+          title={ui("현장 화면 미리보기 · 입력 저장 안 함")}
           onClose={() => setModal(null)}
           wide
         >
@@ -1068,16 +1111,16 @@ export function PanelsPage({
               }
             >
               <ArrowLeft size={15} />
-              이전 화면
+              {ui("이전 화면")}
             </button>
-            <span>{snapshot.config.screens[index]?.title}</span>
+            <span>{ui(snapshot.config.screens[index]?.title)}</span>
             <button
               className="btn"
               onClick={() =>
                 setIndex((i) => (i + 1) % snapshot.config.screens.length)
               }
             >
-              다음 화면
+              {ui("다음 화면")}
               <ArrowRight size={15} />
             </button>
           </div>
@@ -1085,7 +1128,7 @@ export function PanelsPage({
       )}
       {modal === "access" && access && (
         <FieldDialog
-          title="패널 연결 주소"
+          title={ui("패널 연결 주소")}
           onClose={() => {
             setModal(null);
             setAccess(null);
@@ -1095,21 +1138,26 @@ export function PanelsPage({
             <div className="field-access-note">
               <ShieldCheckIcon />
               <p>
-                이 주소는 선택한 패널의 게시 화면과 허용된 현장 입력에만
-                접근합니다. 30일 후 만료되며 재발급하면 이전 주소가 해제됩니다.
+                {ui(
+                  "이 주소는 선택한 패널의 게시 화면과 허용된 현장 입력에만 접근합니다. 30일 후 만료되며 재발급하면 이전 주소가 해제됩니다.",
+                )}
               </p>
             </div>
             {STATIC_DEMO && (
               <div className="info-banner small">
-                Pages 체험 설정과 연결 키는 이 브라우저에 저장됩니다. 실제 다른
-                장비 연결은 백엔드 모드에서 사용하세요.
+                {ui(
+                  "Pages 체험 설정과 연결 키는 이 브라우저에 저장됩니다. 실제 다른 장비 연결은 백엔드 모드에서 사용하세요.",
+                )}
               </div>
             )}
             <label>
-              연결 URL
+              {ui("연결 URL")}
               <input type="password" readOnly value={access.url} />
             </label>
-            <small className="muted">만료 {date(access.expires)}</small>
+            <small className="muted">
+              {ui("만료")}
+              {ui(date(access.expires))}
+            </small>
             <div className="form-row">
               <button
                 className="btn"
@@ -1123,7 +1171,7 @@ export function PanelsPage({
                 }}
               >
                 {copied ? <Check size={15} /> : <Copy size={15} />}{" "}
-                {copied ? "복사 완료" : "주소 복사"}
+                {ui(copied ? "복사 완료" : "주소 복사")}
               </button>
               <a
                 className="btn primary"
@@ -1132,7 +1180,7 @@ export function PanelsPage({
                 rel="noreferrer"
               >
                 <ExternalLink size={14} />
-                연결 화면 열기
+                {ui("연결 화면 열기")}
               </a>
             </div>
           </div>
@@ -1161,7 +1209,7 @@ function NewPanel({
       }}
     >
       <label>
-        패널 이름
+        {ui("패널 이름")}
         <input
           required
           minLength={2}
@@ -1171,7 +1219,7 @@ function NewPanel({
         />
       </label>
       <label>
-        생산 라인
+        {ui("생산 라인")}
         <select
           value={config.line}
           onChange={(e) =>
@@ -1183,7 +1231,7 @@ function NewPanel({
         </select>
       </label>
       <label>
-        설치 위치
+        {ui("설치 위치")}
         <input
           required
           minLength={2}
@@ -1193,7 +1241,7 @@ function NewPanel({
         />
       </label>
       <label>
-        패널 유형
+        {ui("패널 유형")}
         <select
           value={config.mode}
           onChange={(e) =>
@@ -1204,13 +1252,13 @@ function NewPanel({
             })
           }
         >
-          <option value="tv">TV / 전광판</option>
-          <option value="touch">현장 터치 패널</option>
+          <option value="tv">{ui("TV / 전광판")}</option>
+          <option value="touch">{ui("현장 터치 패널")}</option>
         </select>
       </label>
       <button className="btn primary" disabled={busy}>
         <Plus size={15} />
-        패널 등록
+        {ui("패널 등록")}
       </button>
     </form>
   );

@@ -1,3 +1,4 @@
+import { intlLocale } from "./i18n/locale.ts";
 import { demoApi, demoCSV } from "./demo.ts";
 import { DemoAuthError } from "./demo-auth.ts";
 export const STATIC_DEMO = import.meta.env.VITE_STATIC_DEMO === "true";
@@ -141,15 +142,15 @@ export async function download(path: string, filename: string) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-export const num = (n: number) => new Intl.NumberFormat("ko-KR").format(n);
+export const num = (n: number) => new Intl.NumberFormat(intlLocale()).format(n);
 export const time = (s: string) =>
-  new Date(s).toLocaleTimeString("ko-KR", {
+  new Date(s).toLocaleTimeString(intlLocale(), {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
   });
 export const date = (s: string) =>
-  new Date(s).toLocaleString("ko-KR", {
+  new Date(s).toLocaleString(intlLocale(), {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",

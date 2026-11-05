@@ -1,3 +1,5 @@
+import { ui } from "./i18n/locale";
+import { DeviceCameraView } from "./device-camera-view";
 import { lineLabel } from "./industry-context";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -27,7 +29,7 @@ function DemoScene({ camera }: { camera: Camera }) {
       viewBox="0 0 800 450"
       className="camera-demo-scene"
       role="img"
-      aria-label={`${camera.name} 모의 CCTV · 실제 카메라 아님`}
+      aria-label={ui(`${camera.name} 모의 CCTV · 실제 카메라 아님`)}
     >
       <defs>
         <linearGradient
@@ -107,7 +109,7 @@ function DemoScene({ camera }: { camera: Camera }) {
         fontSize="15"
         letterSpacing="4"
       >
-        SIMULATED FACTORY VIEW · {camera.line} LINE
+        SIMULATED FACTORY VIEW · {ui(camera.line)} LINE
       </text>
     </svg>
   );
@@ -115,10 +117,12 @@ function DemoScene({ camera }: { camera: Camera }) {
 function CameraTile({
   camera,
   onMaximize,
+  onUseDevice,
   interactive = true,
 }: {
   camera: Camera;
   onMaximize?: () => void;
+  onUseDevice?: () => void;
   interactive?: boolean;
 }) {
   const video = useRef<HTMLVideoElement>(null);
@@ -133,13 +137,13 @@ function CameraTile({
     setStatus(
       !camera.enabled
         ? "disabled"
-        : camera.source_type === "demo"
+        : ["demo", "device"].includes(camera.source_type)
           ? "simulated"
           : "loading",
     );
     if (
       !camera.enabled ||
-      camera.source_type === "demo" ||
+      ["demo", "device"].includes(camera.source_type) ||
       camera.source_type === "mjpeg" ||
       !element
     )
@@ -193,13 +197,15 @@ function CameraTile({
         style={{ "--camera-fit": camera.fit } as React.CSSProperties}
       >
         {camera.enabled &&
-          (camera.source_type === "demo" ? (
+          (camera.source_type === "device" ? (
+            <DeviceCameraView id={camera.id} interactive={interactive} />
+          ) : camera.source_type === "demo" ? (
             <DemoScene camera={camera} />
           ) : camera.source_type === "mjpeg" ? (
             <img
               key={retry}
               src={camera.url}
-              alt={camera.name}
+              alt={ui(camera.name)}
               onLoad={() => setStatus("playing")}
               onError={() => setStatus("error")}
             />
@@ -215,56 +221,73 @@ function CameraTile({
                 setAutoplayBlocked(false);
               }}
               onError={() => setStatus("error")}
-              aria-label={`${camera.name} 영상`}
+              aria-label={ui(`${camera.name} 영상`)}
             />
           ))}
-        {(failure || status === "loading" || autoplayBlocked) && (
-          <div className="camera-state">
-            <CameraIcon size={24} />
-            <b>
-              {status === "disabled"
-                ? "사용 중지"
-                : status === "unsupported"
-                  ? "재생 형식 미지원"
-                  : failure
-                    ? "영상 연결 실패"
-                    : autoplayBlocked
-                      ? "재생 버튼을 눌러주세요"
-                      : "영상 연결 중"}
-            </b>
-            {failure && camera.enabled && (
-              <small>재생 주소 · 네트워크 · CORS · HTTPS를 확인하세요.</small>
-            )}
-            {interactive && autoplayBlocked && (
-              <button
-                onClick={() =>
-                  video.current?.play().catch(() => setStatus("error"))
-                }
-              >
-                <Play size={14} />
-                재생
-              </button>
-            )}
-            {interactive && failure && camera.enabled && (
-              <button onClick={() => setRetry((v) => v + 1)}>
-                <RefreshCw size={13} />
-                재연결
-              </button>
-            )}
-          </div>
+        {camera.source_type !== "device" &&
+          (failure || status === "loading" || autoplayBlocked) && (
+            <div className="camera-state">
+              <CameraIcon size={24} />
+              <b>
+                {ui(
+                  status === "disabled"
+                    ? "사용 중지"
+                    : status === "unsupported"
+                      ? "재생 형식 미지원"
+                      : failure
+                        ? "영상 연결 실패"
+                        : autoplayBlocked
+                          ? "재생 버튼을 눌러주세요"
+                          : "영상 연결 중",
+                )}
+              </b>
+              {failure && camera.enabled && (
+                <small>
+                  {ui("재생 주소 · 네트워크 · CORS · HTTPS를 확인하세요.")}
+                </small>
+              )}
+              {interactive && autoplayBlocked && (
+                <button
+                  onClick={() =>
+                    video.current?.play().catch(() => setStatus("error"))
+                  }
+                >
+                  <Play size={14} />
+                  {ui("재생")}
+                </button>
+              )}
+              {interactive && failure && camera.enabled && (
+                <button onClick={() => setRetry((v) => v + 1)}>
+                  <RefreshCw size={13} />
+                  {ui("재연결")}
+                </button>
+              )}
+            </div>
+          )}
+        {interactive && failure && camera.enabled && onUseDevice && (
+          <button className="camera-device-fallback" onClick={onUseDevice}>
+            {ui("기기 카메라로 보기")}
+          </button>
         )}
         <div className="camera-osd">
           <span
             className={camera.source_type === "demo" ? "simulated" : "stream"}
           >
             <i />
-            {camera.source_type === "demo"
-              ? "모의 화면"
-              : camera.source_type.toUpperCase()}{" "}
-            {status === "playing" ? "· 재생 중" : ""}
+            {ui(
+              camera.source_type === "device"
+                ? "기기 카메라"
+                : camera.source_type === "demo"
+                  ? "모의 화면"
+                  : camera.source_type.toUpperCase(),
+            )}{" "}
+            {ui(status === "playing" ? "· 재생 중" : "")}
           </span>
           {interactive && onMaximize && (
-            <button aria-label={`${camera.name} 최대화`} onClick={onMaximize}>
+            <button
+              aria-label={ui(`${camera.name} 최대화`)}
+              onClick={onMaximize}
+            >
               <Maximize2 size={15} />
             </button>
           )}
@@ -272,10 +295,10 @@ function CameraTile({
       </div>
       <div className="camera-caption">
         <span>
-          <b>{camera.name}</b>
-          <small>{camera.location}</small>
+          <b>{ui(camera.name)}</b>
+          <small>{ui(camera.location)}</small>
         </span>
-        <span className="camera-line">{camera.line} LINE</span>
+        <span className="camera-line">{ui(camera.line)} LINE</span>
       </div>
     </article>
   );
@@ -299,6 +322,22 @@ export function CctvWidget({
   title?: string;
   onSettings?: () => void;
 }) {
+  const [deviceView, setDeviceView] = useState(false);
+  const displayed = deviceView
+    ? [
+        {
+          id: "LOCAL-" + (cameras[0]?.line || "A"),
+          name: "기기 카메라",
+          line: cameras[0]?.line || "A",
+          location: "현재 브라우저 · 로컬 영상",
+          source_type: "device",
+          url: "",
+          enabled: true,
+          fit: "contain",
+          revision: 1,
+        } as Camera,
+      ]
+    : cameras;
   const [localLayout, setLocalLayout] = useState(layout),
     [localMin, setLocalMin] = useState(minimized),
     [expanded, setExpanded] = useState(false),
@@ -356,40 +395,53 @@ export function CctvWidget({
       <header>
         <div>
           <Video size={17} />
-          <h2>{title}</h2>
-          <span>{cameras.length} CAM</span>
+          <h2>{ui(title)}</h2>
+          <span>{ui(displayed.length)} CAM</span>
         </div>
         {interactive && (
           <div className="cctv-controls">
             <button
+              aria-label={ui(
+                deviceView ? "등록된 CCTV 보기" : "기기 카메라 보기",
+              )}
+              title={ui(deviceView ? "등록된 CCTV 보기" : "기기 카메라 보기")}
+              className={deviceView ? "selected" : ""}
+              onClick={() => {
+                setDeviceView((v) => !v);
+                setFocus(null);
+              }}
+            >
+              <CameraIcon size={16} />
+            </button>
+            <button
               className={localLayout === "single" ? "selected" : ""}
-              aria-label="CCTV 단일 보기"
+              aria-label={ui("CCTV 단일 보기")}
               onClick={() => changeLayout("single")}
             >
               <Square size={15} />
             </button>
             <button
               className={localLayout === "grid" ? "selected" : ""}
-              aria-label="CCTV 멀티뷰"
+              aria-label={ui("CCTV 멀티뷰")}
               onClick={() => changeLayout("grid")}
             >
               <Grid2X2 size={16} />
             </button>
             {onSettings && !full && (
-              <button aria-label="CCTV 위젯 설정" onClick={onSettings}>
+              <button aria-label={ui("CCTV 위젯 설정")} onClick={onSettings}>
                 <Settings2 size={16} />
               </button>
             )}
             {!full && (
               <button
-                aria-label={localMin ? "CCTV 펼치기" : "CCTV 최소화"}
+                aria-label={ui(localMin ? "CCTV 펼치기" : "CCTV 최소화")}
                 onClick={() => changeMin(!localMin)}
               >
                 {localMin ? <Maximize2 size={15} /> : <Minimize2 size={15} />}
               </button>
             )}
             <button
-              aria-label={full ? "CCTV 최대화 닫기" : "CCTV 최대화"}
+              aria-label={ui(full ? "CCTV 최대화 닫기" : "CCTV 최대화")}
               onClick={() => {
                 setExpanded(!full);
                 if (full) setFocus(null);
@@ -400,23 +452,45 @@ export function CctvWidget({
           </div>
         )}
       </header>
+      {interactive &&
+        !deviceView &&
+        !localMin &&
+        !cameras.some((c) => c.enabled && c.source_type !== "demo") && (
+          <div className="cctv-device-banner">
+            <span>
+              {ui("실제 CCTV 대신 기기 카메라를 사용할 수 있습니다.")}
+            </span>
+            <button
+              onClick={() => {
+                setDeviceView(true);
+                setFocus(null);
+              }}
+            >
+              {ui("기기 카메라로 보기")}
+            </button>
+          </div>
+        )}
       {(full || !expanded) &&
         (!localMin || full) &&
-        (cameras.length ? (
+        (displayed.length ? (
           <>
             <div
-              className={`cctv-grid ${focus || localLayout === "single" ? "single-camera" : ""}`}
+              className={`cctv-grid ${focus || localLayout === "single" || displayed.length === 1 ? "single-camera" : ""}`}
             >
               {(focus
-                ? cameras.filter((c) => c.id === focus)
+                ? displayed.filter((c) => c.id === focus)
                 : localLayout === "single"
-                  ? cameras.slice(0, 1)
-                  : cameras
+                  ? displayed.slice(0, 1)
+                  : displayed
               ).map((c) => (
                 <CameraTile
                   key={c.id}
                   camera={c}
                   interactive={interactive}
+                  onUseDevice={() => {
+                    setDeviceView(true);
+                    setFocus(null);
+                  }}
                   onMaximize={() => {
                     setFocus(c.id);
                     setExpanded(true);
@@ -424,19 +498,19 @@ export function CctvWidget({
                 />
               ))}
             </div>
-            {(localLayout === "single" || focus) && cameras.length > 1 && (
+            {(localLayout === "single" || focus) && displayed.length > 1 && (
               <div className="camera-switcher">
-                {cameras.map((c) => (
+                {displayed.map((c) => (
                   <button
                     key={c.id}
                     onClick={() => {
                       setFocus(c.id);
                     }}
                     className={
-                      c.id === (focus || cameras[0].id) ? "selected" : ""
+                      c.id === (focus || displayed[0].id) ? "selected" : ""
                     }
                   >
-                    {c.name}
+                    {ui(c.name)}
                   </button>
                 ))}
               </div>
@@ -445,29 +519,31 @@ export function CctvWidget({
         ) : (
           <div className="cctv-empty">
             <EyeOff size={25} />
-            <b>표시할 카메라가 없습니다.</b>
-            <p>같은 라인의 활성 카메라를 설정하세요.</p>
+            <b>{ui("표시할 카메라가 없습니다.")}</b>
+            <p>{ui("같은 라인의 활성 카메라를 설정하세요.")}</p>
           </div>
         ))}
     </div>
   );
   return (
     <>
-      {content()}
-      {expanded &&
-        createPortal(
-          <div
-            ref={expandedRef}
-            tabIndex={-1}
-            className="cctv-expanded"
-            role="dialog"
-            aria-modal="true"
-            aria-label="CCTV 최대화 보기"
-          >
-            {content(true)}
-          </div>,
-          document.body,
-        )}
+      {ui(content())}
+      {ui(
+        expanded &&
+          createPortal(
+            <div
+              ref={expandedRef}
+              tabIndex={-1}
+              className="cctv-expanded"
+              role="dialog"
+              aria-modal="true"
+              aria-label={ui("CCTV 최대화 보기")}
+            >
+              {ui(content(true))}
+            </div>,
+            document.body,
+          ),
+      )}
     </>
   );
 }
@@ -503,13 +579,15 @@ export function DashboardCctv() {
       setError((e as Error).message);
     }
   }
-  if (!layout) return error ? <div className="form-error">{error}</div> : null;
+  if (!layout)
+    return error ? <div className="form-error">{ui(error)}</div> : null;
   return (
     <section className="dashboard-cctv">
       <div className="field-section-heading">
         <div>
           <span className="eyebrow">SHOPFLOOR VISIBILITY</span>
-          <h2>현장을 보는 또 하나의 시야</h2>
+          <h2>{ui("현장 영상 모니터링")}</h2>
+          <p>{ui("라인별 영상과 기기 카메라를 통합 조회합니다.")}</p>
         </div>
         {!layout.enabled && (
           <button
@@ -520,11 +598,11 @@ export function DashboardCctv() {
             }}
           >
             <Settings2 size={14} />
-            CCTV 위젯 켜기
+            {ui("CCTV 위젯 켜기")}
           </button>
         )}
       </div>
-      {error && <div className="form-error">{error}</div>}
+      {error && <div className="form-error">{ui(error)}</div>}
       {layout.enabled && (
         <CctvWidget
           cameras={cameras.filter(
@@ -542,7 +620,7 @@ export function DashboardCctv() {
       )}
       {editing && draft && (
         <FieldDialog
-          title="대시보드 CCTV 위젯 설정"
+          title={ui("대시보드 CCTV 위젯 설정")}
           onClose={() => setEditing(false)}
         >
           <form
@@ -560,10 +638,10 @@ export function DashboardCctv() {
                   setDraft({ ...draft, enabled: e.target.checked })
                 }
               />
-              대시보드에 CCTV 위젯 표시
+              {ui("대시보드에 CCTV 위젯 표시")}
             </label>
             <label>
-              기본 보기
+              {ui("기본 보기")}
               <select
                 value={draft.layout}
                 onChange={(e) =>
@@ -573,8 +651,8 @@ export function DashboardCctv() {
                   })
                 }
               >
-                <option value="grid">멀티뷰</option>
-                <option value="single">단일 보기</option>
+                <option value="grid">{ui("멀티뷰")}</option>
+                <option value="single">{ui("단일 보기")}</option>
               </select>
             </label>
             <CameraPicker
@@ -582,7 +660,7 @@ export function DashboardCctv() {
               selected={draft.camera_ids}
               onChange={(ids) => setDraft({ ...draft, camera_ids: ids })}
             />
-            <button className="btn primary">위젯 설정 저장</button>
+            <button className="btn primary">{ui("위젯 설정 저장")}</button>
           </form>
         </FieldDialog>
       )}
@@ -600,7 +678,7 @@ export function CameraPicker({
 }) {
   return (
     <div className="camera-picker">
-      <span>표시할 카메라 · 최대 4개</span>
+      <span>{ui("표시할 카메라 · 최대 4개")}</span>
       {cameras.length ? (
         cameras.map((c) => (
           <label className="check-row" key={c.id}>
@@ -618,15 +696,17 @@ export function CameraPicker({
             />
             <CameraIcon size={14} />
             <span>
-              {c.name}
+              {ui(c.name)}
               <small>
-                {c.line}라인 · {c.location}
+                {ui(c.line)}
+                {ui("라인 ·")}
+                {ui(c.location)}
               </small>
             </span>
           </label>
         ))
       ) : (
-        <p>이 라인에 활성 카메라가 없습니다.</p>
+        <p>{ui("이 라인에 활성 카메라가 없습니다.")}</p>
       )}
     </div>
   );
@@ -651,8 +731,8 @@ export function CamerasPage({ write }: { write: boolean }) {
       <div className="page-heading">
         <div>
           <div className="eyebrow">CCTV OPERATIONS</div>
-          <h1>라인의 모든 시야를 연결하세요.</h1>
-          <p>카메라 설정부터 멀티뷰, 대시보드와 현장 패널 위젯까지.</p>
+          <h1>{ui("라인의 모든 시야를 연결하세요.")}</h1>
+          <p>{ui("카메라 설정부터 멀티뷰, 대시보드와 현장 패널 위젯까지.")}</p>
         </div>
         <button
           className="btn primary"
@@ -660,7 +740,7 @@ export function CamerasPage({ write }: { write: boolean }) {
           onClick={() => setCreating(true)}
         >
           <Plus size={16} />
-          카메라 등록
+          {ui("카메라 등록")}
         </button>
       </div>
       <div className="field-toolbar">
@@ -675,26 +755,28 @@ export function CamerasPage({ write }: { write: boolean }) {
               className={line === id ? "selected" : ""}
               onClick={() => setLine(id)}
             >
-              {name}
+              {ui(name)}
             </button>
           ))}
         </div>
         <span className="muted small">
-          {visible.length}개 카메라 · 모의 화면은 실제 영상이 아닙니다.
+          {ui(visible.length)}
+          {ui("개 카메라 · 모의 화면은 실제 영상이 아닙니다.")}
         </span>
       </div>
-      {error && <div className="form-error">{error}</div>}
+      {error && <div className="form-error">{ui(error)}</div>}
       <CctvWidget
         cameras={visible.filter((c) => c.enabled)}
-        title={line === "all" ? "전체 라인 CCTV" : `${line}라인 CCTV`}
+        title={ui(line === "all" ? "전체 라인 CCTV" : `${line}라인 CCTV`)}
       />
       <section className="panel camera-registry">
         <div className="panel-header">
           <div>
-            <h2>카메라 연결 설정</h2>
+            <h2>{ui("카메라 연결 설정")}</h2>
             <p>
-              HLS · MP4 · MJPEG 재생 주소 지원. RTSP 카메라는 스트리밍
-              게이트웨이에서 변환합니다.
+              {ui(
+                "HLS · MP4 · MJPEG 재생 주소 지원. RTSP 카메라는 스트리밍 게이트웨이에서 변환합니다.",
+              )}
             </p>
           </div>
         </div>
@@ -702,31 +784,35 @@ export function CamerasPage({ write }: { write: boolean }) {
           <table>
             <thead>
               <tr>
-                <th>카메라</th>
-                <th>라인 / 설치 위치</th>
-                <th>소스</th>
-                <th>설정</th>
-                <th>관리</th>
+                <th>{ui("카메라")}</th>
+                <th>{ui("라인 / 설치 위치")}</th>
+                <th>{ui("소스")}</th>
+                <th>{ui("설정")}</th>
+                <th>{ui("관리")}</th>
               </tr>
             </thead>
             <tbody>
               {visible.map((c) => (
                 <tr key={c.id}>
                   <td>
-                    <b>{c.name}</b>
-                    <small className="block muted">{c.id}</small>
+                    <b>{ui(c.name)}</b>
+                    <small className="block muted">{ui(c.id)}</small>
                   </td>
                   <td>
-                    {c.line}라인 · {c.location}
+                    {ui(c.line)}
+                    {ui("라인 ·")}
+                    {ui(c.location)}
                   </td>
                   <td>
                     <span className="code-tag">
-                      {c.source_type === "demo"
-                        ? "모의 CCTV"
-                        : c.source_type.toUpperCase()}
+                      {ui(
+                        c.source_type === "demo"
+                          ? "모의 CCTV"
+                          : c.source_type.toUpperCase(),
+                      )}
                     </span>
                   </td>
-                  <td>{c.enabled ? "사용" : "중지"}</td>
+                  <td>{ui(c.enabled ? "사용" : "중지")}</td>
                   <td>
                     <button
                       className="btn small-btn"
@@ -734,7 +820,7 @@ export function CamerasPage({ write }: { write: boolean }) {
                       onClick={() => setEdit(c)}
                     >
                       <Settings2 size={13} />
-                      설정
+                      {ui("설정")}
                     </button>
                   </td>
                 </tr>
@@ -745,7 +831,7 @@ export function CamerasPage({ write }: { write: boolean }) {
       </section>
       {(edit || creating) && (
         <FieldDialog
-          title={edit ? "카메라 설정" : "카메라 등록"}
+          title={ui(edit ? "카메라 설정" : "카메라 등록")}
           onClose={() => {
             setEdit(null);
             setCreating(false);
@@ -779,9 +865,9 @@ export function CamerasPage({ write }: { write: boolean }) {
       <div className="info-banner">
         <Video size={18} />
         <p>
-          영상 연결 상태는 실제 재생 결과로 표시합니다. 브라우저가 접근할 수
-          있는 주소와 CORS 설정이 필요하며 HTTPS 페이지에서는 HTTPS 영상을
-          사용하세요.
+          {ui(
+            "영상 연결 상태는 실제 재생 결과로 표시합니다. 브라우저가 접근할 수 있는 주소와 CORS 설정이 필요하며 HTTPS 페이지에서는 HTTPS 영상을 사용하세요.",
+          )}
         </p>
       </div>
     </>
@@ -833,19 +919,19 @@ function CameraForm({
       }}
     >
       <label>
-        카메라 이름
+        {ui("카메라 이름")}
         <input
           required
           minLength={2}
           maxLength={80}
           value={config.name}
           onChange={(e) => patch({ name: e.target.value })}
-          placeholder="예: A라인 입구 카메라"
+          placeholder={ui("예: A라인 입구 카메라")}
         />
       </label>
       <div className="form-row">
         <label>
-          생산 라인
+          {ui("생산 라인")}
           <select
             value={config.line}
             onChange={(e) => patch({ line: e.target.value as "A" | "B" })}
@@ -855,34 +941,42 @@ function CameraForm({
           </select>
         </label>
         <label>
-          영상 소스
+          {ui("영상 소스")}
           <select
             value={config.source_type}
             onChange={(e) =>
-              patch({ source_type: e.target.value as Camera["source_type"] })
+              patch({
+                source_type: e.target.value as Camera["source_type"],
+                url: ["demo", "device"].includes(e.target.value)
+                  ? ""
+                  : config.url,
+              })
             }
           >
-            <option value="demo">모의 CCTV</option>
-            <option value="hls">HLS 스트림</option>
-            <option value="mp4">MP4 영상</option>
-            <option value="mjpeg">MJPEG 스트림</option>
+            <option value="demo">{ui("모의 CCTV")}</option>
+            <option value="device">
+              {ui("기기 카메라 · Mac / iPhone / 웹캠")}
+            </option>
+            <option value="hls">{ui("HLS 스트림")}</option>
+            <option value="mp4">{ui("MP4 영상")}</option>
+            <option value="mjpeg">{ui("MJPEG 스트림")}</option>
           </select>
         </label>
       </div>
       <label>
-        설치 위치
+        {ui("설치 위치")}
         <input
           required
           minLength={2}
           maxLength={80}
           value={config.location}
           onChange={(e) => patch({ location: e.target.value })}
-          placeholder="예: 생산동 A-01"
+          placeholder={ui("예: 생산동 A-01")}
         />
       </label>
-      {config.source_type !== "demo" && (
+      {!["demo", "device"].includes(config.source_type) && (
         <label>
-          HTTP(S) 재생 주소
+          {ui("HTTP(S) 재생 주소")}
           <input
             required
             type="url"
@@ -891,17 +985,24 @@ function CameraForm({
             onChange={(e) => patch({ url: e.target.value })}
             placeholder="https://stream.example.com/line-a/index.m3u8"
           />
-          <small>계정·암호가 포함된 주소는 저장할 수 없습니다.</small>
+          <small>{ui("계정·암호가 포함된 주소는 저장할 수 없습니다.")}</small>
         </label>
       )}
+      {config.source_type === "device" && (
+        <p className="field-dialog-description">
+          {ui(
+            "카메라는 화면을 여는 기기에서 선택합니다. iPad는 iPad의 브라우저에서 직접 접속하거나 시스템에 웹캠으로 등록한 경우 사용할 수 있습니다. HTTPS 또는 localhost가 필요합니다.",
+          )}
+        </p>
+      )}
       <label>
-        화면 맞춤
+        {ui("화면 맞춤")}
         <select
           value={config.fit}
           onChange={(e) => patch({ fit: e.target.value as Camera["fit"] })}
         >
-          <option value="cover">영역 채우기</option>
-          <option value="contain">전체 영상 보기</option>
+          <option value="cover">{ui("영역 채우기")}</option>
+          <option value="contain">{ui("전체 영상 보기")}</option>
         </select>
       </label>
       <label className="check-row">
@@ -910,15 +1011,15 @@ function CameraForm({
           checked={config.enabled}
           onChange={(e) => patch({ enabled: e.target.checked })}
         />
-        카메라 사용
+        {ui("카메라 사용")}
       </label>
       {error && (
         <div role="alert" className="form-error">
-          {error}
+          {ui(error)}
         </div>
       )}
       <button className="btn primary" disabled={busy}>
-        {busy ? "저장 중…" : "카메라 설정 저장"}
+        {ui(busy ? "저장 중…" : "카메라 설정 저장")}
       </button>
     </form>
   );

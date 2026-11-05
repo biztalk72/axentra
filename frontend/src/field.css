@@ -2725,3 +2725,217 @@
     animation: none;
   }
 }
+.device-camera-view {
+  position: absolute;
+  inset: 0;
+  background: #0b1624;
+  color: #e1ebf8;
+  display: grid;
+  place-items: center;
+}
+.device-camera-view > video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.device-camera-prompt {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px 40px;
+  gap: 12px;
+  text-align: center;
+  background: linear-gradient(130deg, #13273e, #0b1827);
+}
+.device-camera-prompt b {
+  font-size: 16px;
+}
+.device-camera-prompt p {
+  max-width: 420px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #b0c6e0;
+  margin: 0;
+}
+.device-camera-prompt small {
+  font-size: 10px;
+  color: #93acc8;
+  max-width: 430px;
+  line-height: 1.6;
+}
+.device-camera-prompt .btn {
+  background: #2c5bbb;
+  color: #fff;
+  border-color: #4c79d0;
+}
+.device-camera-controls {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  gap: 7px;
+  z-index: 3;
+}
+.device-camera-controls select {
+  min-width: 0;
+  flex: 1;
+  background: #0d1d32e8;
+  color: #d4e3f5;
+  border: 1px solid #48617d;
+  border-radius: 6px;
+  padding: 7px;
+  max-width: 380px;
+}
+.device-camera-controls button {
+  border: 1px solid #48617d;
+  background: #0d1d32e8;
+  color: #d4e3f5;
+  border-radius: 6px;
+  padding: 7px;
+  display: grid;
+  place-items: center;
+}
+.cctv-expanded .device-camera-prompt b {
+  font-size: 23px;
+}
+.cctv-expanded .device-camera-prompt p {
+  font-size: 15px;
+}
+.viewer-panel-picker {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0 25px;
+}
+.viewer-panel-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 17px;
+  border: 1px solid #e1e9f5;
+  background: white;
+  border-radius: 10px;
+  color: #607da7;
+  cursor: pointer;
+}
+.viewer-panel-option.selected {
+  background: #f1f6ff;
+  border-color: #95b0eb;
+}
+.viewer-panel-option span {
+  min-width: 0;
+}
+.viewer-panel-option b {
+  font-size: 12px;
+  display: block;
+}
+.viewer-panel-option small {
+  font-size: 9px;
+  color: #859cbc;
+  display: block;
+  line-height: 1.8;
+  margin-top: 5px;
+}
+.viewer-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+.viewer-panel-grid.single {
+  grid-template-columns: 1fr;
+}
+.viewer-panel-card {
+  background: white;
+  border: 1px solid #e2eaf6;
+  border-radius: 12px;
+  overflow: hidden;
+  min-width: 0;
+}
+.viewer-panel-card > header,
+.viewer-panel-card > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px;
+}
+.viewer-panel-card header > div {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: #6684ad;
+}
+.viewer-panel-card header b {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+}
+.viewer-panel-card header small {
+  display: block;
+  font-size: 9px;
+  margin-top: 6px;
+  color: #97abc7;
+}
+.viewer-panel-card .panel-viewport {
+  border-radius: 0;
+}
+.viewer-panel-card footer select {
+  min-width: 0;
+  flex: 1;
+  max-width: 60%;
+  padding: 9px;
+  border: 1px solid #e2eaf6;
+  border-radius: 7px;
+  color: #6684ad;
+  background: #f8fbff;
+}
+.panel-viewer-empty {
+  text-align: center;
+  padding: 65px;
+  color: #8aa2c1;
+}
+.panel-viewer-empty h2 {
+  font-size: 17px;
+  margin: 15px;
+}
+.panel-viewer-empty p {
+  font-size: 12px;
+}
+.field-section-heading p {
+  font-size: 11px;
+  color: #869cba;
+  line-height: 1.8;
+  margin-top: 8px;
+}
+@media (max-width: 1200px) {
+  .viewer-panel-picker {
+    grid-template-columns: 1fr 1fr;
+  }
+  .viewer-panel-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .viewer-panel-picker {
+    grid-template-columns: 1fr;
+  }
+  .viewer-panel-card > header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .viewer-panel-card footer {
+    flex-wrap: wrap;
+  }
+  .viewer-panel-card footer select {
+    max-width: 100%;
+  }
+}
+.panel-player-toolbar .language-selector select{background:#15283b;color:#d5e2f5;border-color:#34506b;font-size:11px;}.panel-player-toolbar .language-selector svg{color:#abc1dd;}
+.monitor-mode-badge{font-size:10px;color:#82d0ba;background:#173a3a;padding:3px 7px;border-radius:5px;font-weight:500;margin-left:7px;}
+.cctv-device-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;background:#edf4ff;color:#607ea6;font-size:11px;}.cctv-device-banner button{flex-shrink:0;border:1px solid #c5d7f0;background:white;border-radius:6px;padding:7px 10px;color:#3b65a2;font:inherit;}.camera-device-fallback{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:4;border:1px solid #6588b1;background:#173557;color:#e8f1ff;padding:8px 12px;border-radius:6px;font-size:11px;white-space:nowrap;}
+@media(max-width:600px){.cctv-device-banner{flex-wrap:wrap;}.device-camera-prompt{padding:20px 12px 35px;gap:9px;}.device-camera-prompt p{font-size:11px;}.device-camera-prompt small{font-size:9px;}}
+.device-camera-prompt{overflow:auto;gap:8px;padding:16px 16px 36px;}.device-camera-prompt>svg{flex-shrink:0;}

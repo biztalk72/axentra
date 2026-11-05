@@ -269,7 +269,9 @@ export async function panelDemoRequest<T>(
       validateCamera(body);
       const camera = {
         ...body,
-        url: body.source_type === "demo" ? "" : body.url.trim(),
+        url: ["demo", "device"].includes(body.source_type)
+          ? ""
+          : body.url.trim(),
         id: `CAM-${crypto.randomUUID().slice(0, 8)}`,
         revision: 1,
       };
@@ -285,7 +287,9 @@ export async function panelDemoRequest<T>(
       validateCamera(body.config);
       store.cameras[index] = {
         ...body.config,
-        url: body.config.source_type === "demo" ? "" : body.config.url.trim(),
+        url: ["demo", "device"].includes(body.config.source_type)
+          ? ""
+          : body.config.url.trim(),
         id: pid,
         revision: camera.revision + 1,
       };
