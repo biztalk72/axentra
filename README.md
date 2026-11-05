@@ -6,7 +6,7 @@
 
 Axentra는 생산·물류·데이터와 현장 실행을 공용 AI 에이전트로 연결하는 제조 운영 플랫폼입니다.
 
-[브랜드 소개](https://biztalk72.github.io/axentra/) · [제품 데모](https://biztalk72.github.io/axentra/demo.html) · [브랜드 가이드](docs/BRAND.md) · [PRD](docs/PRD.md) · [아키텍처](docs/ARCHITECTURE.md) · [API](docs/API.md) · [검증 기록](docs/VERIFICATION.md) · [가입·계정 가이드](docs/ACCOUNTS.md) · [현장 패널](docs/FIELD-PANELS.md) · [CCTV](docs/CCTV.md) · [멀티 에이전트](docs/MULTI-AGENT.md) · [라면·공용 공급망](docs/RAMEN-SUPPLY-CHAIN.md) · [거버넌스·연동](docs/INTEGRATIONS.md) · [Docker 배포](docs/DEPLOYMENT.md) · [한국어·English](docs/LANGUAGES.md)
+[브랜드 소개](https://axentra-5u6.pages.dev/) · [제품 데모](https://axentra-5u6.pages.dev/demo) · [브랜드 가이드](docs/BRAND.md) · [PRD](docs/PRD.md) · [아키텍처](docs/ARCHITECTURE.md) · [API](docs/API.md) · [검증 기록](docs/VERIFICATION.md) · [가입·계정 가이드](docs/ACCOUNTS.md) · [현장 패널](docs/FIELD-PANELS.md) · [CCTV](docs/CCTV.md) · [멀티 에이전트](docs/MULTI-AGENT.md) · [라면·공용 공급망](docs/RAMEN-SUPPLY-CHAIN.md) · [거버넌스·연동](docs/INTEGRATIONS.md) · [Docker 배포](docs/DEPLOYMENT.md) · [한국어·English](docs/LANGUAGES.md)
 
 한국어·English 소개 사이트와 콘솔, 기업형 백엔드를 함께 제공합니다. OCTOPUS의 공개된 8개 기능 영역을 참고한 독립 구현이며, UVC 제품이나 제휴 서비스가 아닙니다.
 
@@ -30,6 +30,14 @@ Axentra는 생산·물류·데이터와 현장 실행을 공용 AI 에이전트�
 - **MES / 관리**: 생산 작업지시, 최종 공정 실적, RBAC, 감사로그.
 
 실장비 드라이버, 3D/물리 엔진, 자율 도구 계획, 로봇 정책 학습, SSO와 다사업장은 후속 범위입니다. MVP의 통계 이상감지는 고장 예측 성능을 의미하지 않습니다. 실제 CCTV 주소와 LLM 서비스는 제공되지 않았으며 연결 설정이 필요합니다.
+
+## Cloudflare에서 확인
+
+- 소개: **https://axentra-5u6.pages.dev/**
+- 데모: **https://axentra-5u6.pages.dev/demo**
+- English: https://axentra-5u6.pages.dev/?lang=en
+
+로그인 없는 브랜드 소개에서 데모로 이동하며 선택한 언어를 유지합니다.
 
 ## GitHub Pages에서 확인
 

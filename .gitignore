@@ -15,3 +15,8 @@ artifacts/
 .DS_Store
 *.tsbuildinfo
 .harness-mem/
+
+# Cloudflare local deployment state and secrets
+.wrangler/
+.dev.vars
+.dev.vars.*

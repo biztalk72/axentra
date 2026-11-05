@@ -18,10 +18,12 @@ Axentra는 생산·물류·데이터와 현장의 실행을 공용 AI 에이전�
 
 ## 소개 사이트와 체험
 
-- 소개: https://biztalk72.github.io/axentra/
-- English: https://biztalk72.github.io/axentra/?lang=en
-- 데모: https://biztalk72.github.io/axentra/demo.html
+- 소개: https://axentra-5u6.pages.dev/
+- English: https://axentra-5u6.pages.dev/?lang=en
+- 데모: https://axentra-5u6.pages.dev/demo
 - 저장소: https://github.com/biztalk72/axentra
+- GitHub Pages 미러: https://biztalk72.github.io/axentra/
+- 로컬 프로젝트 폴더: `/Users/brian-work/Works/axentra`
 
 소개 사이트는 로그인 없이 플랫폼·운영 흐름·활용 영역·문서를 제공한다. Console/Agents/Panel/Connect 탭은 키보드 좌우·Home·End를 지원한다. 데모 버튼은 선택 언어를 유지한다. 기존 `#overview`, `#panel-view`, `#panel/...` 즐겨찾기는 데모 페이지로 이동한다. `/forge-ax/`의 이전 Pages 주소는 저장소 이름 변경 후 유지가 보장되지 않으므로 새 주소를 사용한다.
 

@@ -113,4 +113,6 @@ Pages 체험 테스트는 브라우저 저장소 기반 데이터 수집 → 시
 - production Docker 검증 통과: 소개·데모 HTML, 파비콘 3종, 자산 캐시와 누락 자산 404, non-root/read-only, DB readiness, 합성 스트림 중지, 관리자 로그인·로그아웃.
 - 실제 브라우저는 연결 목록이 확인되었으나 페이지 이동 API가 `Cannot read properties of undefined (reading 'timeoutMs')`로 실패해 시각·반응형 스크린샷 검수는 완료하지 못했다. 실제 카메라 하드웨어도 사용하지 않았다.
 
-Cloudflare용 최종 정적 빌드·응답 헤더·업로드 스크립트를 준비했다. 이 시점에는 Wrangler에 로그인된 계정이 없어 실제 업로드는 계정 인증 후 진행한다.
+Cloudflare Pages `axentra` production 배포가 완료됐다. 소개 https://axentra-5u6.pages.dev/ 와 데모 https://axentra-5u6.pages.dev/demo 를 제공한다. 배포 ID는 `eb42e104-bcae-470b-878a-d4a1dcd01c85`, 소스는 `abbc096`이다. curl로 소개·영문 데모의 정상 응답, 진입 JS/CSS 5개와 파비콘 3종이 최종 빌드와 일치함을 확인했다. GitHub Pages 미러도 같은 해시를 확인했다.
+
+저장소는 https://github.com/biztalk72/axentra 로 변경했고 origin을 갱신했다. 로컬 폴더는 `/Users/brian-work/Works/axentra`로 변경했으며 Python 실행 스크립트와 MQTT 마운트 경로도 갱신했다. 폴더 변경 후 Pages 빌드와 8088/8090 소개·데모·API 상태 검사를 다시 통과했다. [CI 41980856364](https://github.com/biztalk72/axentra/actions/runs/41980856364)의 API·프런트엔드·Docker·Pages 배포 단계가 모두 성공했다. 비공개 환경 파일·백업·UI-sample은 커밋에서 제외했다.
