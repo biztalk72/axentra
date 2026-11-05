@@ -77,6 +77,12 @@ export function text(value: string): string {
         text(match[Number(index) + 1]),
       );
   }
+  if (key.startsWith("Value error, "))
+    return "Invalid value: " + text(key.slice(13));
+  if (key.includes(" · ")) {
+    const localized = key.split(" · ").map(text).join(" · ");
+    if (localized !== key) return localized;
+  }
   return value;
 }
 export function ui<T>(value: T): T {

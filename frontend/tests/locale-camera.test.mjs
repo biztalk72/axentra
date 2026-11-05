@@ -19,6 +19,14 @@ test("language switching translates UI, interpolated evidence and dates without 
   const data = { id: "LOT-abc", name: "면 반제품", quantity: "0.125" };
   setLocale("en");
   assert.equal(getLocale(), "en");
+  assert.equal(
+    text("Value error, 카메라 이름과 위치를 입력하세요."),
+    "Invalid value: Enter the camera name and location.",
+  );
+  assert.equal(
+    text("수량 형식을 확인하세요. · BOM이 변경되었습니다."),
+    "Check the quantity format. · The BOM has changed.",
+  );
   assert.equal(intlLocale(), "en-US");
   assert.equal(text("제조 운영 현황"), "Manufacturing operations overview");
   assert.equal(

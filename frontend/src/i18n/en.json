@@ -1457,5 +1457,11 @@
   "활성 카메라를 중복 없이 선택하세요.": "Select unique active cameras.",
   "기기 카메라로 보기": "Use device camera",
   "실제 CCTV 대신 기기 카메라를 사용할 수 있습니다.": "Use a device camera when a CCTV feed is unavailable.",
-  "카메라 설정 필드를 확인하세요.": "Use only the supported camera settings."
+  "카메라 설정 필드를 확인하세요.": "Use only the supported camera settings.",
+  "BOM 구성품을 1~30개 입력하세요.": "Enter 1–30 BOM components.",
+  "BOM 구성품을 중복 등록할 수 없습니다.": "BOM components must be unique.",
+  "기존 LOT의 제조일·기한·공급처와 다릅니다.": "Manufacturing date, expiry or supplier differs from the existing LOT.",
+  "생산 LOT에 외부 추가 입고할 수 없습니다.": "External receipts cannot be added to a production LOT.",
+  "수량 형식을 확인하세요.": "Check the quantity format.",
+  "수량은 소수 3자리, 0~1,000,000,000 범위입니다.": "Use up to three decimal places and a quantity between 0 and 1,000,000,000."
 }
