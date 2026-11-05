@@ -1,3 +1,4 @@
+import { brandStorageKey } from "./brand.ts";
 import { intlLocale } from "./i18n/locale.ts";
 import { demoApi, demoCSV } from "./demo.ts";
 import { DemoAuthError } from "./demo-auth.ts";
@@ -49,12 +50,13 @@ export type Overview = {
   server_time: string;
   demo: boolean;
 };
-let token = sessionStorage.getItem("forge-token") || "";
+const TOKEN_KEY = brandStorageKey("axentra-token", "session");
+let token = sessionStorage.getItem(TOKEN_KEY) || "";
 export function setToken(value: string) {
   token = value;
   value
-    ? sessionStorage.setItem("forge-token", value)
-    : sessionStorage.removeItem("forge-token");
+    ? sessionStorage.setItem(TOKEN_KEY, value)
+    : sessionStorage.removeItem(TOKEN_KEY);
 }
 export async function api<T>(
   path: string,

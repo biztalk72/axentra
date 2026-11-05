@@ -44,8 +44,9 @@ test("English login persists through navigation; published panel viewer stays re
   const { createRoot } = await import("react-dom/client");
   const server = await createServer({
     configFile: false,
+    optimizeDeps: { noDiscovery: true, include: [] },
     root: process.cwd(),
-    server: { middlewareMode: true, watch: null },
+    server: { middlewareMode: true, watch: null, hmr: false, ws: false },
     appType: "custom",
     plugins: [(await import("@vitejs/plugin-react")).default()],
   });
@@ -209,7 +210,7 @@ test("English login persists through navigation; published panel viewer stays re
     });
     assert.match(document.body.textContent, /Welcome to your workspace/);
     assert.equal(document.documentElement.lang, "en");
-    assert.equal(localStorage.getItem("forge-ax-locale"), "en");
+    assert.equal(localStorage.getItem("axentra-locale"), "en");
     for (const [selector, value] of [
       ["input[type=email]", "qa@example.com"],
       ["input[type=password]", "DemoOnly!2026"],
@@ -265,7 +266,7 @@ test("English login persists through navigation; published panel viewer stays re
     const standalone = document.querySelector(".viewer-panel-card a");
     assert.equal(standalone.getAttribute("target"), null);
     assert.match(standalone.getAttribute("href"), /\?view=monitor$/);
-    sessionStorage.setItem("forge-panel-PANEL-A-TV", "expired-device-test");
+    sessionStorage.setItem("axentra-panel-PANEL-A-TV", "expired-device-test");
     await click(standalone);
     await settle();
     assert.ok(document.querySelector(".panel-standalone"));
@@ -288,7 +289,7 @@ test("English login persists through navigation; published panel viewer stays re
     assert.match(accountName.textContent, /QA Operator/);
     await click(accountName);
     assert.match(document.body.textContent, /Welcome to your workspace/);
-    assert.equal(localStorage.getItem("forge-ax-locale"), "en");
+    assert.equal(localStorage.getItem("axentra-locale"), "en");
   } finally {
     if (root) await React.act(async () => root.unmount());
     await server.close();

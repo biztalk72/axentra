@@ -30,8 +30,8 @@ INSTALL_INTEGRATIONS=true docker compose --profile integration up --build -d api
 [공식 MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)의 FastMCP stdio 서버를 별도 프로세스로 실행한다.
 
 ```bash
-# 환경에서 FORGE_API_TOKEN을 기존 로그인 세션의 bearer 값으로 안전하게 주입
-export FORGE_API_URL=http://127.0.0.1:8088
+# 환경에서 AXENTRA_API_TOKEN을 기존 로그인 세션의 bearer 값으로 안전하게 주입
+export AXENTRA_API_URL=http://127.0.0.1:8088
 cd backend
 .venv/bin/python -m app.integration_plugins.mcp_server
 ```

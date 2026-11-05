@@ -1,10 +1,14 @@
-# FORGE AX
+# Axentra
 
-**데이터에서 실행까지, 제조 전주기를 하나로 연결하는 AX 플랫폼 MVP.**
+**제조의 흐름을 연결하고, 실행을 지능화하다.**
 
-[공개 체험 사이트](https://biztalk72.github.io/forge-ax/) · [PRD](docs/PRD.md) · [아키텍처](docs/ARCHITECTURE.md) · [API](docs/API.md) · [검증 기록](docs/VERIFICATION.md) · [가입·계정 가이드](docs/ACCOUNTS.md) · [현장 패널](docs/FIELD-PANELS.md) · [CCTV](docs/CCTV.md) · [멀티 에이전트](docs/MULTI-AGENT.md) · [라면·공용 공급망](docs/RAMEN-SUPPLY-CHAIN.md) · [거버넌스·연동](docs/INTEGRATIONS.md) · [Docker 배포](docs/DEPLOYMENT.md) · [한국어·English](docs/LANGUAGES.md)
+*Connect manufacturing. Power intelligent execution.*
 
-모던 한국어 콘솔과 기업형 백엔드를 함께 제공합니다. OCTOPUS의 공개된 8개 기능 영역을 참고한 독립 구현이며, UVC 제품이나 제휴 서비스가 아닙니다.
+Axentra는 생산·물류·데이터와 현장 실행을 공용 AI 에이전트로 연결하는 제조 운영 플랫폼입니다.
+
+[브랜드 소개](https://biztalk72.github.io/axentra/) · [제품 데모](https://biztalk72.github.io/axentra/demo.html) · [브랜드 가이드](docs/BRAND.md) · [PRD](docs/PRD.md) · [아키텍처](docs/ARCHITECTURE.md) · [API](docs/API.md) · [검증 기록](docs/VERIFICATION.md) · [가입·계정 가이드](docs/ACCOUNTS.md) · [현장 패널](docs/FIELD-PANELS.md) · [CCTV](docs/CCTV.md) · [멀티 에이전트](docs/MULTI-AGENT.md) · [라면·공용 공급망](docs/RAMEN-SUPPLY-CHAIN.md) · [거버넌스·연동](docs/INTEGRATIONS.md) · [Docker 배포](docs/DEPLOYMENT.md) · [한국어·English](docs/LANGUAGES.md)
+
+한국어·English 소개 사이트와 콘솔, 기업형 백엔드를 함께 제공합니다. OCTOPUS의 공개된 8개 기능 영역을 참고한 독립 구현이며, UVC 제품이나 제휴 서비스가 아닙니다.
 
 ## 구현 범위
 
@@ -29,7 +33,11 @@
 
 ## GitHub Pages에서 확인
 
-**https://biztalk72.github.io/forge-ax/**
+- 소개: **https://biztalk72.github.io/axentra/**
+- 데모: **https://biztalk72.github.io/axentra/demo.html**
+- English: https://biztalk72.github.io/axentra/?lang=en
+
+소개 사이트의 데모 버튼은 선택한 언어를 유지해 로그인으로 이동합니다.
 
 로그인 화면의 **체험 계정 만들기**에서 직접 가입할 수 있습니다. 가입 직후 일반 사용자(체험 운영자)로 입장하며, 로그아웃 후 같은 계정으로 재로그인합니다. 관리자 이메일은 `admin@admin.com`이며 지정한 관리자 암호로 로그인합니다.
 
@@ -39,6 +47,8 @@ Pages의 계정·제조 데이터는 각 브라우저의 localStorage에 저장�
 
 ## 배포용 Docker
 
+Cloudflare 정적 소개·데모 업로드는 `./scripts/deploy-cloudflare.sh`로 실행합니다. [Cloudflare 배포 가이드](docs/CLOUDFLARE.md)를 확인하세요.
+
 ```bash
 cp .env.production.example .env.production
 # DB·관리자 암호와 실제 origin 설정 (기존 파일이 있으면 유지)
@@ -46,7 +56,7 @@ chmod 600 .env.production
 ./scripts/verify-production.sh
 ```
 
-독립 배포 콘솔은 http://127.0.0.1:8090 이며 비루트·읽기 전용 웹/API, DB 영속 볼륨, 상태 검사, 로그 순환을 적용합니다. 합성 데이터·가상 스트림은 꺼지며 현장 데이터는 별도 등록/이관합니다. [배포·업데이트·백업 가이드](docs/DEPLOYMENT.md)를 확인하세요.
+독립 배포 소개 사이트는 http://127.0.0.1:8090, 콘솔은 http://127.0.0.1:8090/demo.html 이며 비루트·읽기 전용 웹/API, DB 영속 볼륨, 상태 검사, 로그 순환을 적용합니다. 합성 데이터·가상 스트림은 꺼지며 현장 데이터는 별도 등록/이관합니다. [배포·업데이트·백업 가이드](docs/DEPLOYMENT.md)를 확인하세요.
 
 ## 기업형 MVP 체험 실행 — Docker
 
@@ -59,7 +69,8 @@ cp .env.example .env
 docker compose up --build -d
 ```
 
-- 콘솔: http://127.0.0.1:8088
+- 브랜드 소개: http://127.0.0.1:8088
+- 콘솔: http://127.0.0.1:8088/demo.html
 - API 문서: http://127.0.0.1:8088/docs
 - 상태: `docker compose ps`
 - 로그: `docker compose logs -f api`
@@ -76,7 +87,7 @@ Nginx → FastAPI → PostgreSQL로 동작하며 시작 시 Alembic migration을
 ./scripts/dev.sh
 ```
 
-콘솔 http://127.0.0.1:5173 · API http://127.0.0.1:8000/docs
+소개 http://127.0.0.1:5173 · 콘솔 http://127.0.0.1:5173/demo.html · API http://127.0.0.1:8000/docs
 
 개별 실행:
 
@@ -110,7 +121,7 @@ npm run build:pages    # 브라우저 체험 전용 빌드
 
 ```bash
 # 반드시 삭제 가능한 테스트 전용 DB 사용: 테스트 fixture가 테이블을 재생성합니다.
-TEST_DATABASE_URL=postgresql+psycopg://forge:password@localhost:5432/forge_test \
+TEST_DATABASE_URL=postgresql+psycopg://axentra:password@localhost:5432/axentra_test \
   .venv/bin/python -m pytest -q
 ```
 

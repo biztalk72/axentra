@@ -6,7 +6,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 def now():
     return datetime.now(timezone.utc).isoformat()
 
-DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///./forge.db')
+DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///./axentra.db')
 engine = create_engine(DATABASE_URL, connect_args={'check_same_thread': False} if DATABASE_URL.startswith('sqlite') else {}, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 

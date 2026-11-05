@@ -1,5 +1,5 @@
 [project]
-name = "forge-ax-api"
+name = "axentra-api"
 version = "0.1.0"
 description = "Full-cycle manufacturing AX MVP"
 requires-python = ">=3.12"

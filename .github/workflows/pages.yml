@@ -1,4 +1,4 @@
-name: Verify and deploy FORGE AX
+name: Verify and deploy Axentra
 on:
   push:
     branches: [main]
@@ -8,7 +8,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: forge-ax-${{ github.ref }}
+  group: axentra-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   api-tests:
@@ -17,12 +17,12 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: forge_test
-          POSTGRES_USER: forge
+          POSTGRES_DB: axentra_test
+          POSTGRES_USER: axentra
           POSTGRES_PASSWORD: test-only-password
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U forge -d forge_test"
+          --health-cmd "pg_isready -U axentra -d axentra_test"
           --health-interval 5s --health-timeout 3s --health-retries 12
     steps:
       - uses: actions/checkout@v4
@@ -37,12 +37,12 @@ jobs:
       - name: PostgreSQL integration tests
         working-directory: backend
         env:
-          TEST_DATABASE_URL: postgresql+psycopg://forge:test-only-password@localhost:5432/forge_test
+          TEST_DATABASE_URL: postgresql+psycopg://axentra:test-only-password@localhost:5432/axentra_test
         run: .venv/bin/python -m pytest -q
       - name: Verify migration on PostgreSQL
         working-directory: backend
         env:
-          DATABASE_URL: postgresql+psycopg://forge:test-only-password@localhost:5432/forge_test
+          DATABASE_URL: postgresql+psycopg://axentra:test-only-password@localhost:5432/axentra_test
         run: |
           .venv/bin/python -c 'from app.db import Base, engine; Base.metadata.drop_all(engine)'
           .venv/bin/alembic upgrade head

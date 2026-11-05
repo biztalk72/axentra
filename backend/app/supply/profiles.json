@@ -2,7 +2,7 @@
   {
     "id": "ramen",
     "name": "라면 제조",
-    "plant_name": "FORGE 라면 스마트팩토리",
+    "plant_name": "Axentra 라면 스마트팩토리",
     "lines": [
       {
         "id": "A",
@@ -32,7 +32,7 @@
   {
     "id": "general",
     "name": "일반 제조",
-    "plant_name": "FORGE 제조 워크스페이스",
+    "plant_name": "Axentra 제조 워크스페이스",
     "lines": [
       {
         "id": "A",

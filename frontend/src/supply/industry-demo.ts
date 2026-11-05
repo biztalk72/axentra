@@ -1,3 +1,4 @@
+import { brandStorageKey, brandPlantName } from "../brand.ts";
 import profiles from "./profiles.json" with { type: "json" };
 import assets from "./assets.json" with { type: "json" };
 import type { BrowserDemoAuth } from "../demo-auth.ts";
@@ -14,12 +15,21 @@ export type IndustryState = {
   templates: IndustryProfile[];
 };
 export const industryTemplates = profiles as IndustryProfile[];
-const KEY = "forge-ax-industry-v1";
+const KEY = brandStorageKey("axentra-industry-v1");
 export function readIndustry(): IndustryState {
   const s = localStorage.getItem(KEY);
+  const saved = s ? JSON.parse(s) : null;
+  if (saved?.config) {
+    const name = brandPlantName(saved.config.plant_name);
+    if (name !== saved.config.plant_name) {
+      saved.config.plant_name = name;
+      saved.revision += 1;
+      localStorage.setItem(KEY, JSON.stringify(saved));
+    }
+  }
   return {
-    ...(s
-      ? JSON.parse(s)
+    ...(saved
+      ? saved
       : { revision: 1, config: structuredClone(industryTemplates[0]) }),
     templates: structuredClone(industryTemplates),
   };

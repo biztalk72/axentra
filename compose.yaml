@@ -1,14 +1,14 @@
-name: forge-ax
+name: axentra
 services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: forge
-      POSTGRES_USER: forge
+      POSTGRES_DB: axentra
+      POSTGRES_USER: axentra
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Copy .env.example to .env and set a password}
     volumes: [postgres-data:/var/lib/postgresql/data]
     healthcheck:
-      test: [CMD-SHELL, pg_isready -U forge -d forge]
+      test: [CMD-SHELL, pg_isready -U axentra -d axentra]
       interval: 5s
       timeout: 3s
       retries: 15
@@ -19,7 +19,7 @@ services:
       args:
         INSTALL_INTEGRATIONS: ${INSTALL_INTEGRATIONS:-false}
     environment:
-      DATABASE_URL: postgresql+psycopg://forge:${POSTGRES_PASSWORD}@postgres:5432/forge
+      DATABASE_URL: postgresql+psycopg://axentra:${POSTGRES_PASSWORD}@postgres:5432/axentra
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@admin.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD}
       ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}

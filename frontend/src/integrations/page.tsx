@@ -55,7 +55,7 @@ export function IntegrationsPage({ admin }: { admin: boolean }) {
       );
       const a = document.createElement("a");
       a.href = url;
-      a.download = `forge-${dataset}-${result.manifest.snapshot_id}.${metadata ? "manifest.json" : "jsonl"}`;
+      a.download = `axentra-${dataset}-${result.manifest.snapshot_id}.${metadata ? "manifest.json" : "jsonl"}`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       setMessage(

@@ -15,11 +15,11 @@
 | Docker Compose 빌드 및 통합 실행 | API·웹 이미지 빌드 성공. PostgreSQL/API healthy, Nginx 8088에서 로그인·overview 응답 확인 |
 | GitHub Pages 공개 배포 | Actions 성공, 실제 배포 URL을 Chrome에서 열어 표시 확인 |
 
-공개 체험: https://biztalk72.github.io/forge-ax/
+공개 체험: https://biztalk72.github.io/axentra/
 
-CI: https://github.com/biztalk72/forge-ax/actions
+CI: https://github.com/biztalk72/axentra/actions
 
-최초 전체 파이프라인 성공: https://github.com/biztalk72/forge-ax/actions/runs/41562269261
+최초 전체 파이프라인 성공: https://github.com/biztalk72/axentra/actions/runs/41562269261
 
 로컬 Docker 콘솔: http://127.0.0.1:8088. 기존 서비스의 8080 사용을 피하도록 WEB_PORT를 구성했다.
 
@@ -56,7 +56,7 @@ Pages 체험 테스트는 브라우저 저장소 기반 데이터 수집 → 시
 
 - 추가 UI 확인: 390×844 패널 스튜디오의 문서 가로 넘침 없음, 세로형 전체 미리보기 화면 맞춤 및 생산 카드 내용 잘림 없음. Nginx→API→PostgreSQL에서 로그인·패널 목록·미리보기·초안 저장·게시·진단 생성 확인.
 
-최신 기능 릴리스: [8a0f7ec](https://github.com/biztalk72/forge-ax/commit/8a0f7ec4c07c6e950ef872e1acbc608eb8ea607e), [CI 및 Pages 배포 성공](https://github.com/biztalk72/forge-ax/actions/runs/41570072208).
+최신 기능 릴리스: [8a0f7ec](https://github.com/biztalk72/axentra/commit/8a0f7ec4c07c6e950ef872e1acbc608eb8ea607e), [CI 및 Pages 배포 성공](https://github.com/biztalk72/axentra/actions/runs/41570072208).
 공개 Pages에서 일반 체험 계정 로그인 → 멀티 에이전트 진단 → 승인 대기·관리자 전용 버튼 비활성화 → 패널 초안 저장·확대 미리보기 → 게시 원본 유지 확인. 공개 런타임 콘솔 오류 없음. 관리자 전용 작업은 로컬 실제 API 및 자동 테스트로 검증했다.
 
 ## 기능별 독립 에이전트 검증
@@ -81,7 +81,7 @@ Pages 체험 테스트는 브라우저 저장소 기반 데이터 수집 → 시
 
 - Chrome 실제 API에서 일반 제조 전환→라면 복원 후 품목 14개·위치 6개·생산 후 LOT 16개 보존. 390×844 공급망 화면의 문서 가로 너비 390px, 브라우저 console error 없음.
 
-## FORGE favicon·Docker 배포 패키지 (2026-11-03)
+## AXENTRA favicon·Docker 배포 패키지 (2026-11-03)
 
 - 네이비/코발트 적층 심볼의 SVG·16/32/48px ICO·32px PNG·180px Apple touch icon 생성. API/Pages 두 빌드에서 상대 경로 확인.
 - 독립 compose.production.yaml에서 PostgreSQL/API/web 모두 healthy. 합성 seed·스트림 비활성, 관리자 로그인/로그아웃·Nginx 프록시·favicon MIME·index no-cache·해시 자산 1년 캐시·없는 JS 404 확인.
@@ -98,3 +98,19 @@ Pages 체험 테스트는 브라우저 저장소 기반 데이터 수집 → 시
 - CameraConfig=device의 URL 제거·개인 deviceId 주입 거부, 조회자 구성 변경 403. Pages에서도 같은 입력 검증. 오디오 요청 없음, 마지막 뷰 종료·페이지 이탈·늦은 권한 완료·장치 해제에서 스트림 정리 검사.
 - SQLite 전체 54개 통과·PostgreSQL 전용 4개 생략, PostgreSQL 전체 58개 통과(선택형 SDK 포함). API·Pages 두 TypeScript/Vite 빌드 통과.
 - 이번 변경의 실제 브라우저 레이아웃·Mac/iPhone/iPad 카메라 하드웨어 검증은 자동 제어 환경 연결 오류로 완료하지 못했다. DOM 테스트는 실제 카메라를 열지 않으며, 기기 조합별 연속성 입력 노출과 권한 승인은 해당 브라우저에서 확인해야 한다.
+
+## Axentra 브랜드·소개 사이트 (2026-11-05)
+
+브랜드를 Axentra로 통일했다. 문구는 ‘제조의 흐름을 연결하고, 실행을 지능화하다.’ / ‘Connect manufacturing. Power intelligent execution.’이다. 로그인·콘솔·현장 패널·API·내려받기·파비콘·문서·패키지·Compose·새 이벤트 namespace에 적용했다.
+
+소개 사이트는 `/`, 데모는 `/demo.html`로 분리한 Vite 멀티 페이지 빌드다. 소개는 한국어·English, Console/Agents/Panel/Connect 탭, 운영 흐름·라면 시나리오·리소스·FAQ와 언어를 유지하는 데모 링크를 제공한다. 외부 폰트나 가짜 고객 실적을 포함하지 않는다. 기존 대시보드 hash 즐겨찾기는 데모로 이동한다.
+
+- 프런트엔드: 업무·카메라·브랜드 이관 테스트 24개와 React/소개 DOM 테스트 2개 통과. 소개 탭 키보드 조작, 언어 유지, 모든 데모 링크의 경로·언어·hash를 검증했다.
+- API: SQLite 55개 통과·PostgreSQL 전용 4개 건너뜀. 격리된 PostgreSQL `axentra_test`에서 선택형 SDK 포함 59개 전부 통과했다.
+- API 연결·Pages 최종 빌드 통과. 소개 페이지는 대시보드 React/HLS 번들을 로드하지 않는 별도 진입점이다.
+- Docker 체험·배포 환경을 `axentra` / `axentra-production`으로 이관했다. 기존 API를 중지하고 비공개 백업을 만든 뒤 새 DB에 복구했으며 계정·설비·리소스·감사로그 수가 일치함을 확인했다. 원본 볼륨과 덤프를 유지했다. 로컬 SQLite도 원본을 보존한 채 이관했다.
+- `002_axentra_brand`는 수정되지 않은 기본 사업장명만 변경한다. 사용자 지정 이름과 제조 기록은 보존한다. 브라우저 키 이관은 기존 계정을 유지하고 로그아웃한 구 세션이 되살아나지 않는지 확인했다.
+- production Docker 검증 통과: 소개·데모 HTML, 파비콘 3종, 자산 캐시와 누락 자산 404, non-root/read-only, DB readiness, 합성 스트림 중지, 관리자 로그인·로그아웃.
+- 실제 브라우저는 연결 목록이 확인되었으나 페이지 이동 API가 `Cannot read properties of undefined (reading 'timeoutMs')`로 실패해 시각·반응형 스크린샷 검수는 완료하지 못했다. 실제 카메라 하드웨어도 사용하지 않았다.
+
+Cloudflare용 최종 정적 빌드·응답 헤더·업로드 스크립트를 준비했다. 이 시점에는 Wrangler에 로그인된 계정이 없어 실제 업로드는 계정 인증 후 진행한다.

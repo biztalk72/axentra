@@ -28,7 +28,7 @@ class TransportConfig(Input):
     plugin:Literal['mqtt','kafka']='mqtt'
     enabled:bool=False
     endpoint:str=Field(default='mqtts://localhost:8883',min_length=3,max_length=200)
-    topic:str=Field(default='forge.factory.events.v1',pattern=r'^[a-zA-Z0-9/_.-]{1,120}$')
+    topic:str=Field(default='axentra.factory.events.v1',pattern=r'^[a-zA-Z0-9/_.-]{1,120}$')
     tls:bool=True
     username_env:str=Field(default='',max_length=100)
     password_env:str=Field(default='',max_length=100)
@@ -59,7 +59,7 @@ def initialize_integrations():
             db.add(Resource(id='INTEGRATION-CONFIG',category='integration_config',name='외부 이벤트 전송 플러그인',status='disabled',data=config(db)));db.commit()
 
 def enqueue(db,event_type,subject,payload):
-    event={'specversion':'1.0','id':identifier('EVT'),'type':'forge.'+event_type+'.v1','source':'urn:forge:plant:default','subject':subject,'time':now(),'datacontenttype':'application/json','dataschema':'urn:forge:schema:'+event_type+':1','industry':industry(db)['config']['id'],'governance':{'classification':'internal','owner':'manufacturing-operations','schema_version':1,'quality_status':'validated'},'data':copy.deepcopy(payload)}
+    event={'specversion':'1.0','id':identifier('EVT'),'type':'axentra.'+event_type+'.v1','source':'urn:axentra:plant:default','subject':subject,'time':now(),'datacontenttype':'application/json','dataschema':'urn:axentra:schema:'+event_type+':1','industry':industry(db)['config']['id'],'governance':{'classification':'internal','owner':'manufacturing-operations','schema_version':1,'quality_status':'validated'},'data':copy.deepcopy(payload)}
     db.add(Resource(id=event['id'],category='integration_event',name=event_type,status='pending',data={'event':event,'attempts':0,'last_error':None,'receipt':None}))
     return event
 

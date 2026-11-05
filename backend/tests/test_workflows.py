@@ -118,7 +118,7 @@ def test_config_and_exports_persist(client,auth):
     assert any(x['id']==c['id'] for x in client.get('/api/resources/connector',headers=h).json())
     assert client.get('/api/telemetry/export',headers=h).text.startswith('id,asset_id,temperature')
     assert client.get('/metrics',headers=auth('viewer')).status_code==403
-    assert 'forge_http_requests_total' in client.get('/metrics',headers=h).text
+    assert 'axentra_http_requests_total' in client.get('/metrics',headers=h).text
 
 def test_expired_session_rejected(client,auth):
     from sqlalchemy import select

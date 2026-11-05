@@ -1,3 +1,5 @@
+import { BRAND_TAGLINE } from "./brand.ts";
+import { BrandMark } from "./brand-mark";
 import { ui } from "./i18n/locale";
 import { LanguageSelector, useLocale } from "./i18n/react";
 import { syncDocumentLocale } from "./i18n/locale";
@@ -397,7 +399,7 @@ function FactoryMap({
         viewBox="0 0 680 420"
         role="img"
         aria-label={ui(
-          "FORGE 라면 스마트팩토리 8개 설비 배치도. 설비를 선택하면 상태가 표시됩니다.",
+          "Axentra 라면 스마트팩토리 8개 설비 배치도. 설비를 선택하면 상태가 표시됩니다.",
         )}
       >
         <defs>
@@ -692,26 +694,24 @@ function Login({
       <div className="login-story">
         <div className="brand">
           <span className="brand-mark">
-            <Layers3 size={24} />
+            <BrandMark size={24} />
           </span>
-          <b>
-            FORGE<span>AX</span>
-          </b>
+          <b>Axentra</b>
         </div>
         <div className="login-copy">
-          <span className="eyebrow">THE CONNECTED FACTORY</span>
+          <span className="eyebrow">CONNECTED MANUFACTURING OPERATIONS</span>
           <h1>
-            {ui("데이터에서 실행까지.")}
+            {ui("제조의 흐름을 연결하고,")}
             <br />
-            {ui("제조의 다음을 연결하다.")}
+            {ui("실행을 지능화하다.")}
           </h1>
           <p>
-            {ui("현장과 디지털, 인사이트와 실행.")}
+            {ui("생산·물류·데이터를 하나의 운영 흐름으로.")}
             <br />
-            {ui("제조 전주기를 하나로 연결하는 AX 운영 플랫폼.")}
+            {ui("공용 AI 에이전트가 현장의 판단과 실행을 연결합니다.")}
           </p>
           <div className="login-flow">
-            CONNECT <ArrowRight size={16} /> SIMULATE <ArrowRight size={16} />{" "}
+            CONNECT <ArrowRight size={16} /> UNDERSTAND <ArrowRight size={16} />{" "}
             ACT
           </div>
         </div>
@@ -722,10 +722,13 @@ function Login({
           <Factory size={80} />
         </div>
         <span className="login-footer">
-          FORGE AX · Manufacturing intelligence, connected.
+          Axentra · Connect manufacturing. Power intelligent execution.
         </span>
       </div>
       <div className="login-form">
+        <a className="login-home" href="./">
+          {ui("Axentra 소개")}&nbsp;↗
+        </a>
         <LanguageSelector />
         <span className="subtle-label">
           {mode === "register"
@@ -735,7 +738,7 @@ function Login({
         <h2>
           {ui(
             mode === "register"
-              ? "제조 AX, 직접 체험해 보세요."
+              ? "Axentra를 직접 체험해 보세요."
               : "워크스페이스에 오신 것을 환영합니다.",
           )}
         </h2>
@@ -1026,7 +1029,7 @@ function App() {
     return (
       <div className="boot">
         <span className="brand-mark">
-          <Layers3 />
+          <BrandMark />
         </span>
         <p>{ui("워크스페이스 연결 중…")}</p>
       </div>
@@ -1040,7 +1043,7 @@ function App() {
             go("overview");
             toast(
               registered
-                ? "체험 계정이 생성되었습니다. 제조 AX 체험을 시작하세요."
+                ? "체험 계정이 생성되었습니다. Axentra 체험을 시작하세요."
                 : `${next.name}님, 환영합니다.`,
             );
           }}
@@ -1056,13 +1059,11 @@ function App() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <a className="brand" href="#overview" aria-label={ui("FORGE AX 홈")}>
+        <a className="brand" href="#overview" aria-label={ui("Axentra 홈")}>
           <span className="brand-mark">
-            <Layers3 size={23} />
+            <BrandMark size={23} />
           </span>
-          <b>
-            FORGE<span>AX</span>
-          </b>
+          <b>Axentra</b>
         </a>
         <div className="workspace-label">
           <span className="workspace-icon">
@@ -1355,11 +1356,11 @@ function App() {
               )}
               <footer className="main-footer">
                 <span>
-                  FORGE AX <i />
+                  Axentra <i />
                   {ui(
                     STATIC_DEMO
                       ? "공개 데모 · 실제 서버·설비와 연결되지 않습니다."
-                      : "제조의 모든 연결, 더 나은 실행.",
+                      : BRAND_TAGLINE,
                   )}
                 </span>
                 <span>{ui("데이터 → 가상화 → 판단 → 실행")}</span>
@@ -1384,7 +1385,7 @@ function App() {
               ? "새 커넥터 구성"
               : modal === "order"
                 ? "새 생산 작업지시"
-                : "FORGE AX 사용 안내",
+                : "Axentra 사용 안내",
           )}
           onClose={() => setModal(null)}
         >
@@ -2037,7 +2038,7 @@ function DataPage({
         action={
           <button
             className="btn"
-            onClick={() => file("/telemetry/export", "forge-telemetry.csv")}
+            onClick={() => file("/telemetry/export", "axentra-telemetry.csv")}
           >
             <ArrowDownToLine size={16} />
             {ui("CSV 내보내기")}

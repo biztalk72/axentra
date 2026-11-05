@@ -1,3 +1,4 @@
+import { brandStorageKey } from "./brand.ts";
 import { DemoAuthError } from "./demo-auth.ts";
 import { integrationDemo } from "./integrations/demo.ts";
 import { widgetDemo } from "./agent-widget-demo.ts";
@@ -30,7 +31,7 @@ type State = {
   total: number;
   lastTick: number;
 };
-const KEY = "forge-ax-public-demo-v1";
+const KEY = brandStorageKey("axentra-public-demo-v1");
 const stamp = () => new Date().toISOString();
 const id = (p: string) =>
   `${p}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;

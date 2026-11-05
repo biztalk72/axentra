@@ -32,9 +32,9 @@ from .supply.api import router as supply_router, initialize_supply
 from .agent_registry import router as module_router, initialize_agent_registry
 from .services import resource_dict, asset_dict, add_resource, get_resource, identifier, audit, ingest, calculate_simulation
 
-logger=logging.getLogger('forge')
-requests_total=Counter('forge_http_requests_total','HTTP requests',['method','status'])
-latency=Histogram('forge_http_request_seconds','HTTP request latency')
+logger=logging.getLogger('axentra')
+requests_total=Counter('axentra_http_requests_total','HTTP requests',['method','status'])
+latency=Histogram('axentra_http_request_seconds','HTTP request latency')
 
 async def demo_stream():
     while True:
@@ -69,7 +69,7 @@ async def lifespan(app):
         with contextlib.suppress(asyncio.CancelledError):
             await task
 
-app=FastAPI(title='FORGE AX API',description='전주기 제조 AX 플랫폼 · MVP',version='0.1.0',lifespan=lifespan)
+app=FastAPI(title='Axentra API',description='제조의 흐름을 연결하고, 실행을 지능화하다. · Connected manufacturing operations · MVP',version='0.1.0',lifespan=lifespan)
 app.include_router(field_router)
 app.include_router(agent_router)
 app.include_router(module_router)
@@ -120,7 +120,7 @@ def issue_session(db, user):
 def register(body: RegisterInput, db: Session=Depends(get_db)):
     if not registration_enabled():
         raise HTTPException(403, '이 워크스페이스는 직접 가입을 허용하지 않습니다.')
-    if body.email in {os.getenv('ADMIN_EMAIL', 'admin@admin.com').strip().lower(), 'admin@admin.com', 'admin@forge.local'}:
+    if body.email in {os.getenv('ADMIN_EMAIL', 'admin@admin.com').strip().lower(), 'admin@admin.com', 'admin@axentra.local', 'admin@forge.local'}:
         raise HTTPException(409, '관리자 전용 이메일입니다. 다른 이메일을 사용하세요.')
     if db.scalar(select(User).where(User.email == body.email)):
         raise HTTPException(409, '이미 가입된 이메일입니다. 로그인해 주세요.')
@@ -216,7 +216,7 @@ def telemetry_list(asset_id: str|None=None,limit: int=Query(100,ge=1,le=1000),us
 def telemetry_export(user: User=Depends(current_user), db: Session=Depends(get_db)):
     rows=db.scalars(select(Telemetry).order_by(Telemetry.id.desc()).limit(10000)).all()
     body='id,asset_id,temperature,vibration,good,rejected,timestamp\n'+'\n'.join(f'{r.id},{r.asset_id},{r.temperature},{r.vibration},{r.good},{r.rejected},{r.timestamp}' for r in rows)
-    return Response(body,media_type='text/csv',headers={'Content-Disposition':'attachment; filename="forge-telemetry.csv"'})
+    return Response(body,media_type='text/csv',headers={'Content-Disposition':'attachment; filename="axentra-telemetry.csv"'})
 
 @app.post('/api/demo/tick')
 def tick(user: User=Depends(roles('operator','admin')),db: Session=Depends(get_db)):

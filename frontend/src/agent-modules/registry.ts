@@ -1,7 +1,8 @@
+import { brandStorageKey } from "../brand.ts";
 import { readIndustry } from "../supply/industry-demo.ts";
 import catalog from "./catalog.json" with { type: "json" };
 import type { AgentModule, AgentModuleConfig } from "./contracts.ts";
-const KEY = "forge-ax-agent-modules-v1";
+const KEY = brandStorageKey("axentra-agent-modules-v1");
 export const builtinModules = catalog.map((m) => ({
   ...m,
   builtin: true,

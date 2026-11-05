@@ -21,6 +21,11 @@ assert health['status'] == 'ok' and health['demo'] is False and health['stream']
 with urllib.request.urlopen(origin, timeout=10) as r:
     html = r.read().decode()
     assert 'no-cache' in r.headers['Cache-Control']
+    assert 'Axentra' in html and 'data-demo' in html
+with urllib.request.urlopen(origin + '/demo.html', timeout=10) as r:
+    demo = r.read().decode()
+    assert 'Axentra' in demo and 'id="root"' in demo
+    assert 'no-cache' in r.headers['Cache-Control']
 for name, mime in [('favicon.svg', 'image/svg+xml'), ('favicon.ico', 'image/x-icon'), ('apple-touch-icon.png', 'image/png')]:
     with urllib.request.urlopen(origin + '/' + name, timeout=10) as r:
         assert r.status == 200 and mime in r.headers['Content-Type'], name

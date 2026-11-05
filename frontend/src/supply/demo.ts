@@ -1,9 +1,10 @@
+import { brandStorageKey } from "../brand.ts";
 import { eventEnvelope } from "../integrations/demo.ts";
 import seed from "./seed.json" with { type: "json" };
 import { transact, productionPlan, lotTrace } from "./engine.ts";
 import type { SupplyState } from "./types.ts";
 import type { BrowserDemoAuth } from "../demo-auth.ts";
-const KEY = "forge-ax-supply-v1";
+const KEY = brandStorageKey("axentra-supply-v1");
 export function emptySupply(): SupplyState {
   return {
     version: 1,

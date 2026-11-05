@@ -1,3 +1,5 @@
+import { brandStorageKey } from "./brand.ts";
+import { BrandMark } from "./brand-mark";
 import { LanguageSelector } from "./i18n/react";
 import { ui } from "./i18n/locale";
 import { intlLocale } from "./i18n/locale";
@@ -641,10 +643,10 @@ export function FloorBoard({
       <header className="floor-header">
         <div className="floor-brand">
           <span>
-            <Factory size={34} />
+            <BrandMark size={34} />
           </span>
           <b>
-            FORGE <em>FLOOR</em>
+            Axentra <em>Panel</em>
           </b>
         </div>
         <div>
@@ -751,7 +753,10 @@ export function PanelPlayer({
   active.current = index;
   const [deviceKey] = useState(() => {
     if (initialKey) {
-      sessionStorage.setItem(`forge-panel-${id}`, initialKey);
+      sessionStorage.setItem(
+        brandStorageKey(`axentra-panel-${id}`, "session"),
+        initialKey,
+      );
       history.replaceState(
         null,
         "",
@@ -761,7 +766,9 @@ export function PanelPlayer({
     }
     return readOnly
       ? undefined
-      : sessionStorage.getItem(`forge-panel-${id}`) || undefined;
+      : sessionStorage.getItem(
+          brandStorageKey(`axentra-panel-${id}`, "session"),
+        ) || undefined;
   });
   useEffect(() => {
     let alive = true,

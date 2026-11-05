@@ -40,7 +40,7 @@ def test_signup_auto_login_then_logout_and_relogin(client,auth):
 def test_email_duplicates_and_reserved_addresses(client):
     assert client.post('/api/auth/register',json=registration()).status_code==201
     assert client.post('/api/auth/register',json=registration(email=' TRIAL@Example.Com ')).status_code==409
-    for email in ['admin@admin.com','ADMIN@ADMIN.COM','admin@forge.local']:
+    for email in ['admin@admin.com','ADMIN@ADMIN.COM','admin@axentra.local','admin@forge.local']:
         assert client.post('/api/auth/register',json=registration(email=email)).status_code==409
 
 def test_registration_validates_without_echoing_password(client):
@@ -61,14 +61,14 @@ def test_registration_can_be_disabled(client,monkeypatch):
 def test_admin_reconfiguration_preserves_factory_and_revokes_old_sessions(client,auth):
     h=auth()
     with SessionLocal() as db:
-        admin=db.get(User,'admin');admin.email='admin@forge.local';admin.password_hash='invalid-old-hash'
+        admin=db.get(User,'admin');admin.email='admin@axentra.local';admin.password_hash='invalid-old-hash'
         db.commit()
     initialize()
     assert client.get('/api/auth/me',headers=h).status_code==401
     fresh=auth()
     assert client.get('/api/auth/me',headers=fresh).json()['email']=='admin@admin.com'
     assert len(client.get('/api/assets',headers=fresh).json())==8
-    assert any(u['email']=='operator@forge.local' for u in client.get('/api/users',headers=fresh).json())
+    assert any(u['email']=='operator@axentra.local' for u in client.get('/api/users',headers=fresh).json())
     initialize()
     assert client.get('/api/auth/me',headers=fresh).status_code==200
 

@@ -1,9 +1,13 @@
+import { brandStorageKey } from "./brand.ts";
 import type { User } from "./api.ts";
 import { ADMIN_EMAIL, normalizeEmail, validateRegistration } from "./auth.ts";
 import type { Registration } from "./auth.ts";
 import { DEMO_ADMIN } from "./demo-admin.ts";
-export const ACCOUNT_KEY = "forge-ax-demo-accounts-v2";
-export const SESSION_KEY = "forge-ax-demo-session-v2";
+export const ACCOUNT_KEY = brandStorageKey("axentra-demo-accounts-v2");
+export const SESSION_KEY = brandStorageKey(
+  "axentra-demo-session-v2",
+  "session",
+);
 export type DemoAccount = User & { id: string; password_hash: string };
 type Session = {
   accountId: string;
@@ -131,7 +135,12 @@ export class BrowserDemoAuth {
   async register(input: Registration) {
     const body = validateRegistration(input);
     if (
-      [ADMIN_EMAIL, this.admin.email, "admin@forge.local"].includes(body.email)
+      [
+        ADMIN_EMAIL,
+        this.admin.email,
+        "admin@axentra.local",
+        "admin@forge.local",
+      ].includes(body.email)
     )
       throw new DemoAuthError(
         409,

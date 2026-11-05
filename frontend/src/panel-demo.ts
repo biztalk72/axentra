@@ -1,3 +1,4 @@
+import { brandStorageKey } from "./brand.ts";
 import { BrowserDemoAuth, DemoAuthError } from "./demo-auth.ts";
 import {
   makeConfig,
@@ -20,7 +21,7 @@ type Store = {
   cameras: Camera[];
   layouts: Record<string, CctvLayout>;
 };
-const KEY = "forge-ax-field-panels-v1";
+const KEY = brandStorageKey("axentra-field-panels-v1");
 const now = () => new Date().toISOString();
 function seed(): Store {
   const cameras: Camera[] = (["A", "B"] as const).flatMap((line) =>

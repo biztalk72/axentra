@@ -3591,3 +3591,19 @@ html[lang="en"] .floor-agent-grid .agent-widget-card header > span {
     max-width: 76px;
   }
 }
+
+.login-home {
+  position: absolute;
+  left: 30px;
+  top: 28px;
+  color: #536481;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.login-home:hover {
+  color: #245bdb;
+}
+.login-form {
+  position: relative;
+}

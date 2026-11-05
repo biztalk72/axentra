@@ -41,7 +41,7 @@ const signup = (overrides = {}) => ({
 });
 
 test("anonymous visitors must log in and legacy auto-admin sessions are ignored", async () => {
-  sessionStorage.setItem("forge-token", "public-browser-demo");
+  sessionStorage.setItem("axentra-token", "public-browser-demo");
   await assert.rejects(request("/auth/me"), (error) => error.status === 401);
   await assert.rejects(request("/overview"), (error) => error.status === 401);
   assert.throws(

@@ -1,7 +1,8 @@
+import { brandStorageKey } from "../brand.ts";
 import english from "./en.json" with { type: "json" };
 import patterns from "./patterns.json" with { type: "json" };
 export type Locale = "ko" | "en";
-const KEY = "forge-ax-locale";
+const KEY = brandStorageKey("axentra-locale");
 const listeners = new Set<() => void>();
 const valid = (value: unknown): value is Locale =>
   value === "ko" || value === "en";
@@ -33,8 +34,8 @@ export function syncDocumentLocale() {
     document.documentElement.lang = locale;
     document.title =
       locale === "en"
-        ? "FORGE AX · Manufacturing Operations"
-        : "FORGE AX · 제조 운영 플랫폼";
+        ? "Axentra · Manufacturing Operations"
+        : "Axentra · 제조 운영 플랫폼";
   }
 }
 export function setLocale(next: Locale) {

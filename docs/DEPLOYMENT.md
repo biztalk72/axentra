@@ -1,6 +1,6 @@
 # Docker 배포
 
-독립 배포 구성은 `compose.production.yaml`이다. 기존 라면 체험용 `compose.yaml`과 별도 프로젝트·DB 볼륨으로 실행한다. 기본 접속은 http://127.0.0.1:8090 이며 기존 체험 콘솔 8088과 함께 사용할 수 있다.
+독립 배포 구성은 `compose.production.yaml`이다. 기존 라면 체험용 `compose.yaml`과 별도 프로젝트·DB 볼륨으로 실행한다. 기본 소개 사이트는 http://127.0.0.1:8090, 콘솔은 http://127.0.0.1:8090/demo.html 이며 기존 체험 콘솔 8088과 함께 사용할 수 있다.
 
 ## 준비와 실행
 
@@ -32,7 +32,7 @@ docker compose --env-file .env.production -f compose.production.yaml logs -f api
 
 | 항목 | 체험 compose.yaml | 배포 compose.production.yaml |
 |---|---|---|
-| 프로젝트 / 기본 포트 | forge-ax / 8088 | forge-ax-production / 8090 |
+| 프로젝트 / 기본 포트 | axentra / 8088 | axentra-production / 8090 |
 | 제조 데이터 | 라면 합성 seed·가상 스트림 | DEMO_MODE/DEMO_STREAM=false 고정 |
 | 신규 DB | 데모 공정·재고 생성 | 관리자·공통 구성만 생성, 현장 데이터 별도 등록/이관 |
 | 가입 | 기본 허용 | 기본 비허용, ALLOW_REGISTRATION=true로 운영자 직접 가입 허용 |
@@ -63,13 +63,26 @@ docker compose --env-file .env.production -f compose.production.yaml down
 mkdir -p backups
 umask 077
 docker compose --env-file .env.production -f compose.production.yaml exec -T postgres \
-  pg_dump -U forge -d forge -Fc > backups/forge.dump
+  pg_dump -U axentra -d axentra -Fc > backups/axentra.dump
 ```
 
 복구는 별도의 검증 DB에서 pg_restore로 먼저 확인한 뒤 해당 운영 환경의 절차에 따라 진행한다. 이 구성은 단일 호스트 배포 패키지이며 HA·자동 백업·외부 TLS·현장 데이터 이관은 배포 환경에서 구성한다.
 
-## FORGE favicon
+## Axentra favicon
 
-`frontend/public/favicon.svg`는 네이비 바탕과 코발트 적층 심볼의 원본이다. 16/32/48px ICO, 32px PNG, 180px Apple touch icon을 함께 제공한다. index.html의 상대 배포 경로는 Vite가 처리해 Docker의 루트 경로와 GitHub Pages의 /forge-ax/ 경로 모두에서 로드한다.
+`frontend/public/favicon.svg`는 네이비·코발트 바탕과 연결 노드로 구성한 A 심볼의 원본이다. 16/32/48px ICO, 32px PNG, 180px Apple touch icon을 함께 제공한다. index.html의 상대 배포 경로는 Vite가 처리해 Docker의 루트 경로와 GitHub Pages의 /axentra/ 경로 모두에서 로드한다.
 
 참조: [Docker Compose](https://docs.docker.com/compose/), [NGINX Docker 배포](https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-docker/).
+
+## Axentra 이름 변경과 기존 데이터
+
+Compose 프로젝트·DB·사용자는 `axentra` / `axentra-production` 및 `axentra`로 변경했다. 기존 `forge-ax` 배포에 새 Compose를 바로 실행하면 새 볼륨이 생성되므로, 아래 순서로 이관한다. 기존 볼륨을 삭제하지 않는다.
+
+1. 기존 API·웹을 중지해 기록 변경을 멈춘다.
+2. 기존 PostgreSQL 컨테이너에서 `pg_dump -U forge -d forge -Fc`를 비공개 `backups/` 파일로 저장한다.
+3. 기존 프로젝트를 일반 `down`으로 중지한다. `--volumes`를 사용하지 않는다.
+4. 새 Compose의 `postgres`만 시작하고, `pg_restore -U axentra -d axentra --no-owner --no-acl`로 덤프를 복구한다.
+5. 새 API·웹을 시작한다. Alembic `002_axentra_brand`가 수정되지 않은 기본 사업장 이름만 변경한다. 사용자 지정 사업장명·제조 기록·계정·감사 이력은 보존한다.
+6. 로그인, 레코드 수, 패널 구성과 상태 검사를 확인한다. 두 배포 환경은 각각 별도 덤프와 볼륨을 사용한다.
+
+로컬 SQLite는 개발 서버를 멈춘 뒤 Python `sqlite3.Connection.backup`으로 `backend/forge.db`를 `backend/axentra.db`에 백업·이관하고 Alembic을 실행한다. 초기 `create_all` 방식으로 생성된 DB는 기존 스키마가 `001_initial`과 일치하는지 검증한 후 해당 리비전을 stamp하고 upgrade한다. `.env`에 DATABASE_URL을 명시했다면 해당 경로도 점검한다. 브라우저 저장 키는 [브랜드 가이드](BRAND.md)에 따라 최초 사용 시 이관한다.

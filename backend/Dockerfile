@@ -8,7 +8,7 @@ RUN if [ "$INSTALL_INTEGRATIONS" = "true" ]; then uv sync --frozen --no-dev --ex
 COPY app ./app
 COPY migrations ./migrations
 COPY alembic.ini ./
-RUN useradd --uid 10001 --create-home forge && chown -R forge:forge /app
-USER forge
+RUN useradd --uid 10001 --create-home axentra && chown -R axentra:axentra /app
+USER axentra
 EXPOSE 8000
 CMD ["sh", "-c", ".venv/bin/alembic upgrade head && exec .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000"]

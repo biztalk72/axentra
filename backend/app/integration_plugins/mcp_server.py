@@ -1,4 +1,4 @@
-"""Optional read-only MCP stdio bridge to the authenticated FORGE API."""
+"""Optional read-only MCP stdio bridge to the authenticated AXENTRA API."""
 import json
 import os
 import re
@@ -7,11 +7,11 @@ from urllib.parse import quote,urlsplit
 
 def create_server():
     from mcp.server.fastmcp import FastMCP
-    server=FastMCP('FORGE manufacturing data products')
+    server=FastMCP('Axentra manufacturing data products')
     def read(path):
-        root=os.getenv('FORGE_API_URL','http://127.0.0.1:8088').rstrip('/');parsed=urlsplit(root)
-        if parsed.scheme not in ('http','https') or not parsed.hostname or parsed.username or parsed.password:raise ValueError('FORGE_API_URL must be an HTTP(S) API origin')
-        token=os.environ['FORGE_API_TOKEN']
+        root=os.getenv('AXENTRA_API_URL','http://127.0.0.1:8088').rstrip('/');parsed=urlsplit(root)
+        if parsed.scheme not in ('http','https') or not parsed.hostname or parsed.username or parsed.password:raise ValueError('AXENTRA_API_URL must be an HTTP(S) API origin')
+        token=os.environ['AXENTRA_API_TOKEN']
         request=urllib.request.Request(root+'/api'+path,headers={'Authorization':'Bearer '+token})
         with urllib.request.urlopen(request,timeout=10) as response:return json.loads(response.read())
     @server.tool()

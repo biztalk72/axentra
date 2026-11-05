@@ -1,3 +1,4 @@
+import { brandStorageKey } from "./brand.ts";
 import ramenAssetCatalog from "./supply/assets.json" with { type: "json" };
 import type { ManufacturingSource } from "./panel-model.ts";
 import type { BrowserDemoAuth } from "./demo-auth.ts";
@@ -16,7 +17,7 @@ import type { AgentContext, AgentModule } from "./agent-modules/contracts.ts";
 import type { AgentRun, AgentConfig } from "./agent-model.ts";
 import { panelDemoInventory } from "./panel-demo.ts";
 import type { Resource } from "./api.ts";
-const KEY = "forge-ax-manufacturing-agents-v1";
+const KEY = brandStorageKey("axentra-manufacturing-agents-v1");
 type StoredRun = AgentRun & {
   context: AgentContext;
   recommendation_ids: string[];

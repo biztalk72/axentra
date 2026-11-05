@@ -1,16 +1,17 @@
+import { brandStorageKey } from "../brand.ts";
 import catalog from "./catalog.json" with { type: "json" };
 import { readSupply, publicSupply } from "../supply/demo.ts";
 import { readIndustry } from "../supply/industry-demo.ts";
 import type { BrowserDemoAuth } from "../demo-auth.ts";
 import type { ManufacturingSource } from "../panel-model.ts";
-const KEY = "forge-ax-integrations-v1";
+const KEY = brandStorageKey("axentra-integrations-v1");
 export const defaultIntegration = {
   revision: 1,
   config: {
     plugin: "mqtt",
     enabled: false,
     endpoint: "mqtts://localhost:8883",
-    topic: "forge.factory.events.v1",
+    topic: "axentra.factory.events.v1",
     tls: true,
     username_env: "",
     password_env: "",
@@ -20,12 +21,12 @@ export function eventEnvelope(type: string, subject: string, data: any) {
   return {
     specversion: "1.0",
     id: "EVT-" + crypto.randomUUID(),
-    type: "forge." + type + ".v1",
-    source: "urn:forge:plant:default",
+    type: "axentra." + type + ".v1",
+    source: "urn:axentra:plant:default",
     subject,
     time: new Date().toISOString(),
     datacontenttype: "application/json",
-    dataschema: "urn:forge:schema:" + type + ":1",
+    dataschema: "urn:axentra:schema:" + type + ":1",
     industry: readIndustry().config.id,
     governance: {
       classification: "internal",

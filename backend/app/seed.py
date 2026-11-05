@@ -69,5 +69,5 @@ def initialize():
           ('REC-SEED','recommendation','NDL-STEAM 냉각 점검 작업 생성','pending',{'asset_id':'NDL-STEAM','alert_id':'ALERT-SEED','reason':'온도 78.4°C, 임계값 75°C 초과. 냉각 상태 및 구동부 점검이 필요합니다.','action':'maintenance','impact':'점검 작업 지시 생성 · 설비 자동 제어 없음','engine':'threshold-rule-v1'})]
         for rid, category, name, status, data in resources:
             db.add(Resource(id=rid, category=category, name=name, status=status, data=data))
-        db.add(Audit(actor='system',action='demo.seed',target='FORGE 라면 스마트팩토리',detail={'mode':'synthetic'}))
+        db.add(Audit(actor='system',action='demo.seed',target='Axentra 라면 스마트팩토리',detail={'mode':'synthetic'}))
         db.commit()

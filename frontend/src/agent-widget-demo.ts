@@ -1,3 +1,4 @@
+import { brandStorageKey } from "./brand.ts";
 import { readModules, planModules } from "./agent-modules/registry.ts";
 import { executeModule } from "./agent-modules/index.ts";
 import { captureContext } from "./agent-modules/context.ts";
@@ -50,7 +51,7 @@ export function widgetDemo(
   source: ManufacturingSource,
 ) {
   const user = auth.current(),
-    key = "forge-ax-agent-widgets-" + user.email;
+    key = brandStorageKey("axentra-agent-widgets-" + user.email);
   if (path.startsWith("/agent-widgets/results")) {
     const query = new URLSearchParams(path.split("?")[1]);
     const ids = (query.get("ids") || defaults.module_ids.join(",")).split(",");
